@@ -1,0 +1,42 @@
+name: ImGui.Forms Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - uses: nuget/setup-nuget@v1
+
+   # Setup the build
+    - name: Wait for other release builds
+      uses: softprops/turnstyle@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 5.0.404
+
+    # Pack framework
+    - name: Publish ImGui.Forms
+      run: |
+        dotnet build ./ImGui.Forms/ImGui.Forms.csproj --configuration Release
+        dotnet build ./ImGui.NET/src/ImGui.NET/ImGui.NET.csproj --configuration Release
+        dotnet pack ./ImGui.Forms/ImGui.Forms.csproj --configuration Release --output .\dist\nuget --verbosity normal
+        dotnet pack ./ImGui.NET/src/ImGui.NET/ImGui.NET.csproj --configuration Release --output .\dist\nuget --verbosity normal
+
+    # Upload nugets to github packages
+    - name: Push NuGet Packages
+      run: |
+        dotnet nuget add source --username onepiecefreak3 --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/FanTranslatorsInternational/index.json"
+        dotnet nuget push "bin/Release/ImGui.Forms.1.0.2.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "github"
+        dotnet nuget push "bin/Release/ImGui.NET.1.82.0.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "github"
+      shell: cmd

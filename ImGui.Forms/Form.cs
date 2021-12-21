@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
-using ImGui.Forms.Components.Base;
-using ImGui.Forms.Components.Menu;
+using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Controls.Menu;
 using ImGui.Forms.Modals;
 using ImGui.Forms.Models;
 using ImGuiNET;

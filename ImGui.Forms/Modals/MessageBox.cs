@@ -4,9 +4,9 @@ using System.Drawing;
 using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
-using ImGui.Forms.Components;
-using ImGui.Forms.Components.Base;
-using ImGui.Forms.Components.Layouts;
+using ImGui.Forms.Controls;
+using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Controls.Layouts;
 using ImGui.Forms.Models;
 
 namespace ImGui.Forms.Modals

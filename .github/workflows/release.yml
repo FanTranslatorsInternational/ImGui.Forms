@@ -37,6 +37,6 @@ jobs:
     - name: Push NuGet Packages
       run: |
         dotnet nuget add source --username onepiecefreak3 --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/FanTranslatorsInternational/index.json"
-        dotnet nuget push "bin/Release/ImGui.Forms.1.0.2.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "github"
-        dotnet nuget push "bin/Release/ImGui.NET.1.82.0.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "github"
+        dotnet nuget push "dist/nuget/ImGui.Forms.1.0.2.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "github"
+        dotnet nuget push "dist/nuget/ImGui.NET.1.82.0.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "github"
       shell: cmd

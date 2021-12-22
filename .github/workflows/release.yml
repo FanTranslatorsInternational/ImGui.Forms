@@ -34,9 +34,18 @@ jobs:
         dotnet pack ./ImGui.NET/src/ImGui.NET/ImGui.NET.csproj --configuration Release --output .\dist\nuget --verbosity normal
 
     # Upload nugets to github packages
-    - name: Push NuGet Packages
-      run: |
-        dotnet nuget add source --username onepiecefreak3 --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/FanTranslatorsInternational/index.json"
-        dotnet nuget push "dist/nuget/ImGui.Forms.1.0.2.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "github"
-        dotnet nuget push "dist/nuget/ImGui.NET.1.82.0.nupkg" --api-key ${{ secrets.GITHUB_TOKEN }} --source "github"
-      shell: cmd
+    - name: Publish ImGui.Forms
+      uses: brandedoutcast/publish-nuget@v2
+      with:
+        PROJECT_FILE_PATH: ImGui.Forms/ImGui.Forms.csproj
+        VERSION_REGEX: '^\s*<Version>(.*)<\/Version>\s*$'
+        TAG_FORMAT: '*'
+        NUGET_KEY: ${{secrets.NUGET_API_KEY}}
+
+    - name: Publish ImGui.NET
+      uses: brandedoutcast/publish-nuget@v2
+      with:
+        PROJECT_FILE_PATH: ImGui.NET/src/ImGui.NET/ImGui.NET.csproj
+        VERSION_REGEX: '^\s*<Version>(.*)<\/Version>\s*$'
+        TAG_FORMAT: '*'
+        NUGET_KEY: ${{secrets.NUGET_API_KEY}}

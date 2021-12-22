@@ -12,6 +12,9 @@
     <PackageTags>ImGui Forms ImGui.NET Immediate Mode GUI</PackageTags>
     <Version>1.0.2</Version>
     <AssemblyVersion>1.0.2.0</AssemblyVersion>
+    <PackageProjectUrl>https://github.com/FanTranslatorsInternational/ImGui.Forms</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/FanTranslatorsInternational/ImGui.Forms</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

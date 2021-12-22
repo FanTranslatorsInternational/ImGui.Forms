@@ -16,6 +16,8 @@
     <RootNamespace>ImGuiNET</RootNamespace>
     <Version>1.82.0</Version>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <RepositoryUrl>https://github.com/mellinoe/imgui.net</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Numerics.Vectors" Version="4.4.0" />

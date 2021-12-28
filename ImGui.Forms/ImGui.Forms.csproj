@@ -10,7 +10,7 @@
     <Copyright>Fan Translators International</Copyright>
     <Description>A WinForms-inspired object-oriented framework around Dear ImGui (https://github.com/ocornut/imgui)</Description>
     <PackageTags>ImGui Forms ImGui.NET Immediate Mode GUI</PackageTags>
-    <Version>1.0.4</Version>
+    <Version>1.0.5-alpha1</Version>
     <AssemblyVersion>1.0.4.0</AssemblyVersion>
     <PackageProjectUrl>https://github.com/FanTranslatorsInternational/ImGui.Forms</PackageProjectUrl>
     <RepositoryUrl>https://github.com/FanTranslatorsInternational/ImGui.Forms</RepositoryUrl>
@@ -35,6 +35,48 @@
     <EmbeddedResource Include="Resources\Fonts\arial.ttf" />
     <EmbeddedResource Include="Resources\Fonts\roboto.ttf" />
     <EmbeddedResource Include="Resources\Images\error.png" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/GLSL/imgui-vertex.glsl">
+      <LogicalName>imgui-vertex.glsl</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/GLSL/imgui-vertex-legacy.glsl">
+      <LogicalName>imgui-vertex-legacy.glsl</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/GLSL/imgui-frag.glsl">
+      <LogicalName>imgui-frag.glsl</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/GLSLES/imgui-vertex.glsles">
+      <LogicalName>imgui-vertex.glsles</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/GLSLES/imgui-vertex-legacy.glsles">
+      <LogicalName>imgui-vertex-legacy.glsles</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/GLSLES/imgui-frag.glsles">
+      <LogicalName>imgui-frag.glsles</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/HLSL/imgui-vertex.hlsl.bytes">
+      <LogicalName>imgui-vertex.hlsl.bytes</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Support\Veldrid.ImGui\Assets\HLSL\imgui-vertex-legacy.hlsl.bytes">
+      <LogicalName>imgui-vertex-legacy.hlsl.bytes</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/HLSL/imgui-frag.hlsl.bytes">
+      <LogicalName>imgui-frag.hlsl.bytes</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/SPIR-V/imgui-vertex.spv">
+      <LogicalName>imgui-vertex.spv</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/SPIR-V/imgui-frag.spv">
+      <LogicalName>imgui-frag.spv</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/Metal/imgui-vertex.metallib">
+      <LogicalName>imgui-vertex.metallib</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/Metal/imgui-frag.metallib">
+      <LogicalName>imgui-frag.metallib</LogicalName>
+    </EmbeddedResource>
   </ItemGroup>
 
   <ItemGroup>

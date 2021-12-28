@@ -26,7 +26,7 @@ jobs:
         dotnet-version: 5.0.404
 
     # Pack framework
-    - name: Publish ImGui.Forms
+    - name: Pack ImGui.Forms
       run: |
         dotnet build ./ImGui.Forms/ImGui.Forms.csproj --configuration Release
         dotnet pack ./ImGui.Forms/ImGui.Forms.csproj --configuration Release --output .\dist\nuget --verbosity normal

@@ -10,8 +10,8 @@
     <Copyright>Fan Translators International</Copyright>
     <Description>A WinForms-inspired object-oriented framework around Dear ImGui (https://github.com/ocornut/imgui)</Description>
     <PackageTags>ImGui Forms ImGui.NET Immediate Mode GUI</PackageTags>
-    <Version>1.0.2</Version>
-    <AssemblyVersion>1.0.2.0</AssemblyVersion>
+    <Version>1.0.3</Version>
+    <AssemblyVersion>1.0.3.0</AssemblyVersion>
     <PackageProjectUrl>https://github.com/FanTranslatorsInternational/ImGui.Forms</PackageProjectUrl>
     <RepositoryUrl>https://github.com/FanTranslatorsInternational/ImGui.Forms</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -41,10 +41,7 @@
     <PackageReference Include="System.Drawing.Common" Version="5.0.3" />
     <PackageReference Include="Veldrid.ImGui" Version="5.72.0" />
     <PackageReference Include="Veldrid.StartupUtilities" Version="4.8.0" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\ImGui.NET\src\ImGui.NET\ImGui.NET.csproj" />
+    <PackageReference Include="ImGui.NET-newest" Version="1.82.0" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.Numerics;
+using ImGui.Forms.Extensions;
 using ImGui.Forms.Factories;
 using ImGui.Forms.Localization;
 using Veldrid;
@@ -31,6 +32,8 @@ namespace ImGui.Forms
 
         public Form MainForm => _executionContext.MainForm;
 
+        internal Sdl2Window Window => _executionContext.Window;
+
         public ILocalizer Localizer { get; }
 
         private Application(Form mainForm, GraphicsDevice gd, Sdl2Window window, ILocalizer localizer)
@@ -49,6 +52,7 @@ namespace ImGui.Forms
             if (Instance != null)
                 throw new InvalidOperationException("There already is an application created.");
 
+            // Create window
             VeldridStartup.CreateWindowAndGraphicsDevice(
                 new WindowCreateInfo(20, 20, form.Width, form.Height, WindowState.Normal, form.Title),
                 new GraphicsDeviceOptions(true, null, true, ResourceBindingModel.Improved, true, true),
@@ -68,7 +72,6 @@ namespace ImGui.Forms
             // Main application loop
             while (_executionContext.Window.Exists)
             {
-                // TODO: Remove drag drop events after n seconds to not fill it up endlessly if no control could handle them
                 _dragDropEvent = default;
                 _frameHandledDragDrop = false;
 

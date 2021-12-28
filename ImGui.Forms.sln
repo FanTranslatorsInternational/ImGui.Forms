@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.30804.86
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImGui.Forms", "ImGui.Forms\ImGui.Forms.csproj", "{C2F9F440-6FEF-46B1-BB8A-25E676007442}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ImGui.NET", "ImGui.NET\src\ImGui.NET\ImGui.NET.csproj", "{211B0438-F090-43AA-A863-FCDC39BFB1EA}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,10 +15,6 @@ Global
 		{C2F9F440-6FEF-46B1-BB8A-25E676007442}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C2F9F440-6FEF-46B1-BB8A-25E676007442}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C2F9F440-6FEF-46B1-BB8A-25E676007442}.Release|Any CPU.Build.0 = Release|Any CPU
-		{211B0438-F090-43AA-A863-FCDC39BFB1EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{211B0438-F090-43AA-A863-FCDC39BFB1EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{211B0438-F090-43AA-A863-FCDC39BFB1EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{211B0438-F090-43AA-A863-FCDC39BFB1EA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
+using ImGui.Forms.Extensions;
 using ImGui.Forms.Modals;
 using ImGui.Forms.Models;
 using ImGuiNET;
@@ -12,7 +14,7 @@ using Rectangle = Veldrid.Rectangle;
 namespace ImGui.Forms
 {
     // HINT: Does not derive from Container to not be a component and therefore nestable into other containers
-    public class Form
+    public abstract class Form
     {
         private readonly IList<Modal> _modals = new List<Modal>();
 
@@ -20,11 +22,13 @@ namespace ImGui.Forms
         public int Width { get; set; } = 700;
         public int Height { get; set; } = 400;
 
-        public MainMenuBar MainMenuBar { get; set; }
+        public Image Icon { get; protected set; }
 
-        public Component Content { get; set; }
+        public MainMenuBar MainMenuBar { get; protected set; }
 
-        public Vector2 Padding { get; set; } = new Vector2(2, 2);
+        public Component Content { get; protected set; }
+
+        public Vector2 Padding { get; protected set; } = new Vector2(2, 2);
 
         public FontResource DefaultFont { get; set; }
 
@@ -52,6 +56,10 @@ namespace ImGui.Forms
 
         public void Update()
         {
+            // Set icon
+            if (Icon != null)
+                Sdl2NativeExtensions.SetWindowIcon(Application.Instance.Window.SdlWindowHandle, (Bitmap)Icon);
+
             // Begin window
             ImGuiNET.ImGui.Begin(Title, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove);
 

@@ -81,8 +81,9 @@ namespace ImGui.Forms.Modals
             // Add modal
             var mainSize = new Vector2(Application.Instance.MainForm.Width, Application.Instance.MainForm.Height);
 
-            Width = msgLabel.GetWidth((int)mainSize.X) + (msgType?.GetWidth((int)mainSize.X) ?? 0) + messageLayout.ItemSpacing;
-            Height =  mainLayout.GetHeight((int)mainSize.Y);
+            var width = msgLabel.GetWidth((int)mainSize.X) + (msgType?.GetWidth((int)mainSize.X) ?? 0) + messageLayout.ItemSpacing;
+            var height = mainLayout.GetHeight((int)mainSize.Y);
+            Size = new Vector2(width, height);
             Content = mainLayout;
         }
 

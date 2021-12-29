@@ -9,7 +9,6 @@ using ImGui.Forms.Extensions;
 using ImGui.Forms.Modals;
 using ImGui.Forms.Models;
 using ImGuiNET;
-using Rectangle = Veldrid.Rectangle;
 
 namespace ImGui.Forms
 {
@@ -21,9 +20,12 @@ namespace ImGui.Forms
         private Image _icon;
         private bool _setIcon;
 
+        #region Properties
+
         public string Title { get; set; } = string.Empty;
-        public int Width { get; set; } = 700;
-        public int Height { get; set; } = 400;
+        public Vector2 Size { get; set; } = new Vector2(700, 400);
+        public int Width => (int)Size.X;
+        public int Height => (int)Size.Y;
 
         public Image Icon
         {
@@ -42,6 +44,8 @@ namespace ImGui.Forms
         public Vector2 Padding { get; protected set; } = new Vector2(2, 2);
 
         public FontResource DefaultFont { get; set; }
+
+        #endregion
 
         #region Events
 
@@ -80,7 +84,7 @@ namespace ImGui.Forms
             // Begin window
             ImGuiNET.ImGui.Begin(Title, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove);
 
-            ImGuiNET.ImGui.SetWindowSize(new Vector2(Width, Height), ImGuiCond.Always);
+            ImGuiNET.ImGui.SetWindowSize(Size, ImGuiCond.Always);
 
             ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
             ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0);
@@ -101,7 +105,7 @@ namespace ImGui.Forms
             var contentPos = ImGuiNET.ImGui.GetCursorScreenPos();
             var contentWidth = Content?.GetWidth(Width - (int)Padding.X * 2) ?? 0;
             var contentHeight = Content?.GetHeight(Height - (int)Padding.Y * 2 - menuHeight) ?? 0;
-            Content?.Update(new Rectangle((int)contentPos.X, (int)contentPos.Y, contentWidth, contentHeight));
+            Content?.Update(new Veldrid.Rectangle((int)contentPos.X, (int)contentPos.Y, contentWidth, contentHeight));
 
             // Add modals
             var modal = _modals.Count > 0 ? _modals.First() : null;
@@ -113,7 +117,7 @@ namespace ImGui.Forms
 
                 ImGuiNET.ImGui.SetNextWindowPos(modalPos);
                 ImGuiNET.ImGui.SetNextWindowSize(modalSize);
-                modal.Update(new Rectangle((int)modalPos.X, (int)modalPos.Y, (int)modalContentSize.X, (int)modalContentSize.Y));
+                modal.Update(new Veldrid.Rectangle((int)modalPos.X, (int)modalPos.Y, (int)modalContentSize.X, (int)modalContentSize.Y));
             }
 
             // End window

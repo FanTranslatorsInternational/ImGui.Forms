@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Layouts;
 using ImGui.Forms.Controls.Tree;
@@ -84,8 +85,9 @@ namespace ImGui.Forms.Modals.IO
 
             #endregion
 
-            Width = (int)Math.Ceiling(Application.Instance.MainForm.Width * .9f);
-            Height = (int)Math.Ceiling(Application.Instance.MainForm.Height * .8f);
+            var width = (int)Math.Ceiling(Application.Instance.MainForm.Width * .9f);
+            var height = (int)Math.Ceiling(Application.Instance.MainForm.Height * .8f);
+            Size = new Vector2(width, height);
 
             Content = new StackLayout
             {

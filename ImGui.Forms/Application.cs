@@ -109,8 +109,7 @@ namespace ImGui.Forms
             _executionContext.GraphicsDevice.MainSwapchain.Resize((uint)_executionContext.Window.Width, (uint)_executionContext.Window.Height);
             _executionContext.Renderer.WindowResized(_executionContext.Window.Width, _executionContext.Window.Height);
 
-            _executionContext.MainForm.Width = _executionContext.Window.Width;
-            _executionContext.MainForm.Height = _executionContext.Window.Height;
+            _executionContext.MainForm.Size = new Vector2(_executionContext.Window.Width, _executionContext.Window.Height);
 
             _executionContext.MainForm.OnResized();
         }

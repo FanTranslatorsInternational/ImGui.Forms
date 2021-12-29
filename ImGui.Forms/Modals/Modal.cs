@@ -22,8 +22,9 @@ namespace ImGui.Forms.Modals
         protected DialogResult Result { get; set; }
 
         public const int HeaderHeight = 20;
-        public int Width { get; set; } = 200;
-        public int Height { get; set; } = 80;
+        public Vector2 Size { get; internal set; } = new Vector2(200, 80);
+        public int Width=>(int)Size.X;
+        public int Height=>(int)Size.Y;
 
         public override Size GetSize()
         {
@@ -47,7 +48,7 @@ namespace ImGui.Forms.Modals
                 {
                     var form = Application.Instance.MainForm;
 
-                    var modalPos = new Vector2((form.Width - modal.Width) / 2f - form.Padding.X, (Height - modal.Height) / 2f);
+                    var modalPos = new Vector2((Width - modal.Width) / 2f - form.Padding.X, (Height - modal.Height) / 2f);
                     var modalContentSize = new Vector2(modal.Width, modal.Height);
                     var modalSize = modalContentSize + new Vector2(form.Padding.X * 2, HeaderHeight + form.Padding.Y * 2);
 
@@ -57,7 +58,7 @@ namespace ImGui.Forms.Modals
                 }
 
                 // Add closing command to current popup context
-                if(_shouldClose)
+                if (_shouldClose)
                     CloseCore();
 
                 ImGuiNET.ImGui.EndPopup();

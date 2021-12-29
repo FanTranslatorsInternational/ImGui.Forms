@@ -17,11 +17,13 @@ namespace ImGui.Forms.Controls
 
         public string Text { get; set; }
 
+        public Size Size { get; set; } = Size.Parent;
+
         public FontResource Font { get; set; }
 
         public override Size GetSize()
         {
-            return Size.Parent;
+            return Size;
         }
 
         protected override void UpdateInternal(Rectangle contentRect)

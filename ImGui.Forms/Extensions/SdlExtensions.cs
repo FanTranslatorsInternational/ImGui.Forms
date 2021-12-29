@@ -12,7 +12,7 @@ namespace ImGui.Forms.Extensions
         public static void SetWindowIcon(IntPtr window, Bitmap icon)
         {
             // Prepare surface
-            var surfacePtr = CreateRgbSurfaceDelegate(0, icon.Width, icon.Height, 32, 0xFF000000, 0xFF0000, 0xFF00, 0xFF);
+            var surfacePtr = CreateRgbSurfaceDelegate(0, icon.Width, icon.Height, 32, 0xFF0000, 0xFF00, 0xFF, 0xFF000000);
 
             // Copy data from icon to surface
             if (LockSurfaceDelegate(surfacePtr) != 0)

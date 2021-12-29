@@ -10,8 +10,8 @@
     <Copyright>Fan Translators International</Copyright>
     <Description>A WinForms-inspired object-oriented framework around Dear ImGui (https://github.com/ocornut/imgui)</Description>
     <PackageTags>ImGui Forms ImGui.NET Immediate Mode GUI</PackageTags>
-    <Version>1.0.5</Version>
-    <AssemblyVersion>1.0.5.0</AssemblyVersion>
+    <Version>1.0.6</Version>
+    <AssemblyVersion>1.0.6.0</AssemblyVersion>
     <PackageProjectUrl>https://github.com/FanTranslatorsInternational/ImGui.Forms</PackageProjectUrl>
     <RepositoryUrl>https://github.com/FanTranslatorsInternational/ImGui.Forms</RepositoryUrl>
     <RepositoryType>git</RepositoryType>

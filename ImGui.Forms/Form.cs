@@ -74,6 +74,9 @@ namespace ImGui.Forms
                 _setIcon = false;
             }
 
+            // Set window title
+            Application.Instance.Window.Title = Title;
+
             // Begin window
             ImGuiNET.ImGui.Begin(Title, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove);
 

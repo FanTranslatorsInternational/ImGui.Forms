@@ -99,7 +99,7 @@ namespace ImGui.Forms.Modals
                     return null;
 
                 case MessageBoxType.Error:
-                    resource = typeof(MessageBox).Assembly.GetManifestResourceStream("imGui.Forms.Resources.Images.error.png");
+                    resource = typeof(MessageBox).Assembly.GetManifestResourceStream("error.png");
                     break;
 
                 default:

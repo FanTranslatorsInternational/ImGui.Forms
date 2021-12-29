@@ -48,8 +48,8 @@ namespace ImGui.Forms.Models
 
     public static class Fonts
     {
-        private const string ArialPath_ = "imGui.Forms.Resources.Fonts.arial.ttf";
-        private const string RobotoPath_ = "imGui.Forms.Resources.Fonts.roboto.ttf";
+        private const string ArialPath_ = "arial.ttf";
+        private const string RobotoPath_ = "roboto.ttf";
 
         public static FontResource Arial(int size)
         {

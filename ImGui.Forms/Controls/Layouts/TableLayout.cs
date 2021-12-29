@@ -210,7 +210,7 @@ namespace ImGui.Forms.Controls.Layouts
             }
 
             // Set column widths with absolute and relative widths
-            var widthCorrection = 1f / (maxRelatives.Sum() == 0 ? 1f : maxRelatives.Sum());
+            var widthCorrection = 1f / (maxRelatives.Sum() <= 1f ? 1f : maxRelatives.Sum());
             for (var c = 0; c < maxColumnCount; c++)
             {
                 // Skip column, if its width is already set
@@ -255,7 +255,7 @@ namespace ImGui.Forms.Controls.Layouts
                 // Otherwise, adjust layout correction and width result
                 maxRelatives[c] = 0f;
 
-                widthCorrection = 1f / (maxRelatives.Sum() == 0 ? 1f : maxRelatives.Sum());
+                widthCorrection = 1f / (maxRelatives.Sum() <= 1f ? 1f : maxRelatives.Sum());
                 availableWidth -= maxCellWidth;
 
                 result[c] = maxCellWidth;
@@ -319,7 +319,7 @@ namespace ImGui.Forms.Controls.Layouts
             }
 
             // Set column heights with absolute and relative heights
-            var heightCorrection = 1f / (maxRelatives.Sum() == 0 ? 1f : maxRelatives.Sum());
+            var heightCorrection = 1f / (maxRelatives.Sum() <= 1f ? 1f : maxRelatives.Sum());
             for (var r = 0; r < Rows.Count; r++)
             {
                 // Skip row, if its height is already set
@@ -365,7 +365,7 @@ namespace ImGui.Forms.Controls.Layouts
                 // Otherwise, adjust layout correction and height result
                 maxRelatives[r] = 0f;
 
-                heightCorrection = 1f / (maxRelatives.Sum() == 0 ? 1f : maxRelatives.Sum());
+                heightCorrection = 1f / (maxRelatives.Sum() <= 1f ? 1f : maxRelatives.Sum());
                 availableHeight -= maxCellHeight;
 
                 result[r] = maxCellHeight;

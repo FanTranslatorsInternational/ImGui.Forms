@@ -18,11 +18,22 @@ namespace ImGui.Forms
     {
         private readonly IList<Modal> _modals = new List<Modal>();
 
+        private Image _icon;
+        private bool _setIcon;
+
         public string Title { get; set; } = string.Empty;
         public int Width { get; set; } = 700;
         public int Height { get; set; } = 400;
 
-        public Image Icon { get; protected set; }
+        public Image Icon
+        {
+            get => _icon;
+            protected set
+            {
+                _icon = value;
+                _setIcon = true;
+            }
+        }
 
         public MainMenuBar MainMenuBar { get; protected set; }
 
@@ -57,8 +68,11 @@ namespace ImGui.Forms
         public void Update()
         {
             // Set icon
-            if (Icon != null)
+            if (_setIcon)
+            {
                 Sdl2NativeExtensions.SetWindowIcon(Application.Instance.Window.SdlWindowHandle, (Bitmap)Icon);
+                _setIcon = false;
+            }
 
             // Begin window
             ImGuiNET.ImGui.Begin(Title, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove);

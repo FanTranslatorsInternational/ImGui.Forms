@@ -27,6 +27,8 @@ namespace ImGui.Forms
         public int Width => (int)Size.X;
         public int Height => (int)Size.Y;
 
+        public Theme Theme { get; set; } = Theme.Dark;
+
         public Image Icon
         {
             get => _icon;
@@ -89,6 +91,18 @@ namespace ImGui.Forms
             ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
             ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0);
             ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
+
+            // Set theme colors
+            switch (Theme)
+            {
+                case Theme.Light:
+                    ImGuiNET.ImGui.StyleColorsLight();
+                    break;
+
+                case Theme.Dark:
+                    ImGuiNET.ImGui.StyleColorsDark();
+                    break;
+            }
 
             // Push font to default to
             if (DefaultFont != null)

@@ -32,7 +32,7 @@ namespace ImGui.Forms.Factories
             // Otherwise, load it into the renderer
             _discFonts[(ttfPath, size)] = _io.Fonts.AddFontFromFileTTF(ttfPath, size);
             _io.Fonts.Build();
-            
+
             _controller.RecreateFontDeviceTexture();
 
             return _discFonts[(ttfPath, size)];
@@ -54,13 +54,29 @@ namespace ImGui.Forms.Factories
 
             fixed (byte* ptr = data)
             {
-                _resourceFonts[(assembly, resourceName, size)] = _io.Fonts.AddFontFromMemoryTTF((IntPtr)ptr, data.Length, size);
+                _resourceFonts[(assembly, resourceName, size)] = _io.Fonts.AddFontFromMemoryTTF((IntPtr)ptr, data.Length, size, new ImFontConfigPtr(), GetAllGlyphRanges());
                 _io.Fonts.Build();
 
                 _controller.RecreateFontDeviceTexture();
 
                 return _resourceFonts[(assembly, resourceName, size)];
             }
+        }
+
+        private unsafe IntPtr GetAllGlyphRanges()
+        {
+            var builder = new ImFontGlyphRangesBuilderPtr(ImGuiNative.ImFontGlyphRangesBuilder_ImFontGlyphRangesBuilder());
+            var fonts = ImGuiNET.ImGui.GetIO().Fonts;
+
+            builder.AddRanges(fonts.GetGlyphRangesCyrillic());
+            builder.AddRanges(fonts.GetGlyphRangesKorean());
+            builder.AddRanges(fonts.GetGlyphRangesChineseFull());
+            builder.AddRanges(fonts.GetGlyphRangesJapanese());
+            builder.AddRanges(fonts.GetGlyphRangesThai());
+            builder.AddRanges(fonts.GetGlyphRangesVietnamese());
+
+            builder.BuildRanges(out var ranges);
+            return ranges.Data;
         }
     }
 }

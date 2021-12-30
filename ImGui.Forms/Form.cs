@@ -51,7 +51,10 @@ namespace ImGui.Forms
 
         #region Events
 
+        public event EventHandler Load;
         public event EventHandler Resized;
+        public event EventHandler<ClosingEventArgs> Closing;
+        public event EventHandler Closed;
 
         #endregion
 
@@ -142,5 +145,28 @@ namespace ImGui.Forms
         {
             Resized?.Invoke(this, new EventArgs());
         }
+
+        internal void OnLoad()
+        {
+            Load?.Invoke(this, new EventArgs());
+        }
+
+        internal bool OnClosing()
+        {
+            var args = new ClosingEventArgs();
+            Closing?.Invoke(this, args);
+
+            return args.Cancel;
+        }
+
+        internal void OnClosed()
+        {
+            Closed?.Invoke(this, new EventArgs());
+        }
+    }
+
+    public class ClosingEventArgs : EventArgs
+    {
+        public bool Cancel { get; set; }
     }
 }

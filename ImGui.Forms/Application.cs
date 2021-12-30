@@ -66,6 +66,9 @@ namespace ImGui.Forms
         {
             _executionContext.Window.Resized += Window_Resized;
             _executionContext.Window.DragDrop += Window_DragDrop;
+            _executionContext.Window.Shown += Window_Shown;
+            _executionContext.Window.SetCloseRequestedHandler(ShouldClose);
+            _executionContext.Window.Closed += Window_Closed;
 
             var cl = _executionContext.GraphicsDevice.ResourceFactory.CreateCommandList();
 
@@ -104,6 +107,23 @@ namespace ImGui.Forms
             _executionContext.GraphicsDevice.Dispose();
         }
 
+        #region Window events
+
+        private void Window_Shown()
+        {
+            _executionContext.MainForm.OnLoad();
+        }
+
+        private bool ShouldClose()
+        {
+            return _executionContext.MainForm.OnClosing();
+        }
+
+        private void Window_Closed()
+        {
+            _executionContext.MainForm.OnClosed();
+        }
+
         private void Window_Resized()
         {
             _executionContext.GraphicsDevice.MainSwapchain.Resize((uint)_executionContext.Window.Width, (uint)_executionContext.Window.Height);
@@ -118,6 +138,8 @@ namespace ImGui.Forms
         {
             _dragDropEvent = new DragDropEventEx(obj, ImGuiNET.ImGui.GetMousePos());
         }
+
+        #endregion
 
         internal bool TryGetDragDrop(Rectangle controlRect, out DragDropEventEx obj)
         {

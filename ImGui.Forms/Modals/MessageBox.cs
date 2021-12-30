@@ -17,7 +17,9 @@ namespace ImGui.Forms.Modals
         {
             CreateLayout(caption, text, type, buttons);
 
-            if (buttons.HasFlag(MessageBoxButton.No))
+            if (buttons.HasFlag(MessageBoxButton.Cancel))
+                Result = DialogResult.Cancel;
+            else if (buttons.HasFlag(MessageBoxButton.No))
                 Result = DialogResult.No;
             else if (buttons.HasFlag(MessageBoxButton.Ok))
                 Result = DialogResult.Ok;
@@ -37,8 +39,12 @@ namespace ImGui.Forms.Modals
 
         public static Task<DialogResult> ShowYesNoAsync(string caption = "", string text = "")
         {
-            //return ShowInformationAsync(caption, text);
             return ShowAsync(caption, text, MessageBoxType.Warning, MessageBoxButton.Yes | MessageBoxButton.No);
+        }
+
+        public static Task<DialogResult> ShowYesNoCancelAsync(string caption = "", string text = "")
+        {
+            return ShowAsync(caption, text, MessageBoxType.Warning, MessageBoxButton.Yes | MessageBoxButton.No | MessageBoxButton.Cancel);
         }
 
         private static async Task<DialogResult> ShowAsync(string caption = "", string text = "", MessageBoxType type = MessageBoxType.Information, MessageBoxButton buttons = MessageBoxButton.Ok)
@@ -155,6 +161,7 @@ namespace ImGui.Forms.Modals
     {
         Ok = 1,
         Yes = 2,
-        No = 4
+        No = 4,
+        Cancel = 8
     }
 }

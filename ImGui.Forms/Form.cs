@@ -141,6 +141,13 @@ namespace ImGui.Forms
             ImGuiNET.ImGui.End();
         }
 
+        protected void Close()
+        {
+            Application.Instance?.Window.Close();
+        }
+
+        #region Event Invokers
+
         internal void OnResized()
         {
             Resized?.Invoke(this, new EventArgs());
@@ -163,6 +170,8 @@ namespace ImGui.Forms
         {
             Closed?.Invoke(this, new EventArgs());
         }
+
+        #endregion
     }
 
     public class ClosingEventArgs : EventArgs

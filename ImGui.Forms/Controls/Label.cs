@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Drawing;
 using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Extensions;
 using ImGui.Forms.Models;
 using ImGuiNET;
-using Veldrid;
+using Rectangle = Veldrid.Rectangle;
+using Size = ImGui.Forms.Models.Size;
 
 namespace ImGui.Forms.Controls
 {
@@ -11,6 +14,8 @@ namespace ImGui.Forms.Controls
         public string Caption { get; set; } = string.Empty;
 
         public FontResource Font { get; set; }
+
+        public Color TextColor { get; set; } = Color.Empty;
 
         public override Size GetSize()
         {
@@ -27,12 +32,14 @@ namespace ImGui.Forms.Controls
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            // TODO: Add property to decide if label should get assigned componentWidth
             ImGuiNET.ImGui.Text(Caption);
         }
 
         protected override void ApplyStyles()
         {
+            if (TextColor != Color.Empty)
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Text, TextColor.ToUInt32());
+
             if (Font != null)
                 ImGuiNET.ImGui.PushFont((ImFontPtr)Font);
         }
@@ -41,6 +48,9 @@ namespace ImGui.Forms.Controls
         {
             if (Font != null)
                 ImGuiNET.ImGui.PopFont();
+
+            if (TextColor != Color.Empty)
+                ImGuiNET.ImGui.PopStyleColor();
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
 using ImGui.Forms.Extensions;
@@ -53,8 +54,6 @@ namespace ImGui.Forms
 
         public event EventHandler Load;
         public event EventHandler Resized;
-        public event EventHandler<ClosingEventArgs> Closing;
-        public event EventHandler Closed;
 
         #endregion
 
@@ -158,18 +157,8 @@ namespace ImGui.Forms
             Load?.Invoke(this, new EventArgs());
         }
 
-        internal bool OnClosing()
-        {
-            var args = new ClosingEventArgs();
-            Closing?.Invoke(this, args);
-
-            return args.Cancel;
-        }
-
-        internal void OnClosed()
-        {
-            Closed?.Invoke(this, new EventArgs());
-        }
+        internal Task OnClosingInternal(ClosingEventArgs e) => OnClosingAsync(e);
+        protected virtual Task OnClosingAsync(ClosingEventArgs e) => Task.CompletedTask;
 
         #endregion
     }

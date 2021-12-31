@@ -1,19 +1,22 @@
 ﻿using System;
 using System.Drawing;
 using System.Numerics;
+using System.Threading.Tasks;
 using ImGui.Forms.Factories;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Support.Veldrid.ImGui;
 using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
-using Rectangle = Veldrid.Rectangle;
 
 namespace ImGui.Forms
 {
     public class Application
     {
-        private readonly ExecutionContext _executionContext;
+        private bool _isClosing;
+        private bool _shouldClose;
+
+        private ExecutionContext _executionContext;
 
         private DragDropEventEx _dragDropEvent;
         private bool _frameHandledDragDrop;
@@ -22,11 +25,11 @@ namespace ImGui.Forms
 
         #region Factories
 
-        public IdFactory IdFactory { get; }
+        public IdFactory IdFactory { get; private set; }
 
-        public ImageFactory ImageFactory { get; }
+        public ImageFactory ImageFactory { get; private set; }
 
-        public FontFactory FontFactory { get; }
+        public FontFactory FontFactory { get; private set; }
 
         #endregion
 
@@ -36,39 +39,22 @@ namespace ImGui.Forms
 
         public ILocalizer Localizer { get; }
 
-        private Application(Form mainForm, GraphicsDevice gd, Sdl2Window window, ILocalizer localizer)
+        public Application(ILocalizer localizer)
         {
-            _executionContext = new ExecutionContext(mainForm, gd, window);
-
-            IdFactory = new IdFactory();
-            ImageFactory = new ImageFactory(gd, _executionContext.Renderer);
-            FontFactory = new FontFactory(ImGuiNET.ImGui.GetIO(), _executionContext.Renderer);
-
             Localizer = localizer;
         }
 
-        public static Application Create(Form form, ILocalizer localizer = null)
+        public void Execute(Form form)
         {
             if (Instance != null)
-                throw new InvalidOperationException("There already is an application created.");
+                throw new InvalidOperationException("There already is an application running.");
 
-            // Create window
-            VeldridStartup.CreateWindowAndGraphicsDevice(
-                new WindowCreateInfo(20, 20, form.Width, form.Height, WindowState.Normal, form.Title),
-                new GraphicsDeviceOptions(true, null, true, ResourceBindingModel.Improved, true, true),
-                out var window,
-                out var gd);
+            CreateApplication(form);
 
-            return Instance = new Application(form, gd, window, localizer);
-        }
-
-        public void Execute()
-        {
             _executionContext.Window.Resized += Window_Resized;
             _executionContext.Window.DragDrop += Window_DragDrop;
             _executionContext.Window.Shown += Window_Shown;
-            _executionContext.Window.SetCloseRequestedHandler(ShouldClose);
-            _executionContext.Window.Closed += Window_Closed;
+            _executionContext.Window.SetCloseRequestedHandler(ShouldCancelClose);
 
             var cl = _executionContext.GraphicsDevice.ResourceFactory.CreateCommandList();
 
@@ -80,6 +66,10 @@ namespace ImGui.Forms
 
                 // Snapshot current machine state
                 var snapshot = _executionContext.Window.PumpEvents();
+
+                if(_shouldClose)
+                    _executionContext.Window.Close();
+
                 if (!_executionContext.Window.Exists)
                     break;
 
@@ -107,6 +97,24 @@ namespace ImGui.Forms
             _executionContext.GraphicsDevice.Dispose();
         }
 
+        private void CreateApplication(Form form)
+        {
+            // Create window
+            VeldridStartup.CreateWindowAndGraphicsDevice(
+                new WindowCreateInfo(20, 20, form.Width, form.Height, WindowState.Normal, form.Title),
+                new GraphicsDeviceOptions(true, null, true, ResourceBindingModel.Improved, true, true),
+                out var window,
+                out var gd);
+
+            _executionContext = new ExecutionContext(form, gd, window);
+
+            IdFactory = new IdFactory();
+            ImageFactory = new ImageFactory(gd, _executionContext.Renderer);
+            FontFactory = new FontFactory(ImGuiNET.ImGui.GetIO(), _executionContext.Renderer);
+
+            Instance = this;
+        }
+
         #region Window events
 
         private void Window_Shown()
@@ -114,14 +122,24 @@ namespace ImGui.Forms
             _executionContext.MainForm.OnLoad();
         }
 
-        private bool ShouldClose()
+        private bool ShouldCancelClose()
         {
-            return _executionContext.MainForm.OnClosing();
+            if (!_isClosing && !_shouldClose)
+            {
+                _isClosing = true;
+                IsClosing();
+            }
+
+            return _isClosing || !_shouldClose;
         }
 
-        private void Window_Closed()
+        private async void IsClosing()
         {
-            _executionContext.MainForm.OnClosed();
+            var args=new ClosingEventArgs();
+            await MainForm.OnClosingInternal(args);
+
+            _isClosing = false;
+            _shouldClose = !args.Cancel;
         }
 
         private void Window_Resized()
@@ -141,7 +159,7 @@ namespace ImGui.Forms
 
         #endregion
 
-        internal bool TryGetDragDrop(Rectangle controlRect, out DragDropEventEx obj)
+        internal bool TryGetDragDrop(Veldrid.Rectangle controlRect, out DragDropEventEx obj)
         {
             obj = _dragDropEvent;
 

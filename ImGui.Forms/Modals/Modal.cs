@@ -23,8 +23,8 @@ namespace ImGui.Forms.Modals
         protected DialogResult Result { get; set; }
 
         public Vector2 Size { get; set; } = new Vector2(200, 80);
-        public int Width=>(int)Size.X;
-        public int Height=>(int)Size.Y;
+        public int Width => (int)Size.X;
+        public int Height => (int)Size.Y;
 
         public override Size GetSize()
         {
@@ -33,7 +33,7 @@ namespace ImGui.Forms.Modals
 
         public int GetHeaderHeight()
         {
-            return (int)Math.Ceiling(ImGuiNET.ImGui.CalcTextSize("A").Y)+6;
+            return (int)Math.Ceiling(ImGuiNET.ImGui.CalcTextSize("A").Y) + 6;
         }
 
         protected override void UpdateInternal(Rectangle contentRect)
@@ -48,19 +48,7 @@ namespace ImGui.Forms.Modals
                 Content?.Update(new Rectangle(contentRect.X, contentRect.Y, contentRect.Width, contentRect.Height));
 
                 // Create content of child modal
-                var modal = ChildModal;  
-                if (modal != null)
-                {
-                    var form = Application.Instance.MainForm;
-
-                    var modalPos = new Vector2((Width - modal.Width) / 2f - form.Padding.X, (Height - modal.Height) / 2f);
-                    var modalContentSize = new Vector2(modal.Width, modal.Height);
-                    var modalSize = modalContentSize + new Vector2(form.Padding.X * 2, GetHeaderHeight() + form.Padding.Y * 2);
-
-                    ImGuiNET.ImGui.SetNextWindowPos(modalPos);
-                    ImGuiNET.ImGui.SetNextWindowSize(modalSize);
-                    modal.Update(new Rectangle((int)modalPos.X, (int)modalPos.Y, (int)modalContentSize.X, (int)modalContentSize.Y));
-                }
+                DrawModal(Width, Height, ChildModal);
 
                 // Add closing command to current popup context
                 if (_shouldClose)
@@ -122,6 +110,29 @@ namespace ImGui.Forms.Modals
         protected virtual void ShowInternal() { }
 
         protected virtual void CloseInternal() { }
+
+        #region Helper
+
+        public static void DrawModal(int parentWidth, int parentHeight, Modal modal)
+        {
+            if (modal == null)
+                return;
+
+            var form = Application.Instance.MainForm;
+
+            var modalPos = new Vector2((parentWidth - modal.Width) / 2f, (parentHeight - modal.Height - modal.GetHeaderHeight()) / 2f);
+            var contentPos = modalPos + new Vector2(form.Padding.X, modal.GetHeaderHeight() + form.Padding.Y);
+
+            var contentSize = new Vector2(modal.Width, modal.Height);
+            var modalSize = contentSize + new Vector2(form.Padding.X * 2, modal.GetHeaderHeight() + form.Padding.Y * 2);
+
+            ImGuiNET.ImGui.SetNextWindowPos(modalPos);
+            ImGuiNET.ImGui.SetNextWindowSize(modalSize);
+
+            modal.Update(new Rectangle((int)contentPos.X, (int)contentPos.Y, (int)contentSize.X, (int)contentSize.Y));
+        }
+
+        #endregion
     }
 
     public enum DialogResult

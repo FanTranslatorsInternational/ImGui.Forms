@@ -123,18 +123,9 @@ namespace ImGui.Forms
             var contentHeight = Content?.GetHeight(Height - (int)Padding.Y * 2 - menuHeight) ?? 0;
             Content?.Update(new Veldrid.Rectangle((int)contentPos.X, (int)contentPos.Y, contentWidth, contentHeight));
 
-            // Add modals
+            // Add modal
             var modal = _modals.Count > 0 ? _modals.First() : null;
-            if (modal != null)
-            {
-                var modalPos = new Vector2((Width - modal.Width) / 2f - Padding.X, (Height - modal.Height) / 2f - contentPos.Y / 2f);
-                var modalContentSize = new Vector2(modal.Width, modal.Height);
-                var modalSize = modalContentSize + new Vector2(Padding.X * 2, modal.GetHeaderHeight() + Padding.Y * 2);
-
-                ImGuiNET.ImGui.SetNextWindowPos(modalPos);
-                ImGuiNET.ImGui.SetNextWindowSize(modalSize);
-                modal.Update(new Veldrid.Rectangle((int)modalPos.X, (int)modalPos.Y, (int)modalContentSize.X, (int)modalContentSize.Y));
-            }
+            Modal.DrawModal(Width, Height, modal);
 
             // End window
             ImGuiNET.ImGui.End();

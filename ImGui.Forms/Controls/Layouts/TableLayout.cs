@@ -396,5 +396,17 @@ namespace ImGui.Forms.Controls.Layouts
         }
 
         #endregion
+
+        #region Cell Event Methods
+
+        internal void Cells_ItemAdded()
+        {
+        }
+
+        internal void Cells_ItemRemoved()
+        {
+        }
+
+        #endregion
     }
 }

@@ -13,10 +13,6 @@ namespace ImGui.Forms.Controls.Layouts
     {
         private readonly ObservableList<TableRow> _rows = new ObservableList<TableRow>();
 
-        private (int, int) _lastDimensions = (0, 0);
-        private int[] _widths;
-        private int[] _heights;
-
         #region Properties
 
         public IList<TableRow> Rows => _rows;
@@ -35,24 +31,14 @@ namespace ImGui.Forms.Controls.Layouts
 
         public override int GetWidth(int parentWidth, float layoutCorrection = 1f)
         {
-            if (_lastDimensions.Item1 != parentWidth)
-            {
-                _lastDimensions = (parentWidth, _lastDimensions.Item2);
-                _widths = GetColumnWidths(parentWidth, layoutCorrection);
-            }
-
-            return Math.Min(parentWidth, _widths.Sum(x => x) + (_widths.Length - 1) * (int)Spacing.X);
+            var widths = GetColumnWidths(parentWidth, layoutCorrection);
+            return Math.Min(parentWidth, widths.Sum(x => x) + (widths.Length - 1) * (int)Spacing.X);
         }
 
         public override int GetHeight(int parentHeight, float layoutCorrection = 1)
         {
-            if (_lastDimensions.Item2 != parentHeight)
-            {
-                _lastDimensions = (_lastDimensions.Item1, parentHeight);
-                _heights = GetRowHeights(parentHeight, layoutCorrection);
-            }
-
-            return Math.Min(parentHeight, _heights.Sum(x => x) + (_heights.Length - 1) * (int)Spacing.Y);
+            var heights = GetRowHeights(parentHeight, layoutCorrection);
+            return Math.Min(parentHeight, heights.Sum(x => x) + (heights.Length - 1) * (int)Spacing.Y);
         }
 
         public override Size GetSize()
@@ -87,21 +73,14 @@ namespace ImGui.Forms.Controls.Layouts
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            if (contentRect.Width != _lastDimensions.Item1 || contentRect.Height != _lastDimensions.Item2)
-            {
-                _lastDimensions = (contentRect.Width, contentRect.Height);
-                _widths = GetColumnWidths(contentRect.Width, 1f);
-                _heights = GetRowHeights(contentRect.Height, 1f);
-            }
-
             if (ImGuiNET.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height), false, ImGuiWindowFlags.NoScrollbar))
             {
                 var origX = ImGuiNET.ImGui.GetCursorPosX();
                 var x = origX;
                 var y = ImGuiNET.ImGui.GetCursorPosY();
 
-                var localWidths = _widths;
-                var localHeights = _heights;
+                var localWidths = GetColumnWidths(contentRect.Width, 1f);
+                var localHeights = GetRowHeights(contentRect.Height, 1f);
 
                 var localCells = Rows.Select(r => r.Cells).ToArray();
                 var localMaxColumns = GetMaxColumnCount();
@@ -239,7 +218,7 @@ namespace ImGui.Forms.Controls.Layouts
                             (int)cellWidth.Value;
 
                         if (maxValue > maxCellWidth)
-                            maxCellWidth = Math.Min(availableWidth, maxValue); ;
+                            maxCellWidth = Math.Min(availableWidth, maxValue);
 
                         continue;
                     }
@@ -409,46 +388,12 @@ namespace ImGui.Forms.Controls.Layouts
         private void Rows_ItemAdded(object sender, ItemEventArgs<TableRow> e)
         {
             e.Item._parent = this;
-
-            if (_lastDimensions.Item1 == 0 || _lastDimensions.Item2 == 0)
-                return;
-
-            _widths = GetColumnWidths(_lastDimensions.Item1, 1f);
-            _heights = GetRowHeights(_lastDimensions.Item2, 1f);
         }
 
         private void Rows_ItemRemoved(object sender, ItemEventArgs<TableRow> e)
         {
             e.Item._parent = null;
-
-            if (_lastDimensions.Item1 == 0 || _lastDimensions.Item2 == 0)
-                return;
-
-            _widths = GetColumnWidths(_lastDimensions.Item1, 1f);
-            _heights = GetRowHeights(_lastDimensions.Item2, 1f);
         }
-
-        #region Cell Event Methods
-
-        internal void Cells_ItemAdded()
-        {
-            if (_lastDimensions.Item1 == 0 || _lastDimensions.Item2 == 0)
-                return;
-
-            _widths = GetColumnWidths(_lastDimensions.Item1, 1f);
-            _heights = GetRowHeights(_lastDimensions.Item2, 1f);
-        }
-
-        internal void Cells_ItemRemoved()
-        {
-            if (_lastDimensions.Item1 == 0 || _lastDimensions.Item2 == 0)
-                return;
-
-            _widths = GetColumnWidths(_lastDimensions.Item1, 1f);
-            _heights = GetRowHeights(_lastDimensions.Item2, 1f);
-        }
-
-        #endregion
 
         #endregion
     }

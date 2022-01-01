@@ -129,7 +129,7 @@ namespace ImGui.Forms
             {
                 var modalPos = new Vector2((Width - modal.Width) / 2f - Padding.X, (Height - modal.Height) / 2f - contentPos.Y / 2f);
                 var modalContentSize = new Vector2(modal.Width, modal.Height);
-                var modalSize = modalContentSize + new Vector2(Padding.X * 2, Modal.HeaderHeight + Padding.Y * 2);
+                var modalSize = modalContentSize + new Vector2(Padding.X * 2, modal.GetHeaderHeight() + Padding.Y * 2);
 
                 ImGuiNET.ImGui.SetNextWindowPos(modalPos);
                 ImGuiNET.ImGui.SetNextWindowSize(modalSize);

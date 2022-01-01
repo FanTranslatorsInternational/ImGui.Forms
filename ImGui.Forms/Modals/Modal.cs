@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using ImGui.Forms.Controls.Base;
@@ -21,7 +22,6 @@ namespace ImGui.Forms.Modals
 
         protected DialogResult Result { get; set; }
 
-        public const int HeaderHeight = 20;
         public Vector2 Size { get; internal set; } = new Vector2(200, 80);
         public int Width=>(int)Size.X;
         public int Height=>(int)Size.Y;
@@ -29,6 +29,11 @@ namespace ImGui.Forms.Modals
         public override Size GetSize()
         {
             return new Size(Width, Height);
+        }
+
+        public int GetHeaderHeight()
+        {
+            return (int)Math.Ceiling(ImGuiNET.ImGui.CalcTextSize("A").Y)+6;
         }
 
         protected override void UpdateInternal(Rectangle contentRect)
@@ -43,14 +48,14 @@ namespace ImGui.Forms.Modals
                 Content?.Update(new Rectangle(contentRect.X, contentRect.Y, contentRect.Width, contentRect.Height));
 
                 // Create content of child modal
-                var modal = ChildModal;
+                var modal = ChildModal;  
                 if (modal != null)
                 {
                     var form = Application.Instance.MainForm;
 
                     var modalPos = new Vector2((Width - modal.Width) / 2f - form.Padding.X, (Height - modal.Height) / 2f);
                     var modalContentSize = new Vector2(modal.Width, modal.Height);
-                    var modalSize = modalContentSize + new Vector2(form.Padding.X * 2, HeaderHeight + form.Padding.Y * 2);
+                    var modalSize = modalContentSize + new Vector2(form.Padding.X * 2, GetHeaderHeight() + form.Padding.Y * 2);
 
                     ImGuiNET.ImGui.SetNextWindowPos(modalPos);
                     ImGuiNET.ImGui.SetNextWindowSize(modalSize);

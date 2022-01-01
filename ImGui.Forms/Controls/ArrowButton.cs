@@ -20,7 +20,10 @@ namespace ImGui.Forms.Controls
 
         public override Size GetSize()
         {
-            return new Size(19, 19);
+            var size = ImGuiNET.ImGui.CalcTextSize("A").Y;
+            var padding = ImGuiNET.ImGui.GetStyle().FramePadding;
+
+            return new Size((int)Math.Ceiling(size + padding.X*2), (int)Math.Ceiling(size + padding.Y*2));
         }
 
         protected override void UpdateInternal(Rectangle contentRect)
@@ -37,7 +40,7 @@ namespace ImGui.Forms.Controls
             if (ImGuiNET.ImGui.ArrowButton($"##{Id}", Direction) && Enabled)
                 OnClicked();
 
-            if(!enabled)
+            if (!enabled)
                 ImGuiNET.ImGui.PopStyleColor(3);
         }
 

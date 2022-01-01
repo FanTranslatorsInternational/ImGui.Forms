@@ -50,8 +50,8 @@ namespace ImGui.Forms.Modals.IO
             _forBtn = new ArrowButton { Direction = ImGuiDir.Right, Enabled = false };
             _dirTextBox = new TextBox { Width = .7f };
             _searchTextBox = new TextBox { Width = .3f, Placeholder = "Search..." };
-            _selectedFileTextBox = new TextBox { Width = .7f };
-            _fileFilters = new ComboBox<FileFilter> { Width = .1f };
+            _selectedFileTextBox = new TextBox { Width = 1f };
+            _fileFilters = new ComboBox<FileFilter>();
 
             _treeView = new TreeView<string> { Size = new Size(.3f, 1f) };
             _treeView.NodeExpanded += _treeView_NodeExpanded;

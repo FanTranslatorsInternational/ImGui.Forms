@@ -99,9 +99,11 @@ namespace ImGui.Forms.Controls.Lists
                             ImGuiNET.ImGui.GetWindowDrawList().AddRectFilled(contentScrollPos, contentScrollEndPos, color);
 
                         // Add thumbnail
-
-                        var imgPos = contentScrollPos + new Vector2();
-                        ImGuiNET.ImGui.GetWindowDrawList().AddImage((IntPtr)item.Image, contentScrollPos, contentScrollPos + thumbnailRect);
+                        if (item.Image != null)
+                        {
+                            var imgPos = contentScrollPos + new Vector2();
+                            ImGuiNET.ImGui.GetWindowDrawList().AddImage((IntPtr)item.Image, contentScrollPos, contentScrollPos + thumbnailRect);
+                        }
 
                         // Add text
                         var textPos = contentScrollPos + new Vector2(ThumbnailSize.Width.Value + 2, (itemHeight - textHeight) / 2f);

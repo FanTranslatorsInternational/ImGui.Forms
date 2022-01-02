@@ -130,21 +130,24 @@ namespace ImGui.Forms.Controls.Layouts
                         ImGuiNET.ImGui.SetCursorPosX(x + xAdjust);
                         ImGuiNET.ImGui.SetCursorPosY(y + yAdjust);
 
-                        // Draw component
+                        // Rendering
                         // HINT: Make child container as big as the component returned
-                        if (cellWidth > 0 && cellHeight > 0)
+                        if (cell != null && cellWidth > 0 && cellHeight > 0)
                         {
-                            var hasBorder = cell?.HasBorder ?? false;
+                            // Define border
+                            var hasBorder = cell.HasBorder;
                             var borderOffsetX = (int)Math.Ceiling(hasBorder ? localWindowPadding.X : 0);
                             var borderOffsetY = (int)Math.Ceiling(hasBorder ? localWindowPadding.Y : 0);
 
+                            // Draw component container
                             if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}", new Vector2(cellInternalWidth, cellInternalHeight), hasBorder, ImGuiWindowFlags.NoScrollbar))
                             {
                                 // Set position for child content (should only be altered due to active border)
                                 ImGuiNET.ImGui.SetCursorPosX(borderOffsetX);
                                 ImGuiNET.ImGui.SetCursorPosY(borderOffsetX);
 
-                                cell?.Content?.Update(new Rectangle((int)(contentRect.X + x + xAdjust + borderOffsetX), (int)(contentRect.Y + y + yAdjust + borderOffsetY), cellInternalWidth - borderOffsetX * 2, cellInternalHeight - borderOffsetY * 2));
+                                // Draw component
+                                cell.Content?.Update(new Rectangle((int)(contentRect.X + x + xAdjust + borderOffsetX), (int)(contentRect.Y + y + yAdjust + borderOffsetY), cellInternalWidth - borderOffsetX * 2, cellInternalHeight - borderOffsetY * 2));
 
                                 ImGuiNET.ImGui.EndChild();
                             }

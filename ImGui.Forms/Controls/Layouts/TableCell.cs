@@ -18,6 +18,11 @@ namespace ImGui.Forms.Controls.Layouts
         }
 
         public static implicit operator TableCell(Component c) => new TableCell(c);
-        public static implicit operator TableCell(StackItem si) => new TableCell(si.Content) { VerticalAlignment = si.VerticalAlignment, HorizontalAlignment = si.HorizontalAlignment, HasBorder = si.HasBorder };
+        public static implicit operator TableCell(StackItem si) => new TableCell(si.Content)
+        {
+            VerticalAlignment = si.VerticalAlignment,
+            HorizontalAlignment = si.HorizontalAlignment,
+            HasBorder = si.HasBorder
+        };
     }
 }

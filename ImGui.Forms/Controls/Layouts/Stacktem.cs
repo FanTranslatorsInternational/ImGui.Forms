@@ -9,6 +9,8 @@ namespace ImGui.Forms.Controls.Layouts
 
         public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.Left;
 
+        public bool HasBorder { get; set; }
+
         public Component Content { get; }
 
         public StackItem(Component component)

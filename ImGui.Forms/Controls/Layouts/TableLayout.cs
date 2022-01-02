@@ -85,6 +85,8 @@ namespace ImGui.Forms.Controls.Layouts
                 var localCells = Rows.Select(r => r.Cells).ToArray();
                 var localMaxColumns = GetMaxColumnCount();
 
+                var localWindowPadding = ImGuiNET.ImGui.GetStyle().WindowPadding;
+
                 for (var r = 0; r < localCells.Length; r++)
                 {
                     var row = localCells[r];
@@ -132,9 +134,17 @@ namespace ImGui.Forms.Controls.Layouts
                         // HINT: Make child container as big as the component returned
                         if (cellWidth > 0 && cellHeight > 0)
                         {
-                            if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}", new Vector2(cellInternalWidth, cellInternalHeight), false, ImGuiWindowFlags.NoScrollbar))
+                            var hasBorder = cell?.HasBorder ?? false;
+                            var borderOffsetX = (int)Math.Ceiling(hasBorder ? localWindowPadding.X : 0);
+                            var borderOffsetY = (int)Math.Ceiling(hasBorder ? localWindowPadding.Y : 0);
+
+                            if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}", new Vector2(cellInternalWidth, cellInternalHeight), hasBorder, ImGuiWindowFlags.NoScrollbar))
                             {
-                                cell?.Content?.Update(new Rectangle((int)(contentRect.X + x + xAdjust), (int)(contentRect.Y + y + yAdjust), cellInternalWidth, cellInternalHeight));
+                                // Set position for child content (should only be altered due to active border)
+                                ImGuiNET.ImGui.SetCursorPosX(borderOffsetX);
+                                ImGuiNET.ImGui.SetCursorPosY(borderOffsetX);
+
+                                cell?.Content?.Update(new Rectangle((int)(contentRect.X + x + xAdjust + borderOffsetX), (int)(contentRect.Y + y + yAdjust + borderOffsetY), cellInternalWidth - borderOffsetX * 2, cellInternalHeight - borderOffsetY * 2));
 
                                 ImGuiNET.ImGui.EndChild();
                             }

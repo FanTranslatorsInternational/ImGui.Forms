@@ -8,6 +8,8 @@ namespace ImGui.Forms.Controls.Layouts
 
         public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.Left;
 
+        public bool HasBorder { get; set; }
+
         public Component Content { get; }
 
         public TableCell(Component component)
@@ -16,6 +18,6 @@ namespace ImGui.Forms.Controls.Layouts
         }
 
         public static implicit operator TableCell(Component c) => new TableCell(c);
-        public static implicit operator TableCell(StackItem si) => new TableCell(si.Content) { VerticalAlignment = si.VerticalAlignment, HorizontalAlignment = si.HorizontalAlignment };
+        public static implicit operator TableCell(StackItem si) => new TableCell(si.Content) { VerticalAlignment = si.VerticalAlignment, HorizontalAlignment = si.HorizontalAlignment, HasBorder = si.HasBorder };
     }
 }

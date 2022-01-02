@@ -12,7 +12,6 @@ namespace ImGui.Forms.Controls
     {
         private const int CircleRadius_ = 10;
         private const int CircleDiameter_ = CircleRadius_ * 2;
-        private const int ContentSpacing_ = 4;
 
         public string Caption { get; set; } = string.Empty;
 
@@ -31,7 +30,7 @@ namespace ImGui.Forms.Controls
         public override Size GetSize()
         {
             var size = ImGuiNET.ImGui.CalcTextSize(Caption);
-            return new Size(1f, (int)(Math.Max((int)Math.Ceiling(size.Y), CircleDiameter_) + (Expanded ? ContentSpacing_ + ContentHeight : 0)));
+            return new Size(1f, (int)(Math.Max((int)Math.Ceiling(size.Y), CircleDiameter_) + (Expanded ? ImGuiNET.ImGui.GetStyle().ItemSpacing.X + ContentHeight : 0)));
         }
 
         protected override void UpdateInternal(Rectangle contentRect)
@@ -63,9 +62,9 @@ namespace ImGui.Forms.Controls
 
             if (Expanded && contentWidth > 0 && contentHeight > 0)
             {
-                ImGuiNET.ImGui.SetCursorPos(new Vector2(0, headerHeight + ContentSpacing_));
+                ImGuiNET.ImGui.SetCursorPos(new Vector2(0, headerHeight + ImGuiNET.ImGui.GetStyle().ItemSpacing.X));
 
-                Content?.Update(new Rectangle(contentRect.X, contentRect.Y + headerHeight + ContentSpacing_, contentWidth, contentHeight));
+                Content?.Update(new Rectangle(contentRect.X, contentRect.Y + headerHeight + (int)ImGuiNET.ImGui.GetStyle().ItemSpacing.X, contentWidth, contentHeight));
             }
 
             // Check if item should be expanded

@@ -10,6 +10,8 @@ namespace ImGui.Forms.Controls
     {
         public string Caption { get; set; } = string.Empty;
 
+        public string Tooltip { get; set; } = string.Empty;
+
         public bool Checked { get; set; }
 
         public bool Enabled { get; set; } = true;
@@ -36,6 +38,9 @@ namespace ImGui.Forms.Controls
 
             ApplyStyles(enabled);
 
+            if (IsHovering(contentRect) && !string.IsNullOrEmpty(Tooltip))
+                ImGuiNET.ImGui.SetTooltip(Tooltip);
+
             if (ImGuiNET.ImGui.Checkbox(Caption ?? string.Empty, ref check) && Enabled)
             {
                 Checked = check;
@@ -60,6 +65,11 @@ namespace ImGui.Forms.Controls
         {
             if (!enabled)
                 ImGuiNET.ImGui.PopStyleColor(4);
+        }
+
+        private bool IsHovering(Rectangle contentRect)
+        {
+            return ImGuiNET.ImGui.IsMouseHoveringRect(contentRect.Position, contentRect.Position + contentRect.Size);
         }
 
         private void OnCheckChanged()

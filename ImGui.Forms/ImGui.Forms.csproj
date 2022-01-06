@@ -86,9 +86,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="ImGui.NET" Version="1.86.0" />
     <PackageReference Include="System.Drawing.Common" Version="5.0.3" />
     <PackageReference Include="Veldrid.StartupUtilities" Version="4.8.0" />
-    <PackageReference Include="ImGui.NET-newest" Version="1.82.0" />
   </ItemGroup>
 
 </Project>

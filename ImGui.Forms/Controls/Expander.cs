@@ -25,7 +25,8 @@ namespace ImGui.Forms.Controls
         public override Size GetSize()
         {
             var size = ImGuiNET.ImGui.CalcTextSize(Caption);
-            return new Size(1f, (int)((int)Math.Ceiling(size.Y) + (Expanded ? ImGuiNET.ImGui.GetStyle().ItemSpacing.X + ContentHeight : 0)));
+            var framePadding = ImGuiNET.ImGui.GetStyle().FramePadding;
+            return new Size(1f, (int)((int)Math.Ceiling(size.Y + framePadding.Y * 2) + (Expanded ? ImGuiNET.ImGui.GetStyle().ItemSpacing.X + ContentHeight : 0)));
         }
 
         protected override void UpdateInternal(Rectangle contentRect)

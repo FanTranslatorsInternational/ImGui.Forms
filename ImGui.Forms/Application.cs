@@ -39,7 +39,7 @@ namespace ImGui.Forms
 
         public ILocalizer Localizer { get; }
 
-        public Application(ILocalizer localizer)
+        public Application(ILocalizer localizer = null)
         {
             Localizer = localizer;
         }
@@ -67,7 +67,7 @@ namespace ImGui.Forms
                 // Snapshot current machine state
                 var snapshot = _executionContext.Window.PumpEvents();
 
-                if(_shouldClose)
+                if (_shouldClose)
                     _executionContext.Window.Close();
 
                 if (!_executionContext.Window.Exists)
@@ -135,7 +135,7 @@ namespace ImGui.Forms
 
         private async void IsClosing()
         {
-            var args=new ClosingEventArgs();
+            var args = new ClosingEventArgs();
             await MainForm.OnClosingInternal(args);
 
             _isClosing = false;

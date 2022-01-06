@@ -32,10 +32,20 @@ namespace ImGui.Forms.Modals.IO
 
         public string InitialDirectory { get; set; }
 
-        public string SelectedPath { get; private set; } = string.Empty;
+        public string SelectedPath { get; private set; }
 
-        public SaveFileDialog()
+        public SaveFileDialog(string fileName = null)
         {
+            if (!string.IsNullOrEmpty(fileName))
+            {
+                InitialDirectory = Path.GetDirectoryName(fileName);
+                SelectedPath = fileName;
+
+                _selectedFileTextBox.TextChanged -= _searchTextBox_TextChanged;
+                _selectedFileTextBox.Text = Path.GetFileName(fileName);
+                _selectedFileTextBox.TextChanged += _searchTextBox_TextChanged;
+            }
+
             #region Controls
 
             _backBtn = new ArrowButton { Direction = ImGuiDir.Left, Enabled = false };

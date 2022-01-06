@@ -113,12 +113,12 @@ namespace ImGui.Forms.Controls.Lists
                         else
                             ImGuiNET.ImGui.GetWindowDrawList().AddText(textPos, 0xFFFFFFFF, item.Text);
                     }
-
-                    ImGuiNET.ImGui.EndChild();
                 }
 
                 ImGuiNET.ImGui.EndChild();
             }
+
+            ImGuiNET.ImGui.EndChild();
         }
 
         private int GetTextHeight()

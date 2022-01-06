@@ -58,8 +58,9 @@ namespace ImGui.Forms.Controls.Tree
             if (ImGuiNET.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height), false, ImGuiWindowFlags.HorizontalScrollbar))
             {
                 UpdateNodes(Nodes, ref anyNodeHovered);
-                ImGuiNET.ImGui.EndChild();
             }
+
+            ImGuiNET.ImGui.EndChild();
         }
 
         private void UpdateNodes(IList<TreeNode<TNodeData>> nodes, ref bool nodeHovered)

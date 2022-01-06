@@ -127,9 +127,9 @@ namespace ImGui.Forms.Controls.Layouts
 
                     ImGuiNET.ImGui.EndTable();
                 }
-
-                ImGuiNET.ImGui.EndChild();
             }
+
+            ImGuiNET.ImGui.EndChild();
         }
 
         private bool IsCellClicked()

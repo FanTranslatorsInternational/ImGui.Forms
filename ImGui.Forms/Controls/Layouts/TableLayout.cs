@@ -126,10 +126,6 @@ namespace ImGui.Forms.Controls.Layouts
                                 break;
                         }
 
-                        // Set position for child
-                        ImGuiNET.ImGui.SetCursorPosX(x + xAdjust);
-                        ImGuiNET.ImGui.SetCursorPosY(y + yAdjust);
-
                         // Rendering
                         // HINT: Make child container as big as the component returned
                         if (cell != null && cellWidth > 0 && cellHeight > 0)
@@ -139,18 +135,22 @@ namespace ImGui.Forms.Controls.Layouts
                             var borderOffsetX = (int)Math.Ceiling(hasBorder ? localWindowPadding.X : 0);
                             var borderOffsetY = (int)Math.Ceiling(hasBorder ? localWindowPadding.Y : 0);
 
+                            // Set position for child
+                            ImGuiNET.ImGui.SetCursorPosX(x + xAdjust);
+                            ImGuiNET.ImGui.SetCursorPosY(y + yAdjust);
+
                             // Draw component container
                             if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}", new Vector2(cellInternalWidth, cellInternalHeight), hasBorder, ImGuiWindowFlags.NoScrollbar))
                             {
                                 // Set position for child content (should only be altered due to active border)
                                 ImGuiNET.ImGui.SetCursorPosX(borderOffsetX);
-                                ImGuiNET.ImGui.SetCursorPosY(borderOffsetX);
+                                ImGuiNET.ImGui.SetCursorPosY(borderOffsetY);
 
                                 // Draw component
                                 cell.Content?.Update(new Rectangle((int)(contentRect.X + x + xAdjust + borderOffsetX), (int)(contentRect.Y + y + yAdjust + borderOffsetY), cellInternalWidth - borderOffsetX * 2, cellInternalHeight - borderOffsetY * 2));
-
-                                ImGuiNET.ImGui.EndChild();
                             }
+
+                            ImGuiNET.ImGui.EndChild();
                         }
 
                         x += cellWidth + Spacing.X;
@@ -159,9 +159,9 @@ namespace ImGui.Forms.Controls.Layouts
                     x = origX;
                     y += cellHeight + Spacing.Y;
                 }
-
-                ImGuiNET.ImGui.EndChild();
             }
+
+            ImGuiNET.ImGui.EndChild();
         }
 
         #region Width calculation

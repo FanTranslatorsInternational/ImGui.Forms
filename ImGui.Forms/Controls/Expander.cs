@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
 using ImGuiNET;
@@ -10,9 +8,6 @@ namespace ImGui.Forms.Controls
 {
     public class Expander : Component
     {
-        private const int CircleRadius_ = 10;
-        private const int CircleDiameter_ = CircleRadius_ * 2;
-
         public string Caption { get; set; } = string.Empty;
 
         public Component Content { get; set; }
@@ -30,65 +25,23 @@ namespace ImGui.Forms.Controls
         public override Size GetSize()
         {
             var size = ImGuiNET.ImGui.CalcTextSize(Caption);
-            return new Size(1f, (int)(Math.Max((int)Math.Ceiling(size.Y), CircleDiameter_) + (Expanded ? ImGuiNET.ImGui.GetStyle().ItemSpacing.X + ContentHeight : 0)));
+            return new Size(1f, (int)((int)Math.Ceiling(size.Y) + (Expanded ? ImGuiNET.ImGui.GetStyle().ItemSpacing.X + ContentHeight : 0)));
         }
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            var size = ImGuiNET.ImGui.CalcTextSize(Caption);
-            var headerHeight = Math.Max((int)Math.Ceiling(size.Y), CircleDiameter_);
+            var expanded = Expanded;
+            var flags = expanded ? ImGuiTreeNodeFlags.DefaultOpen : ImGuiTreeNodeFlags.None;
 
-            // Draw expansion icon
-            var pos = contentRect.Position + new Vector2(0, (headerHeight - CircleDiameter_) / 2f);
+            expanded = ImGuiNET.ImGui.CollapsingHeader(Caption ?? string.Empty, flags);
+            if (expanded)
+                Content?.Update(new Rectangle(contentRect.X, contentRect.Y, contentRect.Width, contentRect.Height));
 
-            var arrowArea = new Rectangle(contentRect.X, contentRect.Y, CircleDiameter_, CircleDiameter_);
-            var isHovering = IsHovering(arrowArea);
-            var isMouseDown = isHovering && ImGuiNET.ImGui.IsMouseDown(ImGuiMouseButton.Left);
-
-            var circleColor = isMouseDown ? ImGuiNET.ImGui.GetColorU32(ImGuiCol.ButtonActive) : isHovering ? ImGuiNET.ImGui.GetColorU32(ImGuiCol.ButtonHovered) : ImGuiNET.ImGui.GetColorU32(ImGuiCol.Button);
-            var triangleColor = isMouseDown ? ImGuiNET.ImGui.GetColorU32(ImGuiCol.ButtonActive) : isHovering ? ImGuiNET.ImGui.GetColorU32(ImGuiCol.ButtonHovered) : ImGuiNET.ImGui.GetColorU32(ImGuiCol.Button);
-
-            var triPoints = GetTriangle();
-            ImGuiNET.ImGui.GetWindowDrawList().AddCircle(pos + new Vector2(CircleRadius_, (headerHeight - CircleDiameter_) / 2 + CircleRadius_), CircleRadius_, circleColor, -1, 1.5f);
-            ImGuiNET.ImGui.GetWindowDrawList().AddTriangleFilled(pos + triPoints[0], pos + triPoints[1], pos + triPoints[2], triangleColor);
-
-            // Draw text
-            pos = contentRect.Position + new Vector2(CircleDiameter_ + ImGuiNET.ImGui.GetStyle().ItemSpacing.X, (headerHeight - size.Y) / 2);
-            ImGuiNET.ImGui.GetWindowDrawList().AddText(pos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), Caption ?? string.Empty);
-
-            // Draw content
-            var contentWidth = Content?.GetWidth(contentRect.Width) ?? 0;
-            var contentHeight = Content?.GetHeight(ContentHeight) ?? 0;
-
-            if (Expanded && contentWidth > 0 && contentHeight > 0)
+            if (Expanded != expanded)
             {
-                ImGuiNET.ImGui.SetCursorPos(new Vector2(0, headerHeight + ImGuiNET.ImGui.GetStyle().ItemSpacing.X));
-
-                Content?.Update(new Rectangle(contentRect.X, contentRect.Y + headerHeight + (int)ImGuiNET.ImGui.GetStyle().ItemSpacing.X, contentWidth, contentHeight));
-            }
-
-            // Check if item should be expanded
-            if (isHovering && ImGuiNET.ImGui.IsMouseClicked(ImGuiMouseButton.Left))
-            {
-                Expanded = !Expanded;
+                Expanded = expanded;
                 OnExpandedChanged();
             }
-        }
-
-        private bool IsHovering(Rectangle contentRect)
-        {
-            return ImGuiNET.ImGui.IsMouseHoveringRect(contentRect.Position, contentRect.Position + contentRect.Size);
-        }
-
-        private IList<Vector2> GetTriangle()
-        {
-            var heightOffset = Expanded ? 3 : -3;
-            return new List<Vector2>
-            {
-                new Vector2(CircleRadius_ - 3, CircleRadius_ + heightOffset),
-                new Vector2(CircleRadius_ + 3, CircleRadius_ + heightOffset),
-                new Vector2(CircleRadius_, CircleRadius_ - heightOffset)
-            };
         }
 
         private void OnExpandedChanged()

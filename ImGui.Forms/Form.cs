@@ -67,6 +67,9 @@ namespace ImGui.Forms
 
         public void PopModal()
         {
+            if (_modals.Count <= 0)
+                return;
+
             _modals.Remove(_modals.Last());
 
             if (_modals.Count > 0)

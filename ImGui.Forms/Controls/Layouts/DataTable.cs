@@ -88,7 +88,10 @@ namespace ImGui.Forms.Controls.Layouts
 
                             if (IsSelectable && c == 0)
                             {
-                                if (ImGuiNET.ImGui.Selectable(column.Get(row), isRowSelected, ImGuiSelectableFlags.SpanAllColumns))
+                                var isSelected = ImGuiNET.ImGui.Selectable(column.Get(row), isRowSelected, ImGuiSelectableFlags.SpanAllColumns);
+                                isSelected |= ImGuiNET.ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByPopup) && ImGuiNET.ImGui.IsMouseClicked(ImGuiMouseButton.Right);
+
+                                if (isSelected)
                                 {
                                     if (CanSelectMultiple && ImGuiNET.ImGui.GetIO().KeyCtrl)
                                     {

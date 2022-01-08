@@ -38,11 +38,6 @@ namespace ImGui.Forms.Controls.Base
             if (!Visible)
                 return;
 
-            // Handle Drag and Drop
-            if (AllowDragDrop)
-                if (Application.Instance.TryGetDragDrop(contentRect, out var dragDrop))
-                    OnDragDrop(dragDrop.Event);
-
             ImGuiNET.ImGui.PushID(Id);
 
             ApplyStyles();
@@ -50,6 +45,11 @@ namespace ImGui.Forms.Controls.Base
             RemoveStyles();
 
             ImGuiNET.ImGui.PopID();
+
+            // Handle Drag and Drop after rendering, so drag drop events go from most nested to least nested control
+            if (AllowDragDrop)
+                if (Application.Instance.TryGetDragDrop(contentRect, out var dragDrop))
+                    OnDragDrop(dragDrop.Event);
         }
 
         /// <summary>

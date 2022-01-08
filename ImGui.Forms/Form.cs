@@ -10,6 +10,7 @@ using ImGui.Forms.Extensions;
 using ImGui.Forms.Modals;
 using ImGui.Forms.Models;
 using ImGuiNET;
+using Veldrid.Sdl2;
 
 namespace ImGui.Forms
 {
@@ -27,6 +28,8 @@ namespace ImGui.Forms
         public Vector2 Size { get; set; } = new Vector2(700, 400);
         public int Width => (int)Size.X;
         public int Height => (int)Size.Y;
+
+        public bool AllowDragDrop { get; set; }
 
         public Theme Theme { get; set; } = Theme.Dark;
 
@@ -52,8 +55,10 @@ namespace ImGui.Forms
 
         #region Events
 
+        public event EventHandler<DragDropEvent> DragDrop;
         public event EventHandler Load;
         public event EventHandler Resized;
+        public event Func<object, ClosingEventArgs, Task> Closing;
 
         #endregion
 
@@ -124,11 +129,18 @@ namespace ImGui.Forms
             var contentPos = ImGuiNET.ImGui.GetCursorScreenPos();
             var contentWidth = Content?.GetWidth(Width - (int)Padding.X * 2) ?? 0;
             var contentHeight = Content?.GetHeight(Height - (int)Padding.Y * 2 - menuHeight) ?? 0;
-            Content?.Update(new Veldrid.Rectangle((int)contentPos.X, (int)contentPos.Y, contentWidth, contentHeight));
+            var contentRect = new Veldrid.Rectangle((int)contentPos.X, (int)contentPos.Y, contentWidth, contentHeight);
+
+            Content?.Update(contentRect);
 
             // Add modal
             var modal = _modals.Count > 0 ? _modals.First() : null;
             Modal.DrawModal(Width, Height, modal);
+
+            // Handle Drag and Drop after rendering
+            if (AllowDragDrop)
+                if (Application.Instance.TryGetDragDrop(contentRect, out var dragDrop))
+                    OnDragDrop(dragDrop.Event);
 
             // End window
             ImGuiNET.ImGui.End();
@@ -137,6 +149,11 @@ namespace ImGui.Forms
         protected void Close()
         {
             Application.Instance?.Window.Close();
+        }
+
+        internal bool HasModals()
+        {
+            return _modals.Any();
         }
 
         #region Event Invokers
@@ -151,8 +168,16 @@ namespace ImGui.Forms
             Load?.Invoke(this, new EventArgs());
         }
 
-        internal Task OnClosingInternal(ClosingEventArgs e) => OnClosingAsync(e);
-        protected virtual Task OnClosingAsync(ClosingEventArgs e) => Task.CompletedTask;
+        internal async Task OnClosing(ClosingEventArgs e)
+        {
+            if (Closing == null) return;
+            await Closing?.Invoke(this, e);
+        }
+
+        private void OnDragDrop(DragDropEvent e)
+        {
+            DragDrop?.Invoke(this, e);
+        }
 
         #endregion
     }

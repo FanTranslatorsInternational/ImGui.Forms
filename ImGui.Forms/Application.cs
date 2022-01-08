@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Drawing;
 using System.Numerics;
-using System.Threading.Tasks;
 using ImGui.Forms.Factories;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Support.Veldrid.ImGui;
@@ -124,6 +123,9 @@ namespace ImGui.Forms
 
         private bool ShouldCancelClose()
         {
+            if (MainForm.HasModals())
+                return true;
+
             if (!_isClosing && !_shouldClose)
             {
                 _isClosing = true;
@@ -136,7 +138,7 @@ namespace ImGui.Forms
         private async void IsClosing()
         {
             var args = new ClosingEventArgs();
-            await MainForm.OnClosingInternal(args);
+            await MainForm.OnClosing(args);
 
             _isClosing = false;
             _shouldClose = !args.Cancel;

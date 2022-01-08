@@ -13,6 +13,13 @@ namespace ImGui.Forms.Modals
 {
     public class MessageBox : Modal
     {
+        private const string Ok_ = "Ok";
+        private const string Yes_ = "Yes";
+        private const string No_ = "No";
+        private const string Cancel_ = "Cancel";
+
+        private const int ButtonWidth_ = 75;
+
         private MessageBox(string caption, string text, MessageBoxType type, MessageBoxButton buttons)
         {
             CreateLayout(caption, text, type, buttons);
@@ -119,14 +126,14 @@ namespace ImGui.Forms.Modals
         {
             if (buttons.HasFlag(MessageBoxButton.Ok))
             {
-                var okButton = new Button { Caption = "Ok", Padding = new Vector2(30, 2) };
+                var okButton = new Button { Caption = Ok_, Padding = new Vector2((ButtonWidth_ - GetTextWidth(Ok_)) / 2, 2) };
                 okButton.Clicked += (s, e) => Close();
 
                 yield return okButton;
             }
             if (buttons.HasFlag(MessageBoxButton.Yes))
             {
-                var yesButton = new Button { Caption = "Yes", Padding = new Vector2(25, 2) };
+                var yesButton = new Button { Caption = Yes_, Padding = new Vector2((ButtonWidth_ - GetTextWidth(Yes_)) / 2, 2) };
                 yesButton.Clicked += (s, e) =>
                 {
                     Result = DialogResult.Yes;
@@ -137,7 +144,7 @@ namespace ImGui.Forms.Modals
             }
             if (buttons.HasFlag(MessageBoxButton.No))
             {
-                var noButton = new Button { Caption = "No", Padding = new Vector2(30, 2) };
+                var noButton = new Button { Caption = No_, Padding = new Vector2((ButtonWidth_ - GetTextWidth(No_)) / 2, 2) };
                 noButton.Clicked += (s, e) =>
                 {
                     Result = DialogResult.No;
@@ -146,6 +153,22 @@ namespace ImGui.Forms.Modals
 
                 yield return noButton;
             }
+            if (buttons.HasFlag(MessageBoxButton.Cancel))
+            {
+                var noButton = new Button { Caption = Cancel_, Padding = new Vector2((ButtonWidth_ - GetTextWidth(Cancel_)) / 2, 2) };
+                noButton.Clicked += (s, e) =>
+                {
+                    Result = DialogResult.Cancel;
+                    Close();
+                };
+
+                yield return noButton;
+            }
+        }
+
+        private float GetTextWidth(string text)
+        {
+            return ImGuiNET.ImGui.CalcTextSize(text).X;
         }
     }
 

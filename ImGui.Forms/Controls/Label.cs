@@ -17,12 +17,14 @@ namespace ImGui.Forms.Controls
 
         public Color TextColor { get; set; } = Color.Empty;
 
+        public SizeValue Width { get; set; } = SizeValue.Absolute(-1);
+
         public override Size GetSize()
         {
             ApplyStyles();
 
             var textSize = ImGuiNET.ImGui.CalcTextSize(Caption ?? string.Empty);
-            var width = (int)Math.Ceiling(textSize.X);
+            SizeValue width = Width.Value == -1 ? (int)Math.Ceiling(textSize.X) : Width;
             var height = (int)Math.Ceiling(textSize.Y);
 
             RemoveStyles();
@@ -32,6 +34,7 @@ namespace ImGui.Forms.Controls
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
+            ImGuiNET.ImGui.SetNextItemWidth(contentRect.Width);
             ImGuiNET.ImGui.Text(Caption);
         }
 

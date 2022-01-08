@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
 using ImGuiNET;
@@ -30,7 +31,7 @@ namespace ImGui.Forms.Controls
         #region Events
 
         public event EventHandler SelectedPageChanged;
-        public event EventHandler<RemovingEventArgs> PageRemoving;
+        public event Func<object, RemovingEventArgs, Task> PageRemoving;
         public event EventHandler<RemoveEventArgs> PageRemoved;
 
         #endregion
@@ -40,15 +41,18 @@ namespace ImGui.Forms.Controls
             return Size.Parent;
         }
 
-        protected override void UpdateInternal(Rectangle contentRect)
+        protected override async void UpdateInternal(Rectangle contentRect)
         {
             if (ImGuiNET.ImGui.BeginTabBar(Id.ToString(), ImGuiTabBarFlags.None))
             {
+                var toRemovePages = new HashSet<TabPage>();
                 foreach (var page in Pages.ToArray())
                 {
                     var pageFlags = ImGuiTabItemFlags.None;
                     if (page.HasChanges) pageFlags |= ImGuiTabItemFlags.UnsavedDocument;
                     if (_setPageManually && _selectedPage == page) pageFlags |= ImGuiTabItemFlags.SetSelected;
+
+                    ImGuiNET.ImGui.PushID(Application.Instance.IdFactory.Get(page));
 
                     var stillOpen = true;
                     if (ImGuiNET.ImGui.BeginTabItem(page.Title ?? string.Empty, ref stillOpen, pageFlags))
@@ -61,11 +65,7 @@ namespace ImGui.Forms.Controls
                             OnSelectedPageChanged();
 
                         if (ImGuiNET.ImGui.IsItemHovered() && ImGuiNET.ImGui.IsMouseClicked(ImGuiMouseButton.Middle))
-                            if (RemovePage(page))
-                            {
-                                ImGuiNET.ImGui.EndTabItem();
-                                continue;
-                            }
+                            toRemovePages.Add(page);
 
                         var pageWidth = page.Content.GetWidth(contentRect.Width);
                         var pageHeight = page.Content.GetHeight(contentRect.Height - (int)ImGuiNET.ImGui.GetCursorPosY());
@@ -75,14 +75,20 @@ namespace ImGui.Forms.Controls
                         ImGuiNET.ImGui.EndTabItem();
                     }
 
+                    ImGuiNET.ImGui.PopID();
+
                     if (!stillOpen)
-                        RemovePage(page);
+                        toRemovePages.Add(page);
                 }
 
                 ImGuiNET.ImGui.EndTabBar();
 
                 if (_setPageManually)
                     _setPageManually = false;
+
+                // Handle pages to remove asynchronously
+                foreach (var toRemove in toRemovePages)
+                    await RemovePage(toRemove);
             }
         }
 
@@ -91,11 +97,13 @@ namespace ImGui.Forms.Controls
             _pages.Add(page);
         }
 
-        public bool RemovePage(TabPage page)
+        public async Task<bool> RemovePage(TabPage page)
         {
-            OnPageRemoving(page, out var cancel);
-            if (cancel)
+            if (await OnPageRemoving(page))
                 return false;
+
+            if (_selectedPage == page)
+                _selectedPage = null;
 
             _pages.Remove(page);
             OnPageRemoved(page);
@@ -108,12 +116,13 @@ namespace ImGui.Forms.Controls
             SelectedPageChanged?.Invoke(this, new EventArgs());
         }
 
-        private void OnPageRemoving(TabPage page, out bool cancel)
+        private async Task<bool> OnPageRemoving(TabPage page)
         {
             var args = new RemovingEventArgs(page);
-            PageRemoving?.Invoke(this, args);
+            if (PageRemoving != null)
+                await PageRemoving.Invoke(this, args);
 
-            cancel = args.Cancel;
+            return args.Cancel;
         }
 
         private void OnPageRemoved(TabPage page)

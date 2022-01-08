@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Drawing;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Extensions;
 using ImGui.Forms.Models;
 using ImGuiNET;
-using Veldrid;
+using Rectangle = Veldrid.Rectangle;
+using Size = ImGui.Forms.Models.Size;
 
 namespace ImGui.Forms.Controls
 {
@@ -21,6 +24,8 @@ namespace ImGui.Forms.Controls
 
         public FontResource Font { get; set; }
 
+        public Color ProgressColor { get; set; } = Color.FromArgb(0x27, 0xBB, 0x65);
+
         public override Size GetSize()
         {
             return Size;
@@ -30,10 +35,10 @@ namespace ImGui.Forms.Controls
         {
             // Draw progress bar
             var barWidth = (float)Math.Ceiling((float)contentRect.Width / Maximum * Value);
-            ImGuiNET.ImGui.GetWindowDrawList().AddRectFilled(new Vector2(contentRect.X, contentRect.Y), new Vector2(contentRect.X + barWidth, contentRect.Y + contentRect.Height), 0xFF27BB65);
+            ImGuiNET.ImGui.GetWindowDrawList().AddRectFilled(new Vector2(contentRect.X, contentRect.Y), new Vector2(contentRect.X + barWidth, contentRect.Y + contentRect.Height), ProgressColor.ToUInt32());
 
             // Draw border
-            ImGuiNET.ImGui.GetWindowDrawList().AddRect(new Vector2(contentRect.X, contentRect.Y), new Vector2(contentRect.X + contentRect.Width, contentRect.Y + contentRect.Height), 0xFF828282);
+            ImGuiNET.ImGui.GetWindowDrawList().AddRect(new Vector2(contentRect.X, contentRect.Y), new Vector2(contentRect.X + contentRect.Width, contentRect.Y + contentRect.Height), ImGuiNET.ImGui.GetColorU32(ImGuiCol.Border));
 
             // Draw text
             var text = Text ?? string.Empty;
@@ -41,9 +46,9 @@ namespace ImGui.Forms.Controls
             var textPos = new Vector2(contentRect.X + (contentRect.Width - textSize.X) / 2, contentRect.Y + (contentRect.Height - textSize.Y) / 2);
 
             if (Font == null)
-                ImGuiNET.ImGui.GetWindowDrawList().AddText(textPos, 0xFFFFFFFF, text);
+                ImGuiNET.ImGui.GetWindowDrawList().AddText(textPos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), text);
             else
-                ImGuiNET.ImGui.GetWindowDrawList().AddText((ImFontPtr)Font, Font.Size, textPos, 0xFFFFFFFF, text);
+                ImGuiNET.ImGui.GetWindowDrawList().AddText((ImFontPtr)Font, Font.Size, textPos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), text);
         }
 
         protected override void ApplyStyles()

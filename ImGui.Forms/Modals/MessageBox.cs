@@ -126,14 +126,14 @@ namespace ImGui.Forms.Modals
         {
             if (buttons.HasFlag(MessageBoxButton.Ok))
             {
-                var okButton = new Button { Caption = Ok_, Padding = new Vector2((ButtonWidth_ - GetTextWidth(Ok_)) / 2, 2) };
+                var okButton = new Button { Caption = Ok_, Width = ButtonWidth_ };
                 okButton.Clicked += (s, e) => Close();
 
                 yield return okButton;
             }
             if (buttons.HasFlag(MessageBoxButton.Yes))
             {
-                var yesButton = new Button { Caption = Yes_, Padding = new Vector2((ButtonWidth_ - GetTextWidth(Yes_)) / 2, 2) };
+                var yesButton = new Button { Caption = Yes_, Width = ButtonWidth_ };
                 yesButton.Clicked += (s, e) =>
                 {
                     Result = DialogResult.Yes;
@@ -144,7 +144,7 @@ namespace ImGui.Forms.Modals
             }
             if (buttons.HasFlag(MessageBoxButton.No))
             {
-                var noButton = new Button { Caption = No_, Padding = new Vector2((ButtonWidth_ - GetTextWidth(No_)) / 2, 2) };
+                var noButton = new Button { Caption = No_, Width = ButtonWidth_ };
                 noButton.Clicked += (s, e) =>
                 {
                     Result = DialogResult.No;
@@ -155,7 +155,7 @@ namespace ImGui.Forms.Modals
             }
             if (buttons.HasFlag(MessageBoxButton.Cancel))
             {
-                var noButton = new Button { Caption = Cancel_, Padding = new Vector2((ButtonWidth_ - GetTextWidth(Cancel_)) / 2, 2) };
+                var noButton = new Button { Caption = Cancel_, Width = ButtonWidth_ };
                 noButton.Clicked += (s, e) =>
                 {
                     Result = DialogResult.Cancel;
@@ -164,11 +164,6 @@ namespace ImGui.Forms.Modals
 
                 yield return noButton;
             }
-        }
-
-        private float GetTextWidth(string text)
-        {
-            return ImGuiNET.ImGui.CalcTextSize(text).X;
         }
     }
 

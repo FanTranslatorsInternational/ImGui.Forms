@@ -34,18 +34,8 @@ namespace ImGui.Forms.Modals.IO
 
         public string SelectedPath { get; private set; }
 
-        public SaveFileDialog(string fileName = null)
+        public SaveFileDialog(string filePath = null)
         {
-            if (!string.IsNullOrEmpty(fileName))
-            {
-                InitialDirectory = Path.GetDirectoryName(fileName);
-                SelectedPath = fileName;
-
-                _selectedFileTextBox.TextChanged -= _searchTextBox_TextChanged;
-                _selectedFileTextBox.Text = Path.GetFileName(fileName);
-                _selectedFileTextBox.TextChanged += _searchTextBox_TextChanged;
-            }
-
             #region Controls
 
             _backBtn = new ArrowButton { Direction = ImGuiDir.Left, Enabled = false };
@@ -63,9 +53,17 @@ namespace ImGui.Forms.Modals.IO
             _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.DateModified.ToString(CultureInfo.CurrentCulture), "Date modified"));
 
             var cnlBtn = new Button { Caption = "Cancel", Width = 80 };
-            _saveBtn = new Button { Caption = "Save", Width = 80, Enabled = false };
+            _saveBtn = new Button { Caption = "Save", Width = 80, Enabled = !string.IsNullOrEmpty(filePath) };
 
             #endregion
+
+            if (!string.IsNullOrEmpty(filePath))
+            {
+                InitialDirectory = Path.GetDirectoryName(filePath);
+                SelectedPath = filePath;
+
+                _selectedFileTextBox.Text = Path.GetFileName(filePath);
+            }
 
             #region Events
 

@@ -23,7 +23,7 @@ namespace ImGui.Forms.Modals.IO
             var okButton = new Button { Caption = Ok_, Width = ButtonWidth_ };
             var cancelButton = new Button { Caption = Cancel_, Width = ButtonWidth_ };
 
-            _textBox = new TextBox {Placeholder = placeHolder};
+            _textBox = new TextBox { Placeholder = placeHolder };
 
             #endregion
 
@@ -93,7 +93,7 @@ namespace ImGui.Forms.Modals.IO
             var inputBox = new InputBox(caption, text, placeHolder);
             await inputBox.ShowAsync();
 
-            return inputBox.Input;
+            return inputBox.Result == DialogResult.Cancel ? string.Empty : inputBox.Input;
         }
     }
 }

@@ -110,6 +110,9 @@ namespace ImGui.Forms.Modals.IO
             var path = GetNodePath(_treeView.SelectedNode);
             var newFolderName = await InputBox.ShowAsync("Create folder", "New folder name:");
 
+            if (string.IsNullOrEmpty(newFolderName))
+                return;
+
             // Create directory, if not exists
             var newDir = Path.Combine(path, newFolderName);
             if (System.IO.Directory.Exists(newDir))

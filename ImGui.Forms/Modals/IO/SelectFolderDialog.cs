@@ -15,7 +15,7 @@ namespace ImGui.Forms.Modals.IO
         private const string Cancel_ = "Cancel";
         private const string NewFolder_ = "Create new folder";
 
-        private const int ButtonWidth_ = 50;
+        private const int ButtonWidth_ = 75;
 
         private TreeView<string> _treeView;
 
@@ -50,8 +50,8 @@ namespace ImGui.Forms.Modals.IO
 
             #region Main content
 
-            var width = Application.Instance.MainForm.Width * .8f;
-            var height = Application.Instance.MainForm.Height * .2f;
+            var width = Application.Instance.MainForm.Width * .9f;
+            var height = Application.Instance.MainForm.Height * .8f;
             Size = new Vector2(width, height);
 
             Result = DialogResult.Cancel;

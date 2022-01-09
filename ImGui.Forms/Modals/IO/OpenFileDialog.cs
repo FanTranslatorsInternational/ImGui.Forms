@@ -31,6 +31,7 @@ namespace ImGui.Forms.Modals.IO
         private readonly Button _openBtn;
 
         public string InitialDirectory { get; set; }
+        public string InitialFileName { get; set; }
 
         public IList<FileFilter> FileFilters { get; }
 
@@ -155,6 +156,7 @@ namespace ImGui.Forms.Modals.IO
             _dictHistory = new History<string>(_currentDir);
 
             _dirTextBox.Text = _currentDir;
+            _selectedFileTextBox.Text = InitialFileName;
 
             // Initialize file tree and file view
             var userDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);

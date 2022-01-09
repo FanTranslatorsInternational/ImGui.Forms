@@ -54,7 +54,6 @@ namespace ImGui.Forms.Modals.IO
             _fileFilters = new ComboBox<FileFilter>();
 
             _treeView = new TreeView<string> { Size = new Size(.3f, 1f) };
-            _treeView.NodeExpanded += _treeView_NodeExpanded;
 
             _fileTable = new DataTable<FileEntry> { Size = new Size(.7f, 1f) };
             _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.Name, "Name"));
@@ -75,6 +74,8 @@ namespace ImGui.Forms.Modals.IO
             _selectedFileTextBox.TextChanged += _selectedFileTextBox_TextChanged;
 
             _treeView.SelectedNodeChanged += _treeView_SelectedNodeChanged;
+            _treeView.NodeExpanded += _treeView_NodeExpanded;
+
             _fileTable.DoubleClicked += _fileTable_DoubleClicked;
             _fileTable.SelectedRowsChanged += _fileTable_SelectedRowsChanged;
 

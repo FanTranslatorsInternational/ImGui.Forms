@@ -12,11 +12,11 @@ namespace ImGui.Forms.Modals.IO
 
         private const int ButtonWidth_ = 75;
 
-        private TextBox _textBox;
+        private readonly TextBox _textBox;
 
         public string Input { get; private set; }
 
-        public InputBox(string caption, string text, string placeHolder)
+        public InputBox(string caption, string text, string preset, string placeHolder)
         {
             #region Controls
 
@@ -35,6 +35,8 @@ namespace ImGui.Forms.Modals.IO
             _textBox.TextChanged += TextBox_TextChanged;
 
             #endregion
+
+            _textBox.Text = preset;
 
             Result = DialogResult.Cancel;
             Caption = caption;
@@ -88,9 +90,9 @@ namespace ImGui.Forms.Modals.IO
             Close();
         }
 
-        public static async Task<string> ShowAsync(string caption, string text, string placeHolder = "")
+        public static async Task<string> ShowAsync(string caption, string text, string preset = "", string placeHolder = "")
         {
-            var inputBox = new InputBox(caption, text, placeHolder);
+            var inputBox = new InputBox(caption, text, preset, placeHolder);
             await inputBox.ShowAsync();
 
             return inputBox.Result == DialogResult.Cancel ? string.Empty : inputBox.Input;

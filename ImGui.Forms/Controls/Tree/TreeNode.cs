@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
+using System.Drawing;
 using ImGui.Forms.Controls.Layouts;
+using ImGui.Forms.Models;
 
 namespace ImGui.Forms.Controls.Tree
 {
@@ -11,6 +13,10 @@ namespace ImGui.Forms.Controls.Tree
         private bool _isExpanded;
 
         public string Caption { get; set; } = string.Empty;
+
+        public Color TextColor { get; set; }
+
+        public FontResource Font { get; set; }
 
         public bool IsExpanded
         {
@@ -38,6 +44,11 @@ namespace ImGui.Forms.Controls.Tree
             _nodes.ItemRemoved += _nodes_ItemRemoved;
         }
 
+        public void Remove()
+        {
+            Parent.Nodes.Remove(this);
+        }
+
         internal static TreeNode<TNodeData> Create(TreeView<TNodeData> parent)
         {
             return new TreeNode<TNodeData> { _parentView = parent };
@@ -51,6 +62,9 @@ namespace ImGui.Forms.Controls.Tree
 
         private void _nodes_ItemRemoved(object sender, ItemEventArgs<TreeNode<TNodeData>> e)
         {
+            if (_parentView.SelectedNode == e.Item)
+                _parentView.SelectedNode = null;
+
             e.Item.Parent = null;
             SetParents(e.Item, null);
         }
@@ -60,7 +74,12 @@ namespace ImGui.Forms.Controls.Tree
             input._parentView = parent;
 
             foreach (var node in input.Nodes)
+            {
+                if (_parentView.SelectedNode == node)
+                    _parentView.SelectedNode = null;
+
                 SetParents(node, parent);
+            }
         }
 
         private void OnExpandedChanged()

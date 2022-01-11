@@ -1,15 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
+using ImGui.Forms.Extensions;
 using ImGuiNET;
-using Veldrid;
+using Rectangle = Veldrid.Rectangle;
 
 namespace ImGui.Forms.Controls.Tree
 {
-    // TODO: Do not select node, when it got expanded/collapsed
     public class TreeView<TNodeData> : Component
     {
         private readonly TreeNode<TNodeData> _rootNode;
@@ -77,10 +78,22 @@ namespace ImGui.Forms.Controls.Tree
                 ImGuiNET.ImGui.PushID(nodeId);
                 ImGuiNET.ImGui.SetNextItemOpen(node.IsExpanded);
 
+                if (node.TextColor != Color.Empty)
+                    ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Text, node.TextColor.ToUInt32());
+
+                if (node.Font != null)
+                    ImGuiNET.ImGui.PushFont((ImFontPtr)node.Font);
+
                 var expanded = ImGuiNET.ImGui.TreeNodeEx(node.Caption ?? string.Empty, flags);
                 var changedExpansion = expanded != node.IsExpanded;
                 if (changedExpansion)
                     node.IsExpanded = expanded;
+
+                if (node.Font != null)
+                    ImGuiNET.ImGui.PopFont();
+
+                if (node.TextColor != Color.Empty)
+                    ImGuiNET.ImGui.PopStyleColor();
 
                 ImGuiNET.ImGui.PopID();
 

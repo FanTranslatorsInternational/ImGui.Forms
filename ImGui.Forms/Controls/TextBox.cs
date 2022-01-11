@@ -9,7 +9,7 @@ namespace ImGui.Forms.Controls
 {
     public class TextBox : Component
     {
-        private bool _activePreviousFrame = false;
+        private bool _activePreviousFrame;
         private string _text = string.Empty;
 
         /// <summary>
@@ -20,6 +20,8 @@ namespace ImGui.Forms.Controls
             get => _text;
             set
             {
+                value ??= string.Empty;
+
                 _text = value;
                 OnTextChanged();
             }

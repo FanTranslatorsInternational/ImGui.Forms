@@ -7,6 +7,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Layouts;
+using ImGui.Forms.Controls.Lists;
 using ImGui.Forms.Controls.Tree;
 using ImGui.Forms.Models;
 using ImGui.Forms.Support;
@@ -213,7 +214,7 @@ namespace ImGui.Forms.Modals.IO
 
         private void UpdateFileView()
         {
-            _fileTable.Rows = GetDirectories(_currentDir).Concat(GetFiles(_currentDir)).ToArray();
+            _fileTable.Rows = GetDirectories(_currentDir).Concat(GetFiles(_currentDir)).Select(fe => new DataTableRow<FileEntry>(fe)).ToArray();
         }
 
         private void UpdateButtonEnablement()
@@ -233,7 +234,7 @@ namespace ImGui.Forms.Modals.IO
             if (!_fileTable.SelectedRows.Any())
                 return;
 
-            _selectedFileTextBox.Text = _fileTable.SelectedRows.First().Name;
+            _selectedFileTextBox.Text = _fileTable.SelectedRows.First().Data.Name;
         }
 
         private async void _fileTable_DoubleClicked(object sender, EventArgs e)
@@ -350,6 +351,9 @@ namespace ImGui.Forms.Modals.IO
 
         private async void SaveBtnClicked(object sender, EventArgs e)
         {
+            // TODO: Rethink usage and setting of SelectedPath throughout control
+            SelectedPath = Path.Combine(_currentDir, _selectedFileTextBox.Text);
+
             if (!await ShouldOverwrite(SelectedPath))
                 return;
 

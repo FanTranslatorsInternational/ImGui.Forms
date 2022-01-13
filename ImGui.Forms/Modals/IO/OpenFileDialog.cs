@@ -6,6 +6,7 @@ using System.Linq;
 using System.Numerics;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Layouts;
+using ImGui.Forms.Controls.Lists;
 using ImGui.Forms.Controls.Tree;
 using ImGui.Forms.Models;
 using ImGui.Forms.Support;
@@ -211,7 +212,7 @@ namespace ImGui.Forms.Modals.IO
 
         private void UpdateFileView()
         {
-            _fileTable.Rows = GetDirectories(_currentDir).Concat(GetFiles(_currentDir)).ToArray();
+            _fileTable.Rows = GetDirectories(_currentDir).Concat(GetFiles(_currentDir)).Select(fe => new DataTableRow<FileEntry>(fe)).ToArray();
         }
 
         private void UpdateButtonEnablement()
@@ -250,7 +251,7 @@ namespace ImGui.Forms.Modals.IO
             if (!_fileTable.SelectedRows.Any())
                 return;
 
-            _selectedFileTextBox.Text = _fileTable.SelectedRows.First().Name;
+            _selectedFileTextBox.Text = _fileTable.SelectedRows.First().Data.Name;
         }
 
         private void _fileTable_DoubleClicked(object sender, EventArgs e)

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ImGui.Forms.Controls.Layouts
+namespace ImGui.Forms.Controls.Lists
 {
     public class DataTableColumn<TData>
     {
@@ -14,6 +14,6 @@ namespace ImGui.Forms.Controls.Layouts
             _valueGetter = valueGetter;
         }
 
-        public string Get(TData data) => _valueGetter(data);
+        public string Get(DataTableRow<TData> row) => _valueGetter(row.Data);
     }
 }

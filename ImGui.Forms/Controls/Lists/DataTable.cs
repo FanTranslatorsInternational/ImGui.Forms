@@ -1,24 +1,26 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Linq;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
-using ImGui.Forms.Models;
+using ImGui.Forms.Extensions;
 using ImGuiNET;
-using Veldrid;
+using Rectangle = Veldrid.Rectangle;
+using Size = ImGui.Forms.Models.Size;
 
-namespace ImGui.Forms.Controls.Layouts
+namespace ImGui.Forms.Controls.Lists
 {
     public class DataTable<TData> : Component
     {
         private (int, int) _clickedCell = (-1, -1);
         private readonly IList<int> _selectedIndexes = new List<int>();
 
-        private IList<TData> _rows;
+        private IList<DataTableRow<TData>> _rows;
 
         public IList<DataTableColumn<TData>> Columns { get; } = new List<DataTableColumn<TData>>();
 
-        public IList<TData> Rows
+        public IList<DataTableRow<TData>> Rows
         {
             get => _rows;
             set
@@ -30,7 +32,7 @@ namespace ImGui.Forms.Controls.Layouts
             }
         }
 
-        public IEnumerable<TData> SelectedRows => _rows.Where((r, i) => _selectedIndexes.Contains(i));
+        public IEnumerable<DataTableRow<TData>> SelectedRows => _rows.Where((r, i) => _selectedIndexes.Contains(i));
 
         public bool IsResizable { get; set; }
 
@@ -58,7 +60,7 @@ namespace ImGui.Forms.Controls.Layouts
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            var localRows = _rows ?? new List<TData>();
+            var localRows = _rows ?? new List<DataTableRow<TData>>();
 
             var flags = ImGuiTableFlags.BordersV;
             if (IsResizable) flags |= ImGuiTableFlags.Resizable;
@@ -85,6 +87,10 @@ namespace ImGui.Forms.Controls.Layouts
                         {
                             var column = Columns[c];
                             ImGuiNET.ImGui.TableSetColumnIndex(c);
+
+                            var rowColor = row.TextColor;
+                            if (rowColor != Color.Empty)
+                                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Text, row.TextColor.ToUInt32());
 
                             if (IsSelectable && c == 0)
                             {
@@ -113,6 +119,9 @@ namespace ImGui.Forms.Controls.Layouts
                             {
                                 ImGuiNET.ImGui.Text(column.Get(row));
                             }
+
+                            if (rowColor != Color.Empty)
+                                ImGuiNET.ImGui.PopStyleColor();
 
                             if (IsCellClicked())
                                 _clickedCell = (r, c);

@@ -10,7 +10,8 @@ var form = new MainForm();
 new Application().Execute(form);
 ```
 
-``MainForm`` is your own derivation of the abstract class ``Form``, in which you set your components for your design. ``MainForm`` is used as an example name, and you can freely choose the name of your derivative class.
+``MainForm`` is your own derivation of the abstract class ``Form``, in which you set your components for your design. ``MainForm`` is used as an example name, and you can freely choose the name of your derivative class.<br>
+You set your components to the property ``Content`` iny your derived class.
 
 The constructor of ``Application`` takes an ``ILocalizer`` as well, which can be called via ``Application.Localizer.Localize()`` to localize a string used in the application. Currently localizations get only set, when they are set explicitly. A system is planned, where you can set up automatic re-setting of application strings, after the locale of the ``ILocalizer`` was changed.
 

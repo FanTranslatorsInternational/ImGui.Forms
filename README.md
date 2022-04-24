@@ -4,9 +4,18 @@ A WinForms-inspired object-oriented framework around Dear ImGui.
 ## Get started
 You only need to install the ``imGui.Forms`` nuget package in your project.
 
-To create your own GUI, add the line ``new Application().Execute(new Form());`` in your main method. This will create and execute an application and draw the content of ``Form``. You must derive from ``Form`` to create your own content.
+To create your own GUI, you have to add those two lines to your main method:
+```
+public static void Main()
+{
+  var form = new MainForm();
+  new Application().Execute(form);
+}
+```
 
-The constructor of ``Application`` takes in an ``ILocalizer`` as well, which can be called via ``Application.Localizer.Localize()`` to localize a string used in the application. Currently localizations get only set, when they are set explicitly. A system is planned, where you can set up automatic re-setting of application strings, after the locale of the ``ILocalizer`` was changed.
+``MainForm`` is your own derivation of the abstract class ``Form``, in which you set your components for your design. ``MainForm`` is used as an example name, and you can freely choose the name of your derivative class.
+
+The constructor of ``Application`` takes an ``ILocalizer`` as well, which can be called via ``Application.Localizer.Localize()`` to localize a string used in the application. Currently localizations get only set, when they are set explicitly. A system is planned, where you can set up automatic re-setting of application strings, after the locale of the ``ILocalizer`` was changed.
 
 ## Namespaces
 

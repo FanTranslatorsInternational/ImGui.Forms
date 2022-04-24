@@ -6,11 +6,8 @@ You only need to install the ``imGui.Forms`` nuget package in your project.
 
 To create your own GUI, you have to add those two lines to your main method:
 ```
-public static void Main()
-{
-  var form = new MainForm();
-  new Application().Execute(form);
-}
+var form = new MainForm();
+new Application().Execute(form);
 ```
 
 ``MainForm`` is your own derivation of the abstract class ``Form``, in which you set your components for your design. ``MainForm`` is used as an example name, and you can freely choose the name of your derivative class.

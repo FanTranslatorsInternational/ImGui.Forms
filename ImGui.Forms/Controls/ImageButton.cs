@@ -13,6 +13,10 @@ namespace ImGui.Forms.Controls
 
         public bool Enabled { get; set; } = true;
 
+        public Vector2 ImageSize { get; set; } = Vector2.Zero;
+
+        public Vector2 Padding { get; set; } = new Vector2(2, 2);
+
         #region Events
 
         public event EventHandler Clicked;
@@ -21,7 +25,8 @@ namespace ImGui.Forms.Controls
 
         public override Size GetSize()
         {
-            return new Size(Image?.Width ?? 0, Image?.Height ?? 0);
+            var size = GetImageSize();
+            return new Size((int)size.X + (int)Padding.X * 2, (int)size.Y + (int)Padding.Y * 2);
         }
 
         protected override void UpdateInternal(Rectangle contentRect)
@@ -29,18 +34,38 @@ namespace ImGui.Forms.Controls
             if (Image == null || (IntPtr)Image == IntPtr.Zero)
                 return;
 
-            if (ImGuiNET.ImGui.ImageButton((IntPtr)Image, new Vector2(Image.Width, Image.Height)) && Enabled)
+            var enabled = Enabled;
+            ApplyStyles(enabled);
+
+            if (ImGuiNET.ImGui.ImageButton((IntPtr)Image, GetImageSize()) && Enabled)
                 OnClicked();
+
+            RemoveStyles(enabled);
         }
 
-        protected override void ApplyStyles()
+        private void ApplyStyles(bool enabled)
         {
-            ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0,0));
+            if (!enabled)
+            {
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Button, 0xFF666666);
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0xFF666666);
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xFF666666);
+            }
+
+            ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Padding);
         }
 
-        protected override void RemoveStyles()
+        private void RemoveStyles(bool enabled)
         {
             ImGuiNET.ImGui.PopStyleVar();
+
+            if (!enabled)
+                ImGuiNET.ImGui.PopStyleColor(3);
+        }
+
+        private Vector2 GetImageSize()
+        {
+             return ImageSize != Vector2.Zero ? ImageSize : Image?.Size ?? Vector2.Zero;
         }
 
         private void OnClicked()

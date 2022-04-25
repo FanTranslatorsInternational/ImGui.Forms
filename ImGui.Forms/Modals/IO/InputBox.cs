@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Numerics;
 using System.Threading.Tasks;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Layouts;
+using ImGui.Forms.Models;
 
 namespace ImGui.Forms.Modals.IO
 {
@@ -16,13 +18,14 @@ namespace ImGui.Forms.Modals.IO
 
         public string Input { get; private set; }
 
-        public InputBox(string caption, string text, string preset, string placeHolder)
+        private InputBox(string caption, string text, string preset, string placeHolder)
         {
             #region Controls
 
             var okButton = new Button { Caption = Ok_, Width = ButtonWidth_ };
             var cancelButton = new Button { Caption = Cancel_, Width = ButtonWidth_ };
 
+            var label = new Label { Caption = text };
             _textBox = new TextBox { Placeholder = placeHolder };
 
             #endregion
@@ -41,28 +44,21 @@ namespace ImGui.Forms.Modals.IO
             Result = DialogResult.Cancel;
             Caption = caption;
 
-            // TODO: Allow textbox Enter to validate input box
             Content = new StackLayout
             {
                 Alignment = Alignment.Vertical,
                 ItemSpacing = 4,
+                Size = new Size(1f, -1),
                 Items =
                 {
-                    new StackLayout
-                    {
-                        Alignment = Alignment.Horizontal,
-                        ItemSpacing = 4,
-                        Items =
-                        {
-                            new Label {Caption = text},
-                            _textBox
-                        }
-                    },
+                    label,
+                    _textBox,
                     new StackLayout
                     {
                         Alignment = Alignment.Horizontal,
                         HorizontalAlignment = HorizontalAlignment.Right,
                         ItemSpacing = 4,
+                        Size=new Size(1f,-1),
                         Items =
                         {
                             okButton,
@@ -71,6 +67,10 @@ namespace ImGui.Forms.Modals.IO
                     }
                 }
             };
+
+            var width = Application.Instance.MainForm.Width * .8f;
+            var height = Content.GetHeight(Application.Instance.MainForm.Height);
+            Size = new Vector2(width, height);
         }
 
         private void TextBox_TextChanged(object sender, EventArgs e)

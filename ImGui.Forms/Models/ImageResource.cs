@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Numerics;
 
 namespace ImGui.Forms.Models
 {
@@ -7,6 +8,8 @@ namespace ImGui.Forms.Models
     {
         private readonly Bitmap _img;
         private IntPtr _ptr = IntPtr.Zero;
+
+        public Vector2 Size => new Vector2(_img.Width, _img.Height);
 
         public int Width => _img.Width;
 

@@ -34,34 +34,34 @@ namespace ImGui.Forms.Modals
 
         #region Static accessors
 
-        public static Task<DialogResult> ShowErrorAsync(string caption = "", string text = "")
+        public static Task<DialogResult> ShowErrorAsync(string caption = "", string text = "", bool blockFormClosing = false)
         {
-            return ShowAsync(caption, text, MessageBoxType.Error);
+            return ShowAsync(caption, text, MessageBoxType.Error, blockFormClosing: blockFormClosing);
         }
 
-        public static Task<DialogResult> ShowInformationAsync(string caption = "", string text = "")
+        public static Task<DialogResult> ShowInformationAsync(string caption = "", string text = "", bool blockFormClosing = false)
         {
-            return ShowAsync(caption, text);
+            return ShowAsync(caption, text, blockFormClosing: blockFormClosing);
         }
 
-        public static Task<DialogResult> ShowYesNoAsync(string caption = "", string text = "")
+        public static Task<DialogResult> ShowYesNoAsync(string caption = "", string text = "", bool blockFormClosing = false)
         {
-            return ShowAsync(caption, text, MessageBoxType.Warning, MessageBoxButton.Yes | MessageBoxButton.No);
+            return ShowAsync(caption, text, MessageBoxType.Warning, MessageBoxButton.Yes | MessageBoxButton.No, blockFormClosing: blockFormClosing);
         }
 
-        public static Task<DialogResult> ShowYesNoCancelAsync(string caption = "", string text = "")
+        public static Task<DialogResult> ShowYesNoCancelAsync(string caption = "", string text = "", bool blockFormClosing = false)
         {
-            return ShowAsync(caption, text, MessageBoxType.Warning, MessageBoxButton.Yes | MessageBoxButton.No | MessageBoxButton.Cancel);
+            return ShowAsync(caption, text, MessageBoxType.Warning, MessageBoxButton.Yes | MessageBoxButton.No | MessageBoxButton.Cancel, blockFormClosing);
         }
 
-        private static async Task<DialogResult> ShowAsync(string caption = "", string text = "", MessageBoxType type = MessageBoxType.Information, MessageBoxButton buttons = MessageBoxButton.Ok)
+        private static async Task<DialogResult> ShowAsync(string caption = "", string text = "", MessageBoxType type = MessageBoxType.Information, MessageBoxButton buttons = MessageBoxButton.Ok, bool blockFormClosing = false)
         {
             // Even though modal.Show already checks for null, we do that here, so the layout is not created only to be disposed again, when the Modal is about to be shown
             if (Application.Instance?.MainForm == null)
                 return DialogResult.None;
 
             var msgBox = new MessageBox(caption, text, type, buttons);
-            await ((Modal)msgBox).ShowAsync();
+            await msgBox.ShowAsync(blockFormClosing);
 
             return msgBox.Result;
         }

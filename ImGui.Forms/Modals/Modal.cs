@@ -20,6 +20,8 @@ namespace ImGui.Forms.Modals
 
         public Component Content { get; set; }
 
+        public bool BlockFormClosing { get; private set; }
+
         protected DialogResult Result { get; set; }
 
         public Vector2 Size { get; set; } = new Vector2(200, 80);
@@ -61,8 +63,10 @@ namespace ImGui.Forms.Modals
                 _shouldClose = true;
         }
 
-        public async Task<DialogResult> ShowAsync()
+        public async Task<DialogResult> ShowAsync(bool blockFormClosing = false)
         {
+            BlockFormClosing = blockFormClosing;
+
             if (Application.Instance?.MainForm == null || _tokenSource != null)
                 return DialogResult.None;
 

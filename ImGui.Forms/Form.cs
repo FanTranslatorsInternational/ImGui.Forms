@@ -151,9 +151,9 @@ namespace ImGui.Forms
             Application.Instance?.Window.Close();
         }
 
-        internal bool HasModals()
+        internal bool HasBlockingModals()
         {
-            return _modals.Any();
+            return _modals.Any(x => x.BlockFormClosing);
         }
 
         #region Event Invokers

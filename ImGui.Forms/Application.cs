@@ -123,15 +123,18 @@ namespace ImGui.Forms
 
         private bool ShouldCancelClose()
         {
-            if (MainForm.HasModals())
+            // If any close blocking modal is open, cancel closing
+            if (MainForm.HasBlockingModals())
                 return true;
 
+            // If not closing action is currently taking place, start closing action
             if (!_isClosing && !_shouldClose)
             {
                 _isClosing = true;
                 IsClosing();
             }
 
+            // Determine, if closing action was cancelled
             return _isClosing || !_shouldClose;
         }
 

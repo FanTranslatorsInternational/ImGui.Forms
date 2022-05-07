@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
+using ImGui.Forms.Resources;
 using ImGuiNET;
 using Veldrid;
 
@@ -35,7 +36,7 @@ namespace ImGui.Forms.Modals
 
         public int GetHeaderHeight()
         {
-            return (int)Math.Ceiling(ImGuiNET.ImGui.CalcTextSize("A").Y) + 6;
+            return FontResource.GetCurrentLineHeight(withDescent: true) + 6;
         }
 
         protected override void UpdateInternal(Rectangle contentRect)
@@ -50,7 +51,7 @@ namespace ImGui.Forms.Modals
                 Content?.Update(new Rectangle(contentRect.X, contentRect.Y, contentRect.Width, contentRect.Height));
 
                 // Create content of child modal
-                DrawModal(Width, Height, ChildModal);
+                DrawModal(ChildModal);
 
                 // Add closing command to current popup context
                 if (_shouldClose)
@@ -60,7 +61,7 @@ namespace ImGui.Forms.Modals
             }
 
             if (!exists)
-                _shouldClose = true;
+                _shouldClose = !ShouldCancelClose();
         }
 
         public async Task<DialogResult> ShowAsync(bool blockFormClosing = false)
@@ -92,7 +93,7 @@ namespace ImGui.Forms.Modals
 
         public void Close()
         {
-            _shouldClose = true;
+            _shouldClose = !ShouldCancelClose();
         }
 
         private void CloseCore()
@@ -115,16 +116,18 @@ namespace ImGui.Forms.Modals
 
         protected virtual void CloseInternal() { }
 
+        protected virtual bool ShouldCancelClose() => false;
+
         #region Helper
 
-        public static void DrawModal(int parentWidth, int parentHeight, Modal modal)
+        internal static void DrawModal(Modal modal)
         {
             if (modal == null)
                 return;
 
             var form = Application.Instance.MainForm;
 
-            var modalPos = new Vector2((parentWidth - modal.Width) / 2f, (parentHeight - modal.Height - modal.GetHeaderHeight()) / 2f);
+            var modalPos = new Vector2((form.Width - modal.Width) / 2f, (form.Height - modal.Height - modal.GetHeaderHeight()) / 2f);
             var contentPos = modalPos + new Vector2(form.Padding.X, modal.GetHeaderHeight() + form.Padding.Y);
 
             var contentSize = new Vector2(modal.Width, modal.Height);

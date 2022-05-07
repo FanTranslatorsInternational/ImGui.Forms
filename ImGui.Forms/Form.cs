@@ -9,6 +9,7 @@ using ImGui.Forms.Controls.Menu;
 using ImGui.Forms.Extensions;
 using ImGui.Forms.Modals;
 using ImGui.Forms.Models;
+using ImGui.Forms.Resources;
 using ImGuiNET;
 using Veldrid.Sdl2;
 
@@ -31,8 +32,10 @@ namespace ImGui.Forms
 
         public bool AllowDragDrop { get; set; }
 
-        public Theme Theme { get; set; } = Theme.Dark;
-
+        /// <summary>
+        /// Sets the applications icon.
+        /// </summary>
+        /// <remarks>The icons dimensions need to be a power of 2 (eg. 32, 64, 128, etc)</remarks>
         public Image Icon
         {
             get => _icon;
@@ -47,7 +50,7 @@ namespace ImGui.Forms
 
         public Component Content { get; protected set; }
 
-        public Vector2 Padding { get; protected set; } = new Vector2(2, 2);
+        public Vector2 Padding => Style.GetStyleVector2(ImGuiStyleVar.WindowPadding);
 
         public FontResource DefaultFont { get; set; }
 
@@ -102,17 +105,8 @@ namespace ImGui.Forms
             ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0);
             ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
 
-            // Set theme colors
-            switch (Theme)
-            {
-                case Theme.Light:
-                    ImGuiNET.ImGui.StyleColorsLight();
-                    break;
-
-                case Theme.Dark:
-                    ImGuiNET.ImGui.StyleColorsDark();
-                    break;
-            }
+            // Apply style
+            Style.ApplyStyle();
 
             // Push font to default to
             if (DefaultFont != null)
@@ -135,7 +129,7 @@ namespace ImGui.Forms
 
             // Add modal
             var modal = _modals.Count > 0 ? _modals.First() : null;
-            Modal.DrawModal(Width, Height, modal);
+            Modal.DrawModal(modal);
 
             // Handle Drag and Drop after rendering
             if (AllowDragDrop)

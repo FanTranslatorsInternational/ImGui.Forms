@@ -2,6 +2,7 @@
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
+using ImGui.Forms.Resources;
 using ImGuiNET;
 using Veldrid;
 
@@ -31,7 +32,7 @@ namespace ImGui.Forms.Controls
 
         public Vector2 Padding { get; set; } = new Vector2(2, 2);
 
-        public FontResource FontResource { get; set; }
+        public FontResource Font { get; set; }
 
         /// <summary>
         /// Masks the input text, for security reasons. Eg passwords.
@@ -66,7 +67,7 @@ namespace ImGui.Forms.Controls
         {
             ApplyStyles();
 
-            var textSize = ImGuiNET.ImGui.CalcTextSize(_text ?? string.Empty);
+            var textSize = FontResource.MeasureText(_text);
             SizeValue width = (int)Width.Value == -1 ? (int)Math.Ceiling(textSize.X) + (int)Padding.X * 2 : Width;
             var height = (int)Padding.Y * 2 + (int)Math.Ceiling(textSize.Y);
 
@@ -114,8 +115,8 @@ namespace ImGui.Forms.Controls
 
         protected override void ApplyStyles()
         {
-            if (FontResource != null)
-                ImGuiNET.ImGui.PushFont((ImFontPtr)FontResource);
+            if (Font != null)
+                ImGuiNET.ImGui.PushFont((ImFontPtr)Font);
 
             ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Padding);
         }
@@ -124,7 +125,7 @@ namespace ImGui.Forms.Controls
         {
             ImGuiNET.ImGui.PopStyleVar();
 
-            if (FontResource != null)
+            if (Font != null)
                 ImGuiNET.ImGui.PopFont();
         }
 

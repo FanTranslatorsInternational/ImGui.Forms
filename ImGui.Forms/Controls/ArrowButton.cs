@@ -1,6 +1,7 @@
 ﻿using System;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
+using ImGui.Forms.Resources;
 using ImGuiNET;
 using Veldrid;
 
@@ -20,10 +21,10 @@ namespace ImGui.Forms.Controls
 
         public override Size GetSize()
         {
-            var size = ImGuiNET.ImGui.CalcTextSize("A").Y;
+            var height = FontResource.GetCurrentLineHeight();
             var padding = ImGuiNET.ImGui.GetStyle().FramePadding;
 
-            return new Size((int)Math.Ceiling(size + padding.X*2), (int)Math.Ceiling(size + padding.Y*2));
+            return new Size((int)Math.Ceiling(height + padding.X*2), (int)Math.Ceiling(height + padding.Y*2));
         }
 
         protected override void UpdateInternal(Rectangle contentRect)

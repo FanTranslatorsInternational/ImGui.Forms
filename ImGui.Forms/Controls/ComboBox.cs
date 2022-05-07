@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
+using ImGui.Forms.Resources;
 using Veldrid;
 
 namespace ImGui.Forms.Controls
@@ -23,11 +24,11 @@ namespace ImGui.Forms.Controls
 
         public override Size GetSize()
         {
-            var maxWidth = Items.Select(x => GetTextWidth(x.Name)).DefaultIfEmpty(0).Max() + (int)ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.X * 2;
+            var maxWidth = Items.Select(x => FontResource.GetCurrentLineWidth(x.Name)).DefaultIfEmpty(0).Max() + (int)ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.X * 2;
             var arrowWidth = 20;
 
             SizeValue width = (int)Width.Value == -1 ? maxWidth + arrowWidth : Width;
-            var height = GetTextHeight() + (int)ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.Y * 2;
+            var height = FontResource.GetCurrentLineHeight() + (int)ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.Y * 2;
 
             return new Size(width, height);
         }
@@ -53,16 +54,6 @@ namespace ImGui.Forms.Controls
 
                 ImGuiNET.ImGui.EndCombo();
             }
-        }
-
-        private int GetTextHeight()
-        {
-            return (int)ImGuiNET.ImGui.CalcTextSize("A").Y;
-        }
-
-        private int GetTextWidth(string input)
-        {
-            return (int)ImGuiNET.ImGui.CalcTextSize(input).X;
         }
 
         private void OnSelectedItemChanged()

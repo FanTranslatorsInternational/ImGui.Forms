@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
+using ImGui.Forms.Resources;
 using ImGuiNET;
 
 namespace ImGui.Forms.Controls.Menu
@@ -36,7 +37,7 @@ namespace ImGui.Forms.Controls.Menu
         {
             ApplyStyles();
 
-            var textSize = ImGuiNET.ImGui.CalcTextSize(Caption ?? string.Empty);
+            var textSize = FontResource.MeasureText(Caption);
             var height = (int)(textSize.Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y);
 
             RemoveStyles();

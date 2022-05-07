@@ -1,82 +1,119 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
+using ImGui.Forms.Resources;
 using ImGui.Forms.Support.Veldrid.ImGui;
 using ImGuiNET;
 
 namespace ImGui.Forms.Factories
 {
-    public class FontFactory
+    public class FontFactory : IDisposable
     {
-        private readonly ImGuiIOPtr _io;
-        private readonly ImGuiRenderer _controller;
+        private readonly IDictionary<(Assembly, string), string> _resourceCache;
+        private readonly IDictionary<(string, int), FontResource> _discCache;
 
-        private readonly IDictionary<(string, int), ImFontPtr> _discFonts;
-        private readonly IDictionary<(Assembly, string, int), ImFontPtr> _resourceFonts;
+        private ImGuiIOPtr _io;
+        private ImGuiRenderer _controller;
 
-        public FontFactory(ImGuiIOPtr io, ImGuiRenderer controller)
+        public bool IsInitialized { get; set; }
+
+        internal FontFactory()
+        {
+            _discCache = new Dictionary<(string, int), FontResource>();
+            _resourceCache = new Dictionary<(Assembly, string), string>();
+        }
+
+        #region Registration
+
+        public void RegisterFromFile(string ttfPath, int size)
+        {
+            if (IsInitialized)
+                throw new InvalidOperationException("Can not register new fonts after application started.");
+
+            // If font not tracked, add it
+            if (!_discCache.ContainsKey((ttfPath, size)))
+                _discCache[(ttfPath, size)] = new FontResource(ttfPath, size);
+        }
+
+        public void RegisterFromResource(Assembly assembly, string resourceName, int size)
+        {
+            if (IsInitialized)
+                throw new InvalidOperationException("Can not register new fonts after application started.");
+
+            // If font is not tracked, add it
+            if (!_resourceCache.ContainsKey((assembly, resourceName)))
+            {
+                var resourceStream = assembly.GetManifestResourceStream(resourceName);
+                if (resourceStream == null)
+                    return;
+
+                var tempFile = Path.GetTempFileName();
+                var tempFileStream = File.OpenWrite(tempFile);
+                resourceStream.CopyTo(tempFileStream);
+                tempFileStream.Close();
+
+                _resourceCache[(assembly, resourceName)] = tempFile;
+            }
+
+            // If resource font with size is already tracked, return
+            var fontPath = _resourceCache[(assembly, resourceName)];
+            if (_discCache.ContainsKey((fontPath, size)))
+                return;
+
+            // Otherwise add it to cache
+            _discCache[(fontPath, size)] = new FontResource(fontPath, size, true);
+        }
+
+        #endregion
+
+        #region Get fonts
+
+        public FontResource Get(string ttfPath, int size)
+        {
+            if (!_discCache.ContainsKey((ttfPath, size)))
+                throw new InvalidOperationException("Font was not registered before the application was started.");
+
+            return _discCache[(ttfPath, size)];
+        }
+
+        public FontResource Get(Assembly assembly, string resourceName, int size)
+        {
+            if (!_resourceCache.ContainsKey((assembly, resourceName)))
+                throw new InvalidOperationException("Font was not registered before the application was started.");
+
+            var fontPath = _resourceCache[(assembly, resourceName)];
+            if (!_discCache.ContainsKey((fontPath, size)))
+                throw new InvalidOperationException("Font was not registered before the application was started.");
+
+            return _discCache[(fontPath, size)];
+        }
+
+        #endregion
+
+        #region Initialization
+
+        internal void Initialize(ImGuiIOPtr io, ImGuiRenderer controller)
         {
             _io = io;
             _controller = controller;
 
-            _discFonts = new Dictionary<(string, int), ImFontPtr>();
-            _resourceFonts = new Dictionary<(Assembly, string, int), ImFontPtr>();
-        }
-
-        public ImFontPtr LoadFont(string ttfPath, int size)
-        {
-            // If font already loaded, do nothing
-            if (_discFonts.ContainsKey((ttfPath, size)))
-                return _discFonts[(ttfPath, size)];
-
-            // Otherwise, load it into the renderer
-            _discFonts[(ttfPath, size)] = _io.Fonts.AddFontFromFileTTF(ttfPath, size);
-            _io.Fonts.Build();
+            // Initialize fonts
+            foreach (var discFont in _discCache)
+                discFont.Value.Initialize(_io.Fonts.AddFontFromFileTTF(discFont.Key.Item1, discFont.Key.Item2));
 
             _controller.RecreateFontDeviceTexture();
-
-            return _discFonts[(ttfPath, size)];
         }
 
-        public unsafe ImFontPtr LoadFont(Assembly assembly, string resourceName, int size)
+        #endregion
+
+        public void Dispose()
         {
-            // If font already loaded, do nothing
-            if (_resourceFonts.ContainsKey((assembly, resourceName, size)))
-                return _resourceFonts[(assembly, resourceName, size)];
+            _io = null;
+            _controller = null;
 
-            // Otherwise, load it into the renderer
-            var resourceStream = assembly.GetManifestResourceStream(resourceName);
-            if (resourceStream == null)
-                return null;
-
-            var data = new byte[resourceStream.Length];
-            resourceStream.Read(data);
-
-            fixed (byte* ptr = data)
-            {
-                _resourceFonts[(assembly, resourceName, size)] = _io.Fonts.AddFontFromMemoryTTF((IntPtr)ptr, data.Length, size, new ImFontConfigPtr(), GetAllGlyphRanges());
-                _io.Fonts.Build();
-
-                _controller.RecreateFontDeviceTexture();
-
-                return _resourceFonts[(assembly, resourceName, size)];
-            }
-        }
-
-        private unsafe IntPtr GetAllGlyphRanges()
-        {
-            var builder = new ImFontGlyphRangesBuilderPtr(ImGuiNative.ImFontGlyphRangesBuilder_ImFontGlyphRangesBuilder());
-            var fonts = ImGuiNET.ImGui.GetIO().Fonts;
-
-            builder.AddRanges(fonts.GetGlyphRangesCyrillic());
-            builder.AddRanges(fonts.GetGlyphRangesKorean());
-            builder.AddRanges(fonts.GetGlyphRangesChineseFull());
-            builder.AddRanges(fonts.GetGlyphRangesJapanese());
-            builder.AddRanges(fonts.GetGlyphRangesThai());
-            builder.AddRanges(fonts.GetGlyphRangesVietnamese());
-
-            builder.BuildRanges(out var ranges);
-            return ranges.Data;
+            foreach (var discFont in _discCache)
+                discFont.Value.Dispose();
         }
     }
 }

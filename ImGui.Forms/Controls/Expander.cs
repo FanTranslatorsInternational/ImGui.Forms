@@ -1,6 +1,7 @@
 ﻿using System;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
+using ImGui.Forms.Resources;
 using ImGuiNET;
 using Veldrid;
 
@@ -24,7 +25,7 @@ namespace ImGui.Forms.Controls
 
         public override Size GetSize()
         {
-            var size = ImGuiNET.ImGui.CalcTextSize(Caption);
+            var size = FontResource.MeasureText(Caption);
             var framePadding = ImGuiNET.ImGui.GetStyle().FramePadding;
             return new Size(1f, (int)((int)Math.Ceiling(size.Y + framePadding.Y * 2) + (Expanded ? ImGuiNET.ImGui.GetStyle().ItemSpacing.X + ContentHeight : 0)));
         }

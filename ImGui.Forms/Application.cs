@@ -22,13 +22,13 @@ namespace ImGui.Forms
 
         public static Application Instance { get; private set; }
 
+        public static FontFactory FontFactory { get; } = new FontFactory();
+
         #region Factories
 
         public IdFactory IdFactory { get; private set; }
 
-        public ImageFactory ImageFactory { get; private set; }
-
-        public FontFactory FontFactory { get; private set; }
+        internal ImageFactory ImageFactory { get; private set; }
 
         #endregion
 
@@ -87,13 +87,15 @@ namespace ImGui.Forms
                 _executionContext.GraphicsDevice.SwapBuffers(_executionContext.GraphicsDevice.MainSwapchain);
             }
 
-            // Clean up Veldrid resources
+            // Clean up resources
             _executionContext.GraphicsDevice.WaitForIdle();
 
             _executionContext.Renderer.Dispose();
             cl.Dispose();
 
             _executionContext.GraphicsDevice.Dispose();
+
+            FontFactory.Dispose();
         }
 
         private void CreateApplication(Form form)
@@ -109,7 +111,8 @@ namespace ImGui.Forms
 
             IdFactory = new IdFactory();
             ImageFactory = new ImageFactory(gd, _executionContext.Renderer);
-            FontFactory = new FontFactory(ImGuiNET.ImGui.GetIO(), _executionContext.Renderer);
+
+            FontFactory.Initialize(ImGuiNET.ImGui.GetIO(), _executionContext.Renderer);
 
             Instance = this;
         }

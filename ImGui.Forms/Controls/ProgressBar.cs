@@ -3,7 +3,7 @@ using System.Drawing;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Extensions;
-using ImGui.Forms.Models;
+using ImGui.Forms.Resources;
 using ImGuiNET;
 using Rectangle = Veldrid.Rectangle;
 using Size = ImGui.Forms.Models.Size;
@@ -42,7 +42,7 @@ namespace ImGui.Forms.Controls
 
             // Draw text
             var text = Text ?? string.Empty;
-            var textSize = ImGuiNET.ImGui.CalcTextSize(text);
+            var textSize = FontResource.MeasureText(text);
             var textPos = new Vector2(contentRect.X + (contentRect.Width - textSize.X) / 2, contentRect.Y + (contentRect.Height - textSize.Y) / 2);
 
             if (Font == null)

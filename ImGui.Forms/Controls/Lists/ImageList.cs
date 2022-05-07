@@ -5,6 +5,7 @@ using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Layouts;
 using ImGui.Forms.Models;
+using ImGui.Forms.Resources;
 using ImGuiNET;
 using Veldrid;
 
@@ -52,9 +53,9 @@ namespace ImGui.Forms.Controls.Lists
         {
             if (ImGuiNET.ImGui.BeginChild($"##{Id}", new Vector2(contentRect.Width, contentRect.Height), false))
             {
-                var textHeight = GetTextHeight();
+                var textHeight = FontResource.GetCurrentLineHeight(Font);
 
-                var itemHeight = Math.Max((int)ThumbnailSize.Height.Value, GetTextHeight());
+                var itemHeight = Math.Max((int)ThumbnailSize.Height.Value, textHeight);
                 var itemDimensions = new Vector2(contentRect.Width - Padding.X * 2, itemHeight);
                 var contentPos = new Vector2(contentRect.X + Padding.X, contentRect.Y + Padding.Y);
                 var thumbnailRect = new Vector2(ThumbnailSize.Width.Value, ThumbnailSize.Height.Value);
@@ -119,19 +120,6 @@ namespace ImGui.Forms.Controls.Lists
             }
 
             ImGuiNET.ImGui.EndChild();
-        }
-
-        private int GetTextHeight()
-        {
-            if (Font != null)
-                ImGuiNET.ImGui.PushFont((ImFontPtr)Font);
-
-            var height = ImGuiNET.ImGui.CalcTextSize("A").Y;
-
-            if (Font != null)
-                ImGuiNET.ImGui.PopFont();
-
-            return (int)height;
         }
 
         private bool IsHovering(Rectangle contentRect)

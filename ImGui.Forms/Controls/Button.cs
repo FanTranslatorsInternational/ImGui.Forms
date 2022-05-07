@@ -2,6 +2,7 @@
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
+using ImGui.Forms.Resources;
 using ImGuiNET;
 using Veldrid;
 
@@ -17,7 +18,7 @@ namespace ImGui.Forms.Controls
 
         public SizeValue Width { get; set; } = SizeValue.Absolute(-1);
 
-        public FontResource FontResource { get; set; }
+        public FontResource Font { get; set; }
 
         public bool Enabled { get; set; } = true;
 
@@ -31,13 +32,13 @@ namespace ImGui.Forms.Controls
 
         public override Size GetSize()
         {
-            ApplyStyles(Enabled, FontResource);
+            ApplyStyles(Enabled, Font);
 
-            var textSize = ImGuiNET.ImGui.CalcTextSize(Caption ?? string.Empty);
+            var textSize = FontResource.MeasureText(Caption);
             SizeValue width = (int)Width.Value == -1 ? (int)Math.Ceiling(textSize.X) + (int)Padding.X * 2 : Width;
-            var height = (int)Padding.Y * 2 + (int)Math.Ceiling(textSize.Y);
+            var height = (int)Math.Ceiling(textSize.Y) + (int)Padding.Y * 2;
 
-            RemoveStyles(Enabled, FontResource);
+            RemoveStyles(Enabled, Font);
 
             return new Size(width, height);
         }
@@ -45,7 +46,7 @@ namespace ImGui.Forms.Controls
         protected override void UpdateInternal(Rectangle contentRect)
         {
             var enabled = Enabled;
-            var font = FontResource;
+            var font = Font;
 
             ApplyStyles(enabled, font);
 
@@ -65,7 +66,7 @@ namespace ImGui.Forms.Controls
             }
 
             if (font != null)
-                ImGuiNET.ImGui.PushFont((ImFontPtr)FontResource);
+                ImGuiNET.ImGui.PushFont((ImFontPtr)Font);
 
             ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Padding);
         }
@@ -81,7 +82,7 @@ namespace ImGui.Forms.Controls
                 ImGuiNET.ImGui.PopStyleColor(3);
         }
 
-        private void OnClicked()
+        protected void OnClicked()
         {
             Clicked?.Invoke(this, new EventArgs());
         }

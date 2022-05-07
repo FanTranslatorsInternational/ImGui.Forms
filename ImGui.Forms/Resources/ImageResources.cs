@@ -16,6 +16,6 @@ namespace ImGui.Forms.Resources
         /// Creates a new <see cref="ImageResource"/> for an "Error" symbol.
         /// </summary>
         /// <returns>An <see cref="ImageResource"/> representing an "Error" symbol.</returns>
-        public static ImageResource Error() => ErrorLazy.Value;
+        public static ImageResource Error => ErrorLazy.Value;
     }
 }

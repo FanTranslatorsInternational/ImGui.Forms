@@ -110,7 +110,7 @@ namespace ImGui.Forms.Modals
                     return null;
 
                 case MessageBoxType.Error:
-                    image = ImageResources.Error();
+                    image = ImageResources.Error;
                     break;
 
                 default:

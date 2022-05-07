@@ -17,7 +17,32 @@ namespace ImGui.Forms.Controls.Layouts
 
         public Alignment Alignment { get; set; } = Alignment.Vertical;
 
-        public HorizontalAlignment HorizontalAlignment { get; set; } = HorizontalAlignment.Left;
+        /// <summary>
+        /// Determines alignment in horizontal orientation. Takes effect if <see cref="Alignment"/> is <see cref="Alignment.Horizontal"/>.
+        /// </summary>
+        public HorizontalAlignment HorizontalAlignment
+        {
+            get => _tableLayout.HorizontalAlignment;
+            set => _tableLayout.HorizontalAlignment = value;
+        }
+
+        /// <summary>
+        /// Determines alignment in vertical orientation. Takes effect if <see cref="Alignment"/> is <see cref="Alignment.Vertical"/>.
+        /// </summary>
+        public VerticalAlignment VerticalAlignment
+        {
+            get => _tableLayout.VerticalAlignment;
+            set => _tableLayout.VerticalAlignment = value;
+        }
+
+        /// <summary>
+        /// Determines if the layout should have a border.
+        /// </summary>
+        public bool HasBorder
+        {
+            get => _tableLayout.HasBorder;
+            set => _tableLayout.HasBorder = value;
+        }
 
         public int ItemSpacing
         {
@@ -40,6 +65,7 @@ namespace ImGui.Forms.Controls.Layouts
             var itemList = new ObservableList<StackItem>();
             itemList.ItemAdded += (s, e) => AddItem(e.Item);
             itemList.ItemRemoved += (s, e) => RemoveItem(e.Item);
+            itemList.ItemSet += (s, e) => SetItem(e.Item, e.Index);
 
             Items = itemList;
             _tableLayout = new TableLayout();
@@ -62,37 +88,7 @@ namespace ImGui.Forms.Controls.Layouts
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            // Update placeholder for proper stack alignment
-            UpdatePlaceholder(contentRect);
-
-            // Update layout
             _tableLayout.Update(contentRect);
-        }
-
-        private void UpdatePlaceholder(Rectangle contentRect)
-        {
-            switch (Alignment)
-            {
-                case Alignment.Horizontal:
-                    if (_tableLayout.Rows.Count <= 0 || _tableLayout.Rows[0].Cells[0].Content is Placeholder)
-                        return;
-
-                    var emptyWidth = contentRect.Width - _tableLayout.GetWidth(contentRect.Width) - _tableLayout.Spacing.X;
-                    switch (HorizontalAlignment)
-                    {
-                        case HorizontalAlignment.Center:
-                            _tableLayout.Rows[0].Cells.Insert(0, new Placeholder(new Size(emptyWidth / 2, -1)));
-                            break;
-
-                        case HorizontalAlignment.Right:
-                            _tableLayout.Rows[0].Cells.Insert(0, new Placeholder(new Size(emptyWidth, -1)));
-                            break;
-                    }
-                    break;
-
-                case Alignment.Vertical:
-                    break;
-            }
         }
 
         private void AddItem(StackItem item)
@@ -107,9 +103,6 @@ namespace ImGui.Forms.Controls.Layouts
                     }
 
                     _tableLayout.Rows[0].Cells.Add(item);
-
-                    if (_tableLayout.Rows[0].Cells[0].Content is Placeholder)
-                        _tableLayout.Rows[0].Cells.RemoveAt(0);
 
                     break;
 
@@ -134,9 +127,6 @@ namespace ImGui.Forms.Controls.Layouts
                             break;
                         }
 
-                    if (_tableLayout.Rows[0].Cells[0].Content is Placeholder)
-                        _tableLayout.Rows[0].Cells.RemoveAt(0);
-
                     break;
 
                 case Alignment.Vertical:
@@ -151,22 +141,23 @@ namespace ImGui.Forms.Controls.Layouts
             }
         }
 
-        class Placeholder : Component
+        private void SetItem(StackItem item, int index)
         {
-            private readonly Size _size;
-
-            public Placeholder(Size size)
+            switch (Alignment)
             {
-                _size = size;
-            }
+                case Alignment.Horizontal:
+                    if (_tableLayout.Rows.Count <= 0 || index >= _tableLayout.Rows[0].Cells.Count)
+                        return;
 
-            public override Size GetSize()
-            {
-                return _size;
-            }
+                    _tableLayout.Rows[0].Cells[index] = item;
+                    break;
 
-            protected override void UpdateInternal(Rectangle contentRect)
-            {
+                case Alignment.Vertical:
+                    if (index >= _tableLayout.Rows.Count)
+                        return;
+
+                    _tableLayout.Rows[index].Cells[0] = item;
+                    break;
             }
         }
     }
@@ -180,6 +171,7 @@ namespace ImGui.Forms.Controls.Layouts
 
         public event EventHandler<ItemEventArgs<TItem>> ItemAdded;
         public event EventHandler<ItemEventArgs<TItem>> ItemRemoved;
+        public event EventHandler<ItemEventArgs<TItem>> ItemSet;
 
         public IEnumerator<TItem> GetEnumerator()
         {
@@ -242,7 +234,11 @@ namespace ImGui.Forms.Controls.Layouts
         public TItem this[int index]
         {
             get => _items[index];
-            set => _items[index] = value;
+            set
+            {
+                _items[index] = value;
+                OnItemSet(value, index);
+            }
         }
 
         private void OnItemAdded(TItem item)
@@ -254,15 +250,22 @@ namespace ImGui.Forms.Controls.Layouts
         {
             ItemRemoved?.Invoke(this, new ItemEventArgs<TItem>(item));
         }
+
+        private void OnItemSet(TItem item, int index)
+        {
+            ItemSet?.Invoke(this, new ItemEventArgs<TItem>(item, index));
+        }
     }
 
     class ItemEventArgs<TItem> : EventArgs
     {
         public TItem Item { get; }
+        public int Index { get; }
 
-        public ItemEventArgs(TItem item)
+        public ItemEventArgs(TItem item, int index = -1)
         {
             Item = item;
+            Index = index;
         }
     }
 

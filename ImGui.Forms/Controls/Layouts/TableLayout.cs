@@ -21,6 +21,11 @@ namespace ImGui.Forms.Controls.Layouts
 
         public Size Size { get; set; } = Size.Parent;
 
+        public HorizontalAlignment HorizontalAlignment { get; set; }
+        public VerticalAlignment VerticalAlignment { get; set; }
+
+        public bool HasBorder { get; set; }
+
         #endregion
 
         public TableLayout()
@@ -73,14 +78,13 @@ namespace ImGui.Forms.Controls.Layouts
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            if (ImGuiNET.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height), false, ImGuiWindowFlags.NoScrollbar))
+            if (ImGuiNET.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height), HasBorder, ImGuiWindowFlags.NoScrollbar))
             {
-                var origX = ImGuiNET.ImGui.GetCursorPosX();
-                var x = origX;
-                var y = ImGuiNET.ImGui.GetCursorPosY();
-
                 var localWidths = GetColumnWidths(contentRect.Width, 1f);
                 var localHeights = GetRowHeights(contentRect.Height, 1f);
+
+                var (x, y) = GetInitPoint(localWidths, localHeights, contentRect);
+                var origX = x;
 
                 var localCells = Rows.Select(r => r.Cells).ToArray();
                 var localMaxColumns = GetMaxColumnCount();
@@ -97,7 +101,7 @@ namespace ImGui.Forms.Controls.Layouts
                         var cell = c < row.Count ? row[c] : null;
                         var cellWidth = localWidths[c];
 
-                        // Apply alignment
+                        // Apply cell alignment
                         var cellInternalSize = cell?.Content?.GetSize() ?? Size.Parent;
                         var cellInternalWidth = cellInternalSize.Width.IsAbsolute ? cell?.Content?.GetWidth(cellWidth) ?? 0 : cellWidth;
                         var cellInternalHeight = cellInternalSize.Height.IsAbsolute ? cell?.Content?.GetHeight(cellHeight) ?? 0 : cellHeight;
@@ -171,21 +175,21 @@ namespace ImGui.Forms.Controls.Layouts
             var maxColumnCount = GetMaxColumnCount();
             var result = Enumerable.Repeat(-1, maxColumnCount).ToArray();
 
-            var availableWidth = (int)((componentWidth * layoutCorrection) - (maxColumnCount - 1) * Spacing.X);
+            var availableWidth = (int)(componentWidth * layoutCorrection - (maxColumnCount - 1) * Spacing.X);
             var maxRelatives = Enumerable.Range(0, maxColumnCount).Select(GetMaxRelativeWidth).ToArray();
 
             // Preset columns with only static widths
             for (var c = 0; c < maxColumnCount; c++)
             {
                 var cells = GetCellsByColumn(c).ToArray();
-                if (cells.All(x => x?.Content?.GetSize().Width.IsAbsolute ?? true))
+                if (cells.All(x => x?.Size.Width.IsAbsolute ?? true))
                 {
                     var maxCellWidth = 0;
                     foreach (var cell in cells)
                     {
                         if (cell?.Content == null) continue;
 
-                        var widthValue = (int)cell.Content.GetSize().Width.Value;
+                        var widthValue = (int)cell.Size.Width.Value;
 
                         var maxValue = widthValue < 0 ?
                             cell.Content.GetWidth(componentWidth, layoutCorrection) :
@@ -211,7 +215,7 @@ namespace ImGui.Forms.Controls.Layouts
 
                 // Skip column, if all have relative width
                 var cells = GetCellsByColumn(c).ToArray();
-                if (cells.All(x => !x?.Content?.GetSize().Width.IsAbsolute ?? false))
+                if (cells.All(x => !x?.Size.Width.IsAbsolute ?? false))
                     continue;
 
                 var maxIsAbsolute = true;
@@ -221,13 +225,13 @@ namespace ImGui.Forms.Controls.Layouts
                     if (cell?.Content == null)
                         continue;
 
-                    var cellWidth = cell.Content.GetSize().Width;
+                    var cellWidth = cell.Size.Width;
                     if (cellWidth.IsAbsolute)
                     {
                         maxIsAbsolute = true;
 
                         var maxValue = cellWidth.Value < 0 ?
-                            cell.Content.GetWidth(componentWidth, layoutCorrection) :
+                            cell.GetWidth(componentWidth, layoutCorrection) :
                             (int)cellWidth.Value;
 
                         if (maxValue > maxCellWidth)
@@ -237,7 +241,7 @@ namespace ImGui.Forms.Controls.Layouts
                     }
 
                     maxIsAbsolute = false;
-                    maxCellWidth = cell.Content.GetWidth(availableWidth, widthCorrection);
+                    maxCellWidth = cell.GetWidth(availableWidth, widthCorrection);
                 }
 
                 // If max width is not absolute, do nothing
@@ -269,7 +273,7 @@ namespace ImGui.Forms.Controls.Layouts
         private float GetMaxRelativeWidth(int column)
         {
             var cells = GetCellsByColumn(column);
-            return cells.Select(x => x?.Content?.GetSize().Width ?? 0).Where(x => !x.IsAbsolute).DefaultIfEmpty(0f).Max(x => x.Value);
+            return cells.Select(x => x?.Size.Width ?? 0).Where(x => !x.IsAbsolute).DefaultIfEmpty(0f).Max(x => x.Value);
         }
 
         #endregion
@@ -280,21 +284,21 @@ namespace ImGui.Forms.Controls.Layouts
         {
             var result = Enumerable.Repeat(-1, Rows.Count).ToArray();
 
-            var availableHeight = (int)((componentHeight * layoutCorrection) - (Rows.Count - 1) * Spacing.Y);
+            var availableHeight = (int)(componentHeight * layoutCorrection - (Rows.Count - 1) * Spacing.Y);
             var maxRelatives = Enumerable.Range(0, Rows.Count).Select(GetMaxRelativeHeight).ToArray();
 
             // Preset columns with only static heights
             for (var r = 0; r < Rows.Count; r++)
             {
                 var cells = GetCellsByRow(r).ToArray();
-                if (cells.All(x => x?.Content?.GetSize().Height.IsAbsolute ?? true))
+                if (cells.All(x => x?.Size.Height.IsAbsolute ?? true))
                 {
                     var maxCellHeight = 0;
                     foreach (var cell in cells)
                     {
                         if (cell?.Content == null) continue;
 
-                        var heightValue = (int)cell.Content.GetSize().Height.Value;
+                        var heightValue = (int)cell.Size.Height.Value;
 
                         var maxValue = heightValue < 0 ?
                             cell.Content.GetHeight(componentHeight, layoutCorrection) :
@@ -320,7 +324,7 @@ namespace ImGui.Forms.Controls.Layouts
 
                 // Skip row, if all have relative height
                 var cells = GetCellsByRow(r).ToArray();
-                if (cells.All(x => !x?.Content?.GetSize().Height.IsAbsolute ?? false))
+                if (cells.All(x => !x?.Size.Height.IsAbsolute ?? false))
                     continue;
 
                 var maxIsAbsolute = true;
@@ -330,13 +334,13 @@ namespace ImGui.Forms.Controls.Layouts
                     if (cell?.Content == null)
                         continue;
 
-                    var cellHeight = cell.Content.GetSize().Height;
+                    var cellHeight = cell.Size.Height;
                     if (cellHeight.IsAbsolute)
                     {
                         maxIsAbsolute = true;
 
                         var maxValue = cellHeight.Value < 0 ?
-                            cell.Content.GetHeight(componentHeight, layoutCorrection) :
+                            cell.GetHeight(componentHeight, layoutCorrection) :
                             cellHeight.Value;
                         maxValue = Math.Min(availableHeight, maxValue);
 
@@ -347,7 +351,7 @@ namespace ImGui.Forms.Controls.Layouts
                     }
 
                     maxIsAbsolute = false;
-                    maxCellHeight = cell.Content.GetHeight(availableHeight, heightCorrection);
+                    maxCellHeight = cell.GetHeight(availableHeight, heightCorrection);
                 }
 
                 // If max height is not absolute, do nothing
@@ -379,12 +383,47 @@ namespace ImGui.Forms.Controls.Layouts
         private float GetMaxRelativeHeight(int row)
         {
             var cells = GetCellsByRow(row);
-            return cells.Select(x => x?.Content?.GetSize().Height ?? 0).Where(x => !x.IsAbsolute).DefaultIfEmpty(0f).Max(x => x.Value);
+            return cells.Select(x => x?.Size.Height ?? 0).Where(x => !x.IsAbsolute).DefaultIfEmpty(0f).Max(x => x.Value);
         }
 
         #endregion
 
         #region Support
+
+        private (float, float) GetInitPoint(int[] widths, int[] heights, Rectangle contentRect)
+        {
+            var totalWidth = widths.Sum(x => x) + Math.Max(0, widths.Length - 1) * (int)Spacing.X;
+            var totalHeight = heights.Sum(x => x) + Math.Max(0, heights.Length - 1) * (int)Spacing.Y;
+
+            var addX = 0;
+            switch (HorizontalAlignment)
+            {
+                case HorizontalAlignment.Center:
+                    addX = (contentRect.Width - totalWidth) / 2;
+                    break;
+
+                case HorizontalAlignment.Right:
+                    addX = contentRect.Width - totalWidth;
+                    break;
+            }
+
+            var addY = 0;
+            switch (VerticalAlignment)
+            {
+                case VerticalAlignment.Center:
+                    addY = (contentRect.Height - totalHeight) / 2;
+                    break;
+
+                case VerticalAlignment.Bottom:
+                    addY = contentRect.Height - totalHeight;
+                    break;
+            }
+
+            var x = ImGuiNET.ImGui.GetCursorPosX() + addX;
+            var y = ImGuiNET.ImGui.GetCursorPosY() + addY;
+
+            return (x, y);
+        }
 
         private int GetMaxColumnCount()
         {

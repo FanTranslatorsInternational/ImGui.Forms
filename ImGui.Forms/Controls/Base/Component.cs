@@ -60,12 +60,7 @@ namespace ImGui.Forms.Controls.Base
         /// <returns>The finalized width of this component.</returns>
         public virtual int GetWidth(int parentWidth, float layoutCorrection = 1f)
         {
-            var size = GetSize();
-
-            if (size.Width.IsAbsolute)
-                return (int)Math.Min(size.Width.Value, parentWidth);
-
-            return (int)Math.Floor(size.Width.Value * parentWidth * layoutCorrection);
+            return GetDimension(GetSize().Width, parentWidth, layoutCorrection);
         }
 
         /// <summary>
@@ -76,12 +71,7 @@ namespace ImGui.Forms.Controls.Base
         /// <returns>The finalized height of this component.</returns>
         public virtual int GetHeight(int parentHeight, float layoutCorrection = 1f)
         {
-            var size = GetSize();
-
-            if (size.Height.IsAbsolute)
-                return (int)Math.Min(size.Height.Value, parentHeight);
-
-            return (int)Math.Floor(size.Height.Value * parentHeight * layoutCorrection);
+            return GetDimension(GetSize().Height, parentHeight, layoutCorrection);
         }
 
         /// <summary>
@@ -109,6 +99,21 @@ namespace ImGui.Forms.Controls.Base
         private void OnDragDrop(DragDropEvent obj)
         {
             DragDrop?.Invoke(this, obj);
+        }
+
+        /// <summary>
+        /// Calculates the integer value of a <see cref="SizeValue"/>.
+        /// </summary>
+        /// <param name="dimensionValue">The value to calculate.</param>
+        /// <param name="maxDimensionValue">The maximum to calculate relative <see cref="SizeValue"/>s against.</param>
+        /// <param name="correction">The corrective value to calculate relative <see cref="SizeValue"/>s against.</param>
+        /// <returns></returns>
+        internal static int GetDimension(SizeValue dimensionValue, int maxDimensionValue, float correction = 1f)
+        {
+            if (dimensionValue.IsAbsolute)
+                return (int)Math.Min(dimensionValue.Value, maxDimensionValue);
+
+            return (int)Math.Floor(dimensionValue.Value * maxDimensionValue * correction);
         }
     }
 }

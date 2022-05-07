@@ -3,6 +3,7 @@ using System.Drawing;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Extensions;
 using ImGui.Forms.Models;
+using ImGui.Forms.Resources;
 using ImGuiNET;
 using Rectangle = Veldrid.Rectangle;
 using Size = ImGui.Forms.Models.Size;
@@ -23,7 +24,7 @@ namespace ImGui.Forms.Controls
         {
             ApplyStyles();
 
-            var textSize = ImGuiNET.ImGui.CalcTextSize(Caption ?? string.Empty);
+            var textSize = FontResource.MeasureText(Caption, true);
             SizeValue width = Width.Value == -1 ? (int)Math.Ceiling(textSize.X) : Width;
             var height = (int)Math.Ceiling(textSize.Y);
 
@@ -34,8 +35,7 @@ namespace ImGui.Forms.Controls
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            ImGuiNET.ImGui.SetNextItemWidth(contentRect.Width);
-            ImGuiNET.ImGui.Text(Caption);
+            ImGuiNET.ImGui.GetWindowDrawList().AddText(contentRect.Position, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), Caption);
         }
 
         protected override void ApplyStyles()

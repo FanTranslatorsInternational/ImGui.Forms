@@ -2,8 +2,8 @@
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
+using ImGui.Forms.Resources;
 using ImGuiNET;
-using Size = ImGui.Forms.Models.Size;
 
 namespace ImGui.Forms.Controls
 {
@@ -34,7 +34,7 @@ namespace ImGui.Forms.Controls
 
         #endregion
 
-        public override Models.Size GetSize()
+        public override Size GetSize()
         {
             return Size.Parent;
         }

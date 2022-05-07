@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Layouts;
-using ImGui.Forms.Models;
+using ImGui.Forms.Resources;
 
 namespace ImGui.Forms.Modals
 {
@@ -102,7 +100,7 @@ namespace ImGui.Forms.Modals
 
         private Component GetTypeImage(MessageBoxType type)
         {
-            Stream resource;
+            ImageResource image;
             switch (type)
             {
                 case MessageBoxType.Information:
@@ -112,14 +110,14 @@ namespace ImGui.Forms.Modals
                     return null;
 
                 case MessageBoxType.Error:
-                    resource = typeof(MessageBox).Assembly.GetManifestResourceStream("error.png");
+                    image = ImageResources.Error();
                     break;
 
                 default:
                     return null;
             }
 
-            return new PictureBox { Image = new ImageResource((Bitmap)Image.FromStream(resource)) };
+            return new PictureBox { Image = image };
         }
 
         private IEnumerable<Button> GetButtons(MessageBoxButton buttons)

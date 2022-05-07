@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
 using ImGui.Forms.Support.Veldrid.ImGui;
 using Veldrid;
 
 namespace ImGui.Forms.Factories
 {
-    public class ImageFactory
+    class ImageFactory
     {
         private readonly GraphicsDevice _gd;
         private readonly ImGuiRenderer _controller;
@@ -16,7 +15,7 @@ namespace ImGui.Forms.Factories
         private readonly IDictionary<object, IntPtr> _inputPointers;
         private readonly IDictionary<IntPtr, Texture> _ptrTextures;
 
-        internal ImageFactory(GraphicsDevice gd, ImGuiRenderer controller)
+        public ImageFactory(GraphicsDevice gd, ImGuiRenderer controller)
         {
             _gd = gd;
             _controller = controller;
@@ -24,17 +23,7 @@ namespace ImGui.Forms.Factories
             _ptrTextures = new Dictionary<IntPtr, Texture>();
         }
 
-        internal IntPtr LoadImage(Stream tex)
-        {
-            return LoadImage((Bitmap)Image.FromStream(tex));
-        }
-
-        internal IntPtr LoadImage(string path)
-        {
-            return LoadImage((Bitmap)Image.FromFile(path));
-        }
-
-        internal IntPtr LoadImage(Bitmap img)
+        public IntPtr LoadImage(Bitmap img)
         {
             if (_inputPointers.ContainsKey(img))
                 return _inputPointers[img];

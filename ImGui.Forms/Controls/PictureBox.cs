@@ -2,6 +2,7 @@
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
+using ImGui.Forms.Resources;
 using Veldrid;
 
 namespace ImGui.Forms.Controls
@@ -30,8 +31,6 @@ namespace ImGui.Forms.Controls
             if (Image == null || (IntPtr)_img == IntPtr.Zero)
                 return;
 
-            //contentRect = new Rectangle((int) ImGui.GetCursorScreenPos().X, (int) ImGui.GetCursorScreenPos().Y, Image.Width, Image.Height);
-            //ImGui.GetWindowDrawList().AddImage((IntPtr)_img, new Vector2(contentRect.X, contentRect.Y), new Vector2(contentRect.X + contentRect.Width, contentRect.Y + contentRect.Height));
             ImGuiNET.ImGui.Image((IntPtr)Image, new Vector2(Image.Width, Image.Height));
         }
     }

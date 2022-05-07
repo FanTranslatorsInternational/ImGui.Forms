@@ -14,6 +14,8 @@ namespace ImGui.Forms.Controls.Lists
 
         public int ItemSpacing { get; set; }
 
+        public bool HasBorder { get; set; }
+
         public override Size GetSize()
         {
             return Size.Parent;
@@ -24,7 +26,7 @@ namespace ImGui.Forms.Controls.Lists
             var localItems = Items.ToArray();
             var listHeight = localItems.Sum(i => i.GetHeight(contentRect.Height)) + Math.Max(0, Items.Count - 1) * ItemSpacing;
 
-            if (ImGuiNET.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height)))
+            if (ImGuiNET.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height), HasBorder))
             {
                 var scrollbarWidth = listHeight > contentRect.Height ? ImGuiNET.ImGui.GetStyle().ScrollbarSize : 0;
                 var scrollY = -(int)ImGuiNET.ImGui.GetScrollY();

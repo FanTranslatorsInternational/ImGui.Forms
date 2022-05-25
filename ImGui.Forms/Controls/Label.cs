@@ -24,8 +24,8 @@ namespace ImGui.Forms.Controls
         {
             ApplyStyles();
 
-            var textSize = FontResource.MeasureText(Caption, true);
-            SizeValue width = Width.Value == -1 ? (int)Math.Ceiling(textSize.X) : Width;
+            var textSize = FontResource.MeasureText(EscapeCaption(), true);
+            SizeValue width = (int)Width.Value == -1 ? (int)Math.Ceiling(textSize.X) : Width;
             var height = (int)Math.Ceiling(textSize.Y);
 
             RemoveStyles();
@@ -35,7 +35,7 @@ namespace ImGui.Forms.Controls
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            ImGuiNET.ImGui.GetWindowDrawList().AddText(contentRect.Position, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), Caption);
+            ImGuiNET.ImGui.GetWindowDrawList().AddText(contentRect.Position, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), EscapeCaption());
         }
 
         protected override void ApplyStyles()
@@ -54,6 +54,11 @@ namespace ImGui.Forms.Controls
 
             if (TextColor != Color.Empty)
                 ImGuiNET.ImGui.PopStyleColor();
+        }
+
+        protected string EscapeCaption()
+        {
+            return Caption?.Replace("\\n", Environment.NewLine) ?? string.Empty;
         }
     }
 }

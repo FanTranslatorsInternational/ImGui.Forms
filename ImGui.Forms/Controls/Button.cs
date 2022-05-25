@@ -86,5 +86,10 @@ namespace ImGui.Forms.Controls
         {
             Clicked?.Invoke(this, new EventArgs());
         }
+
+        protected string EscapeCaption()
+        {
+            return Caption?.Replace("\\n", Environment.NewLine) ?? string.Empty;
+        }
     }
 }

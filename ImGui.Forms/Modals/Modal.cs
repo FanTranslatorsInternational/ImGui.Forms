@@ -96,6 +96,13 @@ namespace ImGui.Forms.Modals
             _shouldClose = !ShouldCancelClose();
         }
 
+        public void Close(DialogResult result)
+        {
+            Result = result;
+
+            Close();
+        }
+
         private void CloseCore()
         {
             ImGuiNET.ImGui.CloseCurrentPopup();

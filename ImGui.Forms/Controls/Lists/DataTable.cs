@@ -16,7 +16,7 @@ namespace ImGui.Forms.Controls.Lists
         private (int, int) _clickedCell = (-1, -1);
         private readonly IList<int> _selectedIndexes = new List<int>();
 
-        private IList<DataTableRow<TData>> _rows;
+        private IList<DataTableRow<TData>> _rows = new List<DataTableRow<TData>>();
 
         public IList<DataTableColumn<TData>> Columns { get; } = new List<DataTableColumn<TData>>();
 

@@ -10,7 +10,7 @@ namespace ImGui.Forms.Controls.Lists
 {
     public class List : Component
     {
-        public IList<Component> Items { get; } = new List<Component>();
+        public IList<Component> Items { get; set; } = new List<Component>();
 
         public int ItemSpacing { get; set; }
 
@@ -23,8 +23,8 @@ namespace ImGui.Forms.Controls.Lists
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            var localItems = Items.ToArray();
-            var listHeight = localItems.Sum(i => i.GetHeight(contentRect.Height)) + Math.Max(0, Items.Count - 1) * ItemSpacing;
+            var localItems = Items?.ToArray() ?? Array.Empty<Component>();
+            var listHeight = localItems.Sum(i => i.GetHeight(contentRect.Height)) + Math.Max(0, localItems.Length - 1) * ItemSpacing;
 
             if (ImGuiNET.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height), HasBorder))
             {

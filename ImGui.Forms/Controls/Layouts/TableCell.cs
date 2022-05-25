@@ -19,8 +19,9 @@ namespace ImGui.Forms.Controls.Layouts
         /// The size of this <see cref="TableCell"/>.
         /// Is set to <see cref="Models.Size"/> of <see cref="Content"/> by default.
         /// </summary>
-        public Size Size {
-            get => _sizeValue ?? Content?.GetSize();
+        public Size Size
+        {
+            get => _sizeValue ?? Content?.GetSize() ?? Size.Parent;
             set => _sizeValue = value;
         }
 

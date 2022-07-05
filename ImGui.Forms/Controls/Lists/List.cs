@@ -36,11 +36,12 @@ namespace ImGui.Forms.Controls.Lists
                 {
                     for (var i = 0; i < localItems.Length; i++)
                     {
+                        var itemWidth = localItems[i].GetWidth(contentRect.Width - (int) scrollbarWidth);
                         var itemHeight = localItems[i].GetHeight(contentRect.Height);
 
                         ImGuiNET.ImGui.SetCursorPos(new Vector2(0, y));
                         if (ImGuiNET.ImGui.BeginChild($"{Id}_itm{i}", new Vector2(contentRect.Width - (int)scrollbarWidth, itemHeight)))
-                            localItems[i].Update(new Rectangle(contentRect.X, contentRect.Y + y + scrollY, contentRect.Width - (int)scrollbarWidth, itemHeight));
+                            localItems[i].Update(new Rectangle(contentRect.X, contentRect.Y + y + scrollY, itemWidth, itemHeight));
 
                         ImGuiNET.ImGui.EndChild();
 

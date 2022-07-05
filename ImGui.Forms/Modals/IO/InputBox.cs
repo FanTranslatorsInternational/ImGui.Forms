@@ -95,7 +95,7 @@ namespace ImGui.Forms.Modals.IO
             var inputBox = new InputBox(caption, text, preset, placeHolder);
             await inputBox.ShowAsync();
 
-            return inputBox.Result == DialogResult.Cancel ? string.Empty : inputBox.Input;
+            return inputBox.Result == DialogResult.Cancel ? null : inputBox.Input;
         }
     }
 }

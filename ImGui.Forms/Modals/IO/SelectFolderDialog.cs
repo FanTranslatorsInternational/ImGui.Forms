@@ -2,6 +2,7 @@
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Layouts;
 using ImGui.Forms.Controls.Tree;
@@ -90,7 +91,7 @@ namespace ImGui.Forms.Modals.IO
             #endregion
         }
 
-        protected override void ShowInternal()
+        protected override Task ShowInternal()
         {
             Directory = GetInitialDirectory();
 
@@ -101,6 +102,8 @@ namespace ImGui.Forms.Modals.IO
 
             foreach (var drive in DriveInfo.GetDrives())
                 _treeView.Nodes.Add(new TreeNode<string> { Caption = drive.Name, Data = drive.RootDirectory.Name, Nodes = { new TreeNode<string>() } });
+
+            return Task.CompletedTask;
         }
 
         #region Events

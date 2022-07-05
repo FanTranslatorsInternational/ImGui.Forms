@@ -151,7 +151,7 @@ namespace ImGui.Forms.Modals.IO
             };
         }
 
-        protected override void ShowInternal()
+        protected override Task ShowInternal()
         {
             // Initialize fields
             _currentDir = GetInitialDirectory();
@@ -165,6 +165,8 @@ namespace ImGui.Forms.Modals.IO
             _treeView.Nodes.Add(new TreeNode<string> { Caption = Path.GetFileName(userDir), Data = userDir, Nodes = { new TreeNode<string>() } });
 
             UpdateFileView();
+
+            return Task.CompletedTask;
         }
 
         #region Support

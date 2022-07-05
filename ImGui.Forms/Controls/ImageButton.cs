@@ -32,14 +32,19 @@ namespace ImGui.Forms.Controls
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            if (Image == null || (IntPtr)Image == IntPtr.Zero)
-                return;
-
             var enabled = Enabled;
             ApplyStyles(enabled);
 
-            if (ImGuiNET.ImGui.ImageButton((IntPtr)Image, GetImageSize()) && Enabled)
-                OnClicked();
+            if ((IntPtr)Image != IntPtr.Zero)
+            {
+                if (ImGuiNET.ImGui.ImageButton((IntPtr)Image, GetImageSize()) && Enabled)
+                    OnClicked();
+            }
+            else
+            {
+                if (ImGuiNET.ImGui.Button(string.Empty, GetImageSize() + Padding * 2) && Enabled)
+                    OnClicked();
+            }
 
             RemoveStyles(enabled);
         }
@@ -66,7 +71,7 @@ namespace ImGui.Forms.Controls
 
         private Vector2 GetImageSize()
         {
-             return ImageSize != Vector2.Zero ? ImageSize : Image?.Size ?? Vector2.Zero;
+            return ImageSize != Vector2.Zero ? ImageSize : Image?.Size ?? Vector2.Zero;
         }
 
         private void OnClicked()

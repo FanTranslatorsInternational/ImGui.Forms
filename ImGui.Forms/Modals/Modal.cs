@@ -1,5 +1,4 @@
-﻿using System;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using ImGui.Forms.Controls.Base;
@@ -39,7 +38,7 @@ namespace ImGui.Forms.Modals
             return FontResource.GetCurrentLineHeight(withDescent: true) + 6;
         }
 
-        protected override void UpdateInternal(Rectangle contentRect)
+        protected override async void UpdateInternal(Rectangle contentRect)
         {
             var id = string.IsNullOrEmpty(Caption) ? "##source" : Caption;
             ImGuiNET.ImGui.OpenPopup(id);
@@ -58,6 +57,9 @@ namespace ImGui.Forms.Modals
                     CloseCore();
 
                 ImGuiNET.ImGui.EndPopup();
+
+                if(_shouldClose)
+                    await CloseInternal();
             }
 
             if (!exists)
@@ -75,7 +77,7 @@ namespace ImGui.Forms.Modals
             Application.Instance.MainForm.PushModal(this);
 
             // Execute code from the inherited class
-            ShowInternal();
+            await ShowInternal();
 
             // Wait for modal to be closed
             _tokenSource = new CancellationTokenSource();
@@ -91,11 +93,6 @@ namespace ImGui.Forms.Modals
             return Result;
         }
 
-        public void Close()
-        {
-            _shouldClose = !ShouldCancelClose();
-        }
-
         public void Close(DialogResult result)
         {
             Result = result;
@@ -103,25 +100,24 @@ namespace ImGui.Forms.Modals
             Close();
         }
 
-        private void CloseCore()
+        public void Close()
         {
-            ImGuiNET.ImGui.CloseCurrentPopup();
-
-            CloseWithoutImGui();
+            _shouldClose = !ShouldCancelClose();
         }
 
-        private void CloseWithoutImGui()
+        private void CloseCore()
         {
             if (Application.Instance?.MainForm != null)
                 Application.Instance.MainForm.PopModal();
 
             _tokenSource?.Cancel();
-            CloseInternal();
+
+            ImGuiNET.ImGui.CloseCurrentPopup();
         }
 
-        protected virtual void ShowInternal() { }
+        protected virtual Task ShowInternal() => Task.CompletedTask;
 
-        protected virtual void CloseInternal() { }
+        protected virtual Task CloseInternal() => Task.CompletedTask;
 
         protected virtual bool ShouldCancelClose() => false;
 

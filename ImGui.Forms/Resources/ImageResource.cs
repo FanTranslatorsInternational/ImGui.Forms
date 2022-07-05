@@ -13,7 +13,7 @@ namespace ImGui.Forms.Resources
     public class ImageResource
     {
         private readonly Bitmap _img;
-        private IntPtr _ptr = IntPtr.Zero;
+        private IntPtr _ptr;
 
         /// <summary>
         /// The size of the <see cref="ImageResource"/> as a <see cref="Vector2"/>.
@@ -30,10 +30,16 @@ namespace ImGui.Forms.Resources
         /// </summary>
         public int Height => _img.Height;
 
+        /// <summary>
+        /// Creates a new <see cref="ImageResource"/>.
+        /// </summary>
+        /// <param name="image">The image to load in this <see cref="ImageResource"/>.</param>
         private ImageResource(Bitmap image)
         {
             _img = image;
         }
+
+        #region Load Methods
 
         /// <summary>
         /// Creates a new <see cref="ImageResource"/> from <paramref name="path"/>.
@@ -80,13 +86,16 @@ namespace ImGui.Forms.Resources
             return new ImageResource(image);
         }
 
+        #endregion
+
         public void Destroy()
         {
             if (_ptr != IntPtr.Zero)
                 Application.Instance?.ImageFactory.UnloadImage(_ptr);
+
+            _ptr = IntPtr.Zero;
         }
 
-        public static implicit operator ImageResource(Bitmap i) => new ImageResource(i);
         public static explicit operator IntPtr(ImageResource ir) => ir.GetPointer();
 
         private IntPtr GetPointer()

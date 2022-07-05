@@ -15,12 +15,15 @@ namespace ImGui.Forms.Factories
         private readonly IDictionary<object, IntPtr> _inputPointers;
         private readonly IDictionary<IntPtr, Texture> _ptrTextures;
 
+        private readonly IList<Texture> _unloadQueue;
+
         public ImageFactory(GraphicsDevice gd, ImGuiRenderer controller)
         {
             _gd = gd;
             _controller = controller;
             _inputPointers = new Dictionary<object, IntPtr>();
             _ptrTextures = new Dictionary<IntPtr, Texture>();
+            _unloadQueue = new List<Texture>();
         }
 
         public IntPtr LoadImage(Bitmap img)
@@ -39,7 +42,7 @@ namespace ImGui.Forms.Factories
             if (!_ptrTextures.ContainsKey(ptr))
                 return;
 
-            _controller.RemoveImGuiBinding(_ptrTextures[ptr]);
+            _unloadQueue.Add(_ptrTextures[ptr]);
         }
 
         private IntPtr LoadImageInternal(Bitmap image)
@@ -60,6 +63,16 @@ namespace ImGui.Forms.Factories
             _ptrTextures[imgPtr] = texture;
 
             return imgPtr;
+        }
+
+        internal void FreeTextures()
+        {
+            foreach (var toFree in _unloadQueue)
+                _controller.RemoveImGuiBinding(toFree);
+
+            _unloadQueue.Clear();
+
+            // TODO: Remove entries for those pointers from dictionaries
         }
     }
 }

@@ -20,9 +20,15 @@ namespace ImGui.Forms
         private DragDropEventEx _dragDropEvent;
         private bool _frameHandledDragDrop;
 
+        #region Static properties
+
         public static Application Instance { get; private set; }
 
         public static FontFactory FontFactory { get; } = new FontFactory();
+
+        #endregion
+
+        #region Properties
 
         #region Factories
 
@@ -38,9 +44,19 @@ namespace ImGui.Forms
 
         public ILocalizer Localizer { get; }
 
+        #endregion
+
+        #region Events
+
+        public event EventHandler<Exception> UnhandledException;
+
+        #endregion
+
         public Application(ILocalizer localizer = null)
         {
             Localizer = localizer;
+
+            AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
         }
 
         public void Execute(Form form)
@@ -60,31 +76,8 @@ namespace ImGui.Forms
             // Main application loop
             while (_executionContext.Window.Exists)
             {
-                _dragDropEvent = default;
-                _frameHandledDragDrop = false;
-
-                // Snapshot current machine state
-                var snapshot = _executionContext.Window.PumpEvents();
-
-                if (_shouldClose)
-                    _executionContext.Window.Close();
-
-                if (!_executionContext.Window.Exists)
+                if (!UpdateFrame(cl))
                     break;
-
-                _executionContext.Renderer.Update(1f / 60f, snapshot);
-
-                // Update main form
-                _executionContext.MainForm.Update();
-
-                // Update frame buffer
-                cl.Begin();
-                cl.SetFramebuffer(_executionContext.GraphicsDevice.MainSwapchain.Framebuffer);
-                cl.ClearColorTarget(0, new RgbaFloat(SystemColors.Control.R, SystemColors.Control.G, SystemColors.Control.B, 1f));
-                _executionContext.Renderer.Render(_executionContext.GraphicsDevice, cl);
-                cl.End();
-                _executionContext.GraphicsDevice.SubmitCommands(cl);
-                _executionContext.GraphicsDevice.SwapBuffers(_executionContext.GraphicsDevice.MainSwapchain);
             }
 
             // Clean up resources
@@ -96,6 +89,14 @@ namespace ImGui.Forms
             _executionContext.GraphicsDevice.Dispose();
 
             FontFactory.Dispose();
+        }
+
+        public void Exit()
+        {
+            if (Instance == null)
+                throw new InvalidOperationException("There is no application running.");
+
+            Instance.Window.Close();
         }
 
         private void CreateApplication(Form form)
@@ -115,6 +116,39 @@ namespace ImGui.Forms
             FontFactory.Initialize(ImGuiNET.ImGui.GetIO(), _executionContext.Renderer);
 
             Instance = this;
+        }
+
+        private bool UpdateFrame(CommandList cl)
+        {
+            _dragDropEvent = default;
+            _frameHandledDragDrop = false;
+
+            ImageFactory.FreeTextures();
+
+            // Snapshot current machine state
+            var snapshot = _executionContext.Window.PumpEvents();
+
+            if (_shouldClose)
+                _executionContext.Window.Close();
+
+            if (!_executionContext.Window.Exists)
+                return false;
+
+            _executionContext.Renderer.Update(1f / 60f, snapshot);
+
+            // Update main form
+            _executionContext.MainForm.Update();
+
+            // Update frame buffer
+            cl.Begin();
+            cl.SetFramebuffer(_executionContext.GraphicsDevice.MainSwapchain.Framebuffer);
+            cl.ClearColorTarget(0, new RgbaFloat(SystemColors.Control.R, SystemColors.Control.G, SystemColors.Control.B, 1f));
+            _executionContext.Renderer.Render(_executionContext.GraphicsDevice, cl);
+            cl.End();
+            _executionContext.GraphicsDevice.SubmitCommands(cl);
+            _executionContext.GraphicsDevice.SwapBuffers(_executionContext.GraphicsDevice.MainSwapchain);
+
+            return true;
         }
 
         #region Window events
@@ -166,6 +200,11 @@ namespace ImGui.Forms
         }
 
         #endregion
+
+        private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            UnhandledException?.Invoke(this, e.ExceptionObject as Exception);
+        }
 
         internal bool TryGetDragDrop(Veldrid.Rectangle controlRect, out DragDropEventEx obj)
         {

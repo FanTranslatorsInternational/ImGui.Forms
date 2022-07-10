@@ -36,13 +36,19 @@ namespace ImGui.Forms.Controls.Layouts
 
         public override int GetWidth(int parentWidth, float layoutCorrection = 1f)
         {
+            if (Size.Width.IsAbsolute && Size.Width.Value >= 0)
+                return (int)Size.Width.Value;
+
             var widths = GetColumnWidths(parentWidth, layoutCorrection);
             return Math.Min(parentWidth, widths.Sum(x => x) + (widths.Length - 1) * (int)Spacing.X);
         }
 
         public override int GetHeight(int parentHeight, float layoutCorrection = 1)
         {
-            var heights = GetRowHeights(parentHeight, layoutCorrection);
+            if (Size.Height.IsAbsolute && Size.Height.Value >= 0)
+                return (int)Size.Height.Value;
+
+                var heights = GetRowHeights(parentHeight, layoutCorrection);
             return Math.Min(parentHeight, heights.Sum(x => x) + (heights.Length - 1) * (int)Spacing.Y);
         }
 

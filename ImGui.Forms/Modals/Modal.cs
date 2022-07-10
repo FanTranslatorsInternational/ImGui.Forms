@@ -58,7 +58,7 @@ namespace ImGui.Forms.Modals
 
                 ImGuiNET.ImGui.EndPopup();
 
-                if(_shouldClose)
+                if (_shouldClose)
                     await CloseInternal();
             }
 
@@ -77,7 +77,7 @@ namespace ImGui.Forms.Modals
             Application.Instance.MainForm.PushModal(this);
 
             // Execute code from the inherited class
-            await ShowInternal();
+            ShowInternal();
 
             // Wait for modal to be closed
             _tokenSource = new CancellationTokenSource();
@@ -105,6 +105,7 @@ namespace ImGui.Forms.Modals
             _shouldClose = !ShouldCancelClose();
         }
 
+        // HINT: Only gets executed if _shouldClose is set to true
         private void CloseCore()
         {
             if (Application.Instance?.MainForm != null)
@@ -115,8 +116,9 @@ namespace ImGui.Forms.Modals
             ImGuiNET.ImGui.CloseCurrentPopup();
         }
 
-        protected virtual Task ShowInternal() => Task.CompletedTask;
+        protected virtual void ShowInternal() { }
 
+        // HINT: Only gets executed if _shouldClose is set to true
         protected virtual Task CloseInternal() => Task.CompletedTask;
 
         protected virtual bool ShouldCancelClose() => false;

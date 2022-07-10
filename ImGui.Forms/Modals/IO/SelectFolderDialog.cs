@@ -91,7 +91,7 @@ namespace ImGui.Forms.Modals.IO
             #endregion
         }
 
-        protected override Task ShowInternal()
+        protected override void ShowInternal()
         {
             Directory = GetInitialDirectory();
 
@@ -102,8 +102,6 @@ namespace ImGui.Forms.Modals.IO
 
             foreach (var drive in DriveInfo.GetDrives())
                 _treeView.Nodes.Add(new TreeNode<string> { Caption = drive.Name, Data = drive.RootDirectory.Name, Nodes = { new TreeNode<string>() } });
-
-            return Task.CompletedTask;
         }
 
         #region Events

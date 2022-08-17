@@ -52,14 +52,10 @@ namespace ImGui.Forms.Modals
                 // Create content of child modal
                 DrawModal(ChildModal);
 
-                // Add closing command to current popup context
-                if (_shouldClose)
-                    CloseCore();
-
                 ImGuiNET.ImGui.EndPopup();
 
                 if (_shouldClose)
-                    await CloseInternal();
+                    await CloseCore();
             }
 
             if (!exists)
@@ -106,10 +102,12 @@ namespace ImGui.Forms.Modals
         }
 
         // HINT: Only gets executed if _shouldClose is set to true
-        private void CloseCore()
+        private async Task CloseCore()
         {
             if (Application.Instance?.MainForm != null)
                 Application.Instance.MainForm.PopModal();
+
+            await CloseInternal();
 
             _tokenSource?.Cancel();
 

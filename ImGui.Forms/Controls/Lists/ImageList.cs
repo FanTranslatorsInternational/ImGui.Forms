@@ -40,6 +40,8 @@ namespace ImGui.Forms.Controls.Lists
             var items = new ObservableList<ImageListItem>();
             items.ItemAdded += Items_ItemAdded;
             items.ItemRemoved += Items_ItemRemoved;
+            items.ItemSet += Items_ItemSet;
+            items.ItemInserted += Items_ItemInserted;
 
             Items = items;
         }
@@ -144,6 +146,14 @@ namespace ImGui.Forms.Controls.Lists
         }
 
         private void Items_ItemRemoved(object sender, ItemEventArgs<ImageListItem> e)
+        {
+        }
+
+        private void Items_ItemInserted(object sender, ItemEventArgs<ImageListItem> e)
+        {
+        }
+
+        private void Items_ItemSet(object sender, ItemEventArgs<ImageListItem> e)
         {
         }
 

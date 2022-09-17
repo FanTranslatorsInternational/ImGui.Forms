@@ -16,9 +16,11 @@ namespace ImGui.Forms.Controls.Lists
 
         public bool HasBorder { get; set; }
 
+        public Size Size { get; set; }=Size.Parent;
+
         public override Size GetSize()
         {
-            return Size.Parent;
+            return Size;
         }
 
         protected override void UpdateInternal(Rectangle contentRect)

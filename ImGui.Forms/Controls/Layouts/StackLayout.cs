@@ -66,6 +66,7 @@ namespace ImGui.Forms.Controls.Layouts
             itemList.ItemAdded += (s, e) => AddItem(e.Item);
             itemList.ItemRemoved += (s, e) => RemoveItem(e.Item);
             itemList.ItemSet += (s, e) => SetItem(e.Item, e.Index);
+            itemList.ItemInserted += (s, e) => InsertItem(e.Item, e.Index);
 
             Items = itemList;
             _tableLayout = new TableLayout();
@@ -160,6 +161,26 @@ namespace ImGui.Forms.Controls.Layouts
                     break;
             }
         }
+        private void InsertItem(StackItem item, int index)
+        {
+            switch (Alignment)
+            {
+                case Alignment.Horizontal:
+                    if (_tableLayout.Rows.Count == 0)
+                    {
+                        var row = new TableRow();
+                        _tableLayout.Rows.Add(row);
+                    }
+
+                    _tableLayout.Rows[0].Cells.Insert(index, item);
+
+                    break;
+
+                case Alignment.Vertical:
+                    _tableLayout.Rows.Insert(index, new TableRow { Cells = { item } });
+                    break;
+            }
+        }
     }
 
     class ObservableList<TItem> : IList<TItem>
@@ -172,6 +193,7 @@ namespace ImGui.Forms.Controls.Layouts
         public event EventHandler<ItemEventArgs<TItem>> ItemAdded;
         public event EventHandler<ItemEventArgs<TItem>> ItemRemoved;
         public event EventHandler<ItemEventArgs<TItem>> ItemSet;
+        public event EventHandler<ItemEventArgs<TItem>> ItemInserted;
 
         public IEnumerator<TItem> GetEnumerator()
         {
@@ -220,7 +242,7 @@ namespace ImGui.Forms.Controls.Layouts
         public void Insert(int index, TItem item)
         {
             _items.Insert(index, item);
-            OnItemAdded(item);
+            OnItemInserted(item, index);
         }
 
         public void RemoveAt(int index)
@@ -254,6 +276,11 @@ namespace ImGui.Forms.Controls.Layouts
         private void OnItemSet(TItem item, int index)
         {
             ItemSet?.Invoke(this, new ItemEventArgs<TItem>(item, index));
+        }
+
+        private void OnItemInserted(TItem item, int index)
+        {
+            ItemInserted?.Invoke(this, new ItemEventArgs<TItem>(item, index));
         }
     }
 

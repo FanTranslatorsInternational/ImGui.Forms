@@ -14,6 +14,8 @@ namespace ImGui.Forms.Controls.Layouts
         {
             _cells.ItemAdded += _cells_ItemAdded;
             _cells.ItemRemoved += _cells_ItemRemoved;
+            _cells.ItemSet += _cells_ItemSet;
+            _cells.ItemInserted += _cells_ItemInserted;
         }
 
         private void _cells_ItemAdded(object sender, ItemEventArgs<TableCell> e)
@@ -24,6 +26,16 @@ namespace ImGui.Forms.Controls.Layouts
         private void _cells_ItemRemoved(object sender, ItemEventArgs<TableCell> e)
         {
             _parent?.Cells_ItemRemoved();
+        }
+
+        private void _cells_ItemInserted(object sender, ItemEventArgs<TableCell> e)
+        {
+            _parent?.Cells_ItemInserted();
+        }
+
+        private void _cells_ItemSet(object sender, ItemEventArgs<TableCell> e)
+        {
+            _parent?.Cells_ItemSet();
         }
     }
 }

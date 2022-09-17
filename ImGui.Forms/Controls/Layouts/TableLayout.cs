@@ -32,6 +32,8 @@ namespace ImGui.Forms.Controls.Layouts
         {
             _rows.ItemAdded += Rows_ItemAdded;
             _rows.ItemRemoved += Rows_ItemRemoved;
+            _rows.ItemSet += _rows_ItemSet;
+            _rows.ItemInserted += _rows_ItemInserted;
         }
 
         public override int GetWidth(int parentWidth, float layoutCorrection = 1f)
@@ -453,6 +455,16 @@ namespace ImGui.Forms.Controls.Layouts
             e.Item._parent = null;
         }
 
+        private void _rows_ItemSet(object sender, ItemEventArgs<TableRow> e)
+        {
+            e.Item._parent = this;
+        }
+
+        private void _rows_ItemInserted(object sender, ItemEventArgs<TableRow> e)
+        {
+            e.Item._parent = this;
+        }
+
         #endregion
 
         #region Cell Event Methods
@@ -462,6 +474,14 @@ namespace ImGui.Forms.Controls.Layouts
         }
 
         internal void Cells_ItemRemoved()
+        {
+        }
+
+        internal void Cells_ItemInserted()
+        {
+        }
+
+        internal void Cells_ItemSet()
         {
         }
 

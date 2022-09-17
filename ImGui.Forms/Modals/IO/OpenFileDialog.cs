@@ -44,6 +44,8 @@ namespace ImGui.Forms.Modals.IO
             var filters = new ObservableList<FileFilter>();
             filters.ItemAdded += Filters_ItemAdded;
             filters.ItemRemoved += Filters_ItemRemoved;
+            filters.ItemSet += Filters_ItemSet;
+            filters.ItemInserted += Filters_ItemInserted;
 
             FileFilters = filters;
 
@@ -236,6 +238,16 @@ namespace ImGui.Forms.Modals.IO
         private void Filters_ItemRemoved(object sender, ItemEventArgs<FileFilter> e)
         {
             _fileFilters.Items.Remove(e.Item);
+        }
+
+        private void Filters_ItemInserted(object sender, ItemEventArgs<FileFilter> e)
+        {
+            _fileFilters.Items.Insert(e.Index, new ComboBoxItem<FileFilter>(e.Item));
+        }
+
+        private void Filters_ItemSet(object sender, ItemEventArgs<FileFilter> e)
+        {
+            _fileFilters.Items[e.Index] = new ComboBoxItem<FileFilter>(e.Item);
         }
 
         private void _fileFilters_SelectedItemChanged(object sender, EventArgs e)

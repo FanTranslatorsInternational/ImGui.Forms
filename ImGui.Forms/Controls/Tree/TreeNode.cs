@@ -42,6 +42,8 @@ namespace ImGui.Forms.Controls.Tree
             _nodes = new ObservableList<TreeNode<TNodeData>>();
             _nodes.ItemAdded += _nodes_ItemAdded;
             _nodes.ItemRemoved += _nodes_ItemRemoved;
+            _nodes.ItemSet += _nodes_ItemSet;
+            _nodes.ItemInserted += _nodes_ItemInserted;
         }
 
         public void Remove()
@@ -67,6 +69,18 @@ namespace ImGui.Forms.Controls.Tree
 
             e.Item.Parent = null;
             SetParents(e.Item, null);
+        }
+
+        private void _nodes_ItemInserted(object sender, ItemEventArgs<TreeNode<TNodeData>> e)
+        {
+            e.Item.Parent = this;
+            SetParents(e.Item, _parentView);
+        }
+
+        private void _nodes_ItemSet(object sender, ItemEventArgs<TreeNode<TNodeData>> e)
+        {
+            e.Item.Parent = this;
+            SetParents(e.Item, _parentView);
         }
 
         private void SetParents(TreeNode<TNodeData> input, TreeView<TNodeData> parent)

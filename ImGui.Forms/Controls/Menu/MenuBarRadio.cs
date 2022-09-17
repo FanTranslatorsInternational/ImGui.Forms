@@ -31,6 +31,8 @@ namespace ImGui.Forms.Controls.Menu
             var checkItems = new ObservableList<MenuBarCheckBox>();
             checkItems.ItemAdded += CheckItems_ItemAdded;
             checkItems.ItemRemoved += CheckItems_ItemRemoved;
+            checkItems.ItemSet += CheckItems_ItemSet;
+            checkItems.ItemInserted += CheckItems_ItemInserted;
 
             _radioMenu = new MenuBarMenu();
             CheckItems = checkItems;
@@ -57,14 +59,33 @@ namespace ImGui.Forms.Controls.Menu
 
         private void CheckItems_ItemAdded(object sender, ItemEventArgs<MenuBarCheckBox> e)
         {
+            e.Item.CheckChanged -= Item_CheckChanged;
             e.Item.CheckChanged += Item_CheckChanged;
+
             _radioMenu.Items.Add(e.Item);
         }
 
         private void CheckItems_ItemRemoved(object sender, ItemEventArgs<MenuBarCheckBox> e)
         {
             e.Item.CheckChanged -= Item_CheckChanged;
+
             _radioMenu.Items.Remove(e.Item);
+        }
+
+        private void CheckItems_ItemInserted(object sender, ItemEventArgs<MenuBarCheckBox> e)
+        {
+            e.Item.CheckChanged -= Item_CheckChanged;
+            e.Item.CheckChanged += Item_CheckChanged;
+
+            _radioMenu.Items.Insert(e.Index, e.Item);
+        }
+
+        private void CheckItems_ItemSet(object sender, ItemEventArgs<MenuBarCheckBox> e)
+        {
+            e.Item.CheckChanged -= Item_CheckChanged;
+            e.Item.CheckChanged += Item_CheckChanged;
+
+            _radioMenu.Items[e.Index] = e.Item;
         }
 
         private void Item_CheckChanged(object sender, EventArgs e)

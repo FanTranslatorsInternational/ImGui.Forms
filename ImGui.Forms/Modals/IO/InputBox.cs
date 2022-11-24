@@ -18,7 +18,7 @@ namespace ImGui.Forms.Modals.IO
 
         public string Input { get; private set; }
 
-        private InputBox(string caption, string text, string preset, string placeHolder)
+        private InputBox(string caption, string text, string preset, string placeHolder, int maxCharacters = 0)
         {
             #region Controls
 
@@ -27,6 +27,8 @@ namespace ImGui.Forms.Modals.IO
 
             var label = new Label { Caption = text };
             _textBox = new TextBox { Placeholder = placeHolder };
+            if (maxCharacters >= 0)
+                _textBox.MaxCharacters = (uint)maxCharacters;
 
             #endregion
 
@@ -48,7 +50,7 @@ namespace ImGui.Forms.Modals.IO
             {
                 Alignment = Alignment.Vertical,
                 ItemSpacing = 4,
-                Size = new Size(1f, -1),
+                Size = new Size(SizeValue.Parent, SizeValue.Content),
                 Items =
                 {
                     label,
@@ -58,7 +60,7 @@ namespace ImGui.Forms.Modals.IO
                         Alignment = Alignment.Horizontal,
                         HorizontalAlignment = HorizontalAlignment.Right,
                         ItemSpacing = 4,
-                        Size=new Size(1f,-1),
+                        Size=new Size(SizeValue.Parent, SizeValue.Content),
                         Items =
                         {
                             okButton,
@@ -90,9 +92,9 @@ namespace ImGui.Forms.Modals.IO
             Close();
         }
 
-        public static async Task<string> ShowAsync(string caption, string text, string preset = "", string placeHolder = "")
+        public static async Task<string> ShowAsync(string caption, string text, string preset = "", string placeHolder = "", int maxCharacters = 0)
         {
-            var inputBox = new InputBox(caption, text, preset, placeHolder);
+            var inputBox = new InputBox(caption, text, preset, placeHolder, maxCharacters);
             await inputBox.ShowAsync();
 
             return inputBox.Result == DialogResult.Cancel ? null : inputBox.Input;

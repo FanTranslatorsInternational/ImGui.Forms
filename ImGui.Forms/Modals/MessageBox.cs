@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Layouts;
+using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 
 namespace ImGui.Forms.Modals
@@ -44,7 +45,7 @@ namespace ImGui.Forms.Modals
 
         public static Task<DialogResult> ShowYesNoAsync(string caption = "", string text = "", bool blockFormClosing = false)
         {
-            return ShowAsync(caption, text, MessageBoxType.Warning, MessageBoxButton.Yes | MessageBoxButton.No, blockFormClosing: blockFormClosing);
+            return ShowAsync(caption, text, MessageBoxType.Warning, MessageBoxButton.Yes | MessageBoxButton.No, blockFormClosing);
         }
 
         public static Task<DialogResult> ShowYesNoCancelAsync(string caption = "", string text = "", bool blockFormClosing = false)
@@ -80,7 +81,7 @@ namespace ImGui.Forms.Modals
             messageLayout.Items.Add(new StackItem(msgLabel) { VerticalAlignment = VerticalAlignment.Center });
 
             // Prepare buttons
-            var buttonLayout = new StackLayout { Alignment = Alignment.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Size = new Models.Size(1f, -1), ItemSpacing = 5 };
+            var buttonLayout = new StackLayout { Alignment = Alignment.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Size = new Models.Size(SizeValue.Parent,SizeValue.Content), ItemSpacing = 5 };
             foreach (var button in GetButtons(buttons))
                 buttonLayout.Items.Add(button);
 

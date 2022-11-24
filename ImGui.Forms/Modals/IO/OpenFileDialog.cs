@@ -104,7 +104,7 @@ namespace ImGui.Forms.Modals.IO
                     new StackLayout
                     {
                         Alignment = Alignment.Horizontal,
-                        Size = new Size(1f, -1),
+                        Size = new Size(SizeValue.Parent, SizeValue.Content),
                         ItemSpacing = 5,
                         Items =
                         {
@@ -128,7 +128,7 @@ namespace ImGui.Forms.Modals.IO
                     {
                         Alignment = Alignment.Horizontal,
                         HorizontalAlignment = HorizontalAlignment.Right,
-                        Size = new Size(7f, -1),
+                        Size = new Size(7f, SizeValue.Content),
                         ItemSpacing = 5,
                         Items =
                         {
@@ -141,7 +141,7 @@ namespace ImGui.Forms.Modals.IO
                     {
                         Alignment = Alignment.Horizontal,
                         HorizontalAlignment = HorizontalAlignment.Right,
-                        Size = new Size(1f, -1),
+                        Size = new Size(SizeValue.Parent, SizeValue.Content),
                         ItemSpacing = 5,
                         Items =
                         {

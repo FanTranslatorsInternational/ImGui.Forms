@@ -14,7 +14,7 @@ namespace ImGui.Forms.Controls
 
         public ComboBoxItem<TItem> SelectedItem { get; set; }
 
-        public SizeValue Width { get; set; } = SizeValue.Absolute(-1);
+        public SizeValue Width { get; set; } = SizeValue.Content;
 
         #region Events
 
@@ -27,7 +27,7 @@ namespace ImGui.Forms.Controls
             var maxWidth = Items.Select(x => FontResource.GetCurrentLineWidth(x.Name)).DefaultIfEmpty(0).Max() + (int)ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.X * 2;
             var arrowWidth = 20;
 
-            SizeValue width = (int)Width.Value == -1 ? maxWidth + arrowWidth : Width;
+            SizeValue width = Width.IsContentAligned ? maxWidth + arrowWidth : Width;
             var height = FontResource.GetCurrentLineHeight() + (int)ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.Y * 2;
 
             return new Size(width, height);

@@ -47,31 +47,6 @@ namespace ImGui.Forms.Resources
         }
 
         /// <summary>
-        /// Creates a new <see cref="FontResource"/> from <paramref name="path"/> with size <paramref name="size"/>.
-        /// </summary>
-        /// <param name="path">The path to load the font from.</param>
-        /// <param name="size">The size to display the font in.</param>
-        /// <returns>A <see cref="FontResource"/> representing the font in the given <paramref name="size"/>.</returns>
-        /// <remarks>To load built-in fonts, see <see cref="FontResources"/>.</remarks>
-        //public static FontResource FromFile(string path, int size)
-        //{
-        //    return new FontResource(path, size);
-        //}
-
-        /// <summary>
-        /// Creates a new <see cref="FontResource"/> from an embedded resource <paramref name="resourceName"/> in <paramref name="assembly"/> with size <paramref name="size"/>.
-        /// </summary>
-        /// <param name="assembly">The <see cref="Assembly"/> to load the embedded resource from.</param>
-        /// <param name="resourceName">The name of the resource to load.</param>
-        /// <param name="size">The size to display the font in.</param>
-        /// <returns>A <see cref="FontResource"/> representing the font in the given <paramref name="size"/>.</returns>
-        /// <remarks>To load built-in fonts, see <see cref="FontResources"/>.</remarks>
-        //public static FontResource FromResource(Assembly assembly, string resourceName, int size)
-        //{
-        //    return new FontResource(assembly, resourceName, size);
-        //}
-
-        /// <summary>
         /// Measure the <paramref name="text"/> with the current font on the stack.
         /// </summary>
         /// <param name="text">The text to measure.</param>

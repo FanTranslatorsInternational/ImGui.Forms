@@ -67,7 +67,7 @@ namespace ImGui.Forms.Modals.IO
                     {
                         Alignment = Alignment.Horizontal,
                         ItemSpacing = 4,
-                        Size = new Size(1f,-1),
+                        Size = new Size(1f,SizeValue.Content),
                         Items =
                         {
                             _newFolderButton
@@ -78,7 +78,7 @@ namespace ImGui.Forms.Modals.IO
                         Alignment = Alignment.Horizontal,
                         HorizontalAlignment = HorizontalAlignment.Right,
                         ItemSpacing = 4,
-                        Size = new Size(1f,-1),
+                        Size = new Size(SizeValue.Parent,SizeValue.Content),
                         Items =
                         {
                             _okButton,

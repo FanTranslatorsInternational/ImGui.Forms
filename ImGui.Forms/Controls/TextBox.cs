@@ -68,7 +68,7 @@ namespace ImGui.Forms.Controls
             ApplyStyles();
 
             var textSize = FontResource.MeasureText(_text);
-            SizeValue width = (int)Width.Value == -1 ? (int)Math.Ceiling(textSize.X) + (int)Padding.X * 2 : Width;
+            SizeValue width = Width.IsContentAligned ? (int)Math.Ceiling(textSize.X) + (int)Padding.X * 2 : Width;
             var height = (int)Padding.Y * 2 + (int)Math.Ceiling(textSize.Y);
 
             RemoveStyles();

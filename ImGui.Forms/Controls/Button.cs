@@ -16,7 +16,7 @@ namespace ImGui.Forms.Controls
 
         public Vector2 Padding { get; set; } = new Vector2(2, 2);
 
-        public SizeValue Width { get; set; } = SizeValue.Absolute(-1);
+        public SizeValue Width { get; set; } = SizeValue.Content;
 
         public FontResource Font { get; set; }
 
@@ -35,7 +35,7 @@ namespace ImGui.Forms.Controls
             ApplyStyles(Enabled, Font);
 
             var textSize = FontResource.MeasureText(Caption);
-            SizeValue width = (int)Width.Value == -1 ? (int)Math.Ceiling(textSize.X) + (int)Padding.X * 2 : Width;
+            SizeValue width = Width.IsContentAligned ? (int)Math.Ceiling(textSize.X) + (int)Padding.X * 2 : Width;
             var height = (int)Math.Ceiling(textSize.Y) + (int)Padding.Y * 2;
 
             RemoveStyles(Enabled, Font);

@@ -72,17 +72,14 @@ namespace ImGui.Forms.Controls.Layouts
             _tableLayout = new TableLayout();
         }
 
-        public override Size GetSize()
-        {
-            return _size;
-        }
+        public override Size GetSize() => _size;
 
-        public override int GetWidth(int parentWidth, float layoutCorrection = 1)
+        protected override int GetContentWidth(int parentWidth, float layoutCorrection = 1)
         {
             return _tableLayout.GetWidth(parentWidth, layoutCorrection);
         }
 
-        public override int GetHeight(int parentHeight, float layoutCorrection = 1)
+        protected override int GetContentHeight(int parentHeight, float layoutCorrection = 1)
         {
             return _tableLayout.GetHeight(parentHeight, layoutCorrection);
         }
@@ -192,7 +189,7 @@ namespace ImGui.Forms.Controls.Layouts
 
         public event EventHandler<ItemEventArgs<TItem>> ItemAdded;
         public event EventHandler<ItemEventArgs<TItem>> ItemRemoved;
-        public event EventHandler<ItemEventArgs<TItem>> ItemSet;
+        public event EventHandler<ItemSetEventArgs<TItem>> ItemSet;
         public event EventHandler<ItemEventArgs<TItem>> ItemInserted;
 
         public IEnumerator<TItem> GetEnumerator()
@@ -208,7 +205,7 @@ namespace ImGui.Forms.Controls.Layouts
         public void Add(TItem item)
         {
             _items.Add(item);
-            OnItemAdded(item);
+            OnItemAdded(item, _items.Count - 1);
         }
 
         public void Clear()
@@ -228,8 +225,9 @@ namespace ImGui.Forms.Controls.Layouts
 
         public bool Remove(TItem item)
         {
+            var index = _items.IndexOf(item);
             var result = _items.Remove(item);
-            OnItemRemoved(item);
+            OnItemRemoved(item, index);
 
             return result;
         }
@@ -250,7 +248,7 @@ namespace ImGui.Forms.Controls.Layouts
             var removedItem = _items[index];
 
             _items.RemoveAt(index);
-            OnItemRemoved(removedItem);
+            OnItemRemoved(removedItem, index);
         }
 
         public TItem this[int index]
@@ -258,24 +256,26 @@ namespace ImGui.Forms.Controls.Layouts
             get => _items[index];
             set
             {
+                var previousItem = _items[index];
                 _items[index] = value;
-                OnItemSet(value, index);
+
+                OnItemSet(value, previousItem, index);
             }
         }
 
-        private void OnItemAdded(TItem item)
+        private void OnItemAdded(TItem item, int index)
         {
-            ItemAdded?.Invoke(this, new ItemEventArgs<TItem>(item));
+            ItemAdded?.Invoke(this, new ItemEventArgs<TItem>(item, index));
         }
 
-        private void OnItemRemoved(TItem item)
+        private void OnItemRemoved(TItem item, int index)
         {
-            ItemRemoved?.Invoke(this, new ItemEventArgs<TItem>(item));
+            ItemRemoved?.Invoke(this, new ItemEventArgs<TItem>(item, index));
         }
 
-        private void OnItemSet(TItem item, int index)
+        private void OnItemSet(TItem item, TItem previousItem, int index)
         {
-            ItemSet?.Invoke(this, new ItemEventArgs<TItem>(item, index));
+            ItemSet?.Invoke(this, new ItemSetEventArgs<TItem>(item, previousItem, index));
         }
 
         private void OnItemInserted(TItem item, int index)
@@ -289,10 +289,20 @@ namespace ImGui.Forms.Controls.Layouts
         public TItem Item { get; }
         public int Index { get; }
 
-        public ItemEventArgs(TItem item, int index = -1)
+        public ItemEventArgs(TItem item, int index)
         {
             Item = item;
             Index = index;
+        }
+    }
+
+    class ItemSetEventArgs<TItem> : ItemEventArgs<TItem>
+    {
+        public TItem PreviousItem { get; set; }
+
+        public ItemSetEventArgs(TItem item, TItem previousItem, int index) : base(item, index)
+        {
+            PreviousItem = previousItem;
         }
     }
 

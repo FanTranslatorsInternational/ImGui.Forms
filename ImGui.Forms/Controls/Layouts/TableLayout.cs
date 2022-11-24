@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Extensions;
 using ImGui.Forms.Models;
 using ImGuiNET;
 using Veldrid;
@@ -36,27 +38,18 @@ namespace ImGui.Forms.Controls.Layouts
             _rows.ItemInserted += _rows_ItemInserted;
         }
 
-        public override int GetWidth(int parentWidth, float layoutCorrection = 1f)
-        {
-            if (Size.Width.IsAbsolute && Size.Width.Value >= 0)
-                return (int)Size.Width.Value;
+        public override Size GetSize() => Size;
 
+        protected override int GetContentWidth(int parentWidth, float layoutCorrection = 1f)
+        {
             var widths = GetColumnWidths(parentWidth, layoutCorrection);
             return Math.Min(parentWidth, widths.Sum(x => x) + (widths.Length - 1) * (int)Spacing.X);
         }
 
-        public override int GetHeight(int parentHeight, float layoutCorrection = 1)
+        protected override int GetContentHeight(int parentHeight, float layoutCorrection = 1)
         {
-            if (Size.Height.IsAbsolute && Size.Height.Value >= 0)
-                return (int)Size.Height.Value;
-
-                var heights = GetRowHeights(parentHeight, layoutCorrection);
+            var heights = GetRowHeights(parentHeight, layoutCorrection);
             return Math.Min(parentHeight, heights.Sum(x => x) + (heights.Length - 1) * (int)Spacing.Y);
-        }
-
-        public override Size GetSize()
-        {
-            return Size;
         }
 
         public IEnumerable<TableCell> GetCellsByRow(int row)
@@ -64,7 +57,7 @@ namespace ImGui.Forms.Controls.Layouts
             if (row < 0 || row >= Rows.Count)
                 return Array.Empty<TableCell>();
 
-            return Rows[row].Cells;
+            return Rows[row].Cells.ToArray();
         }
 
         public IEnumerable<TableCell> GetCellsByColumn(int col)
@@ -86,7 +79,7 @@ namespace ImGui.Forms.Controls.Layouts
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            if (ImGuiNET.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height), HasBorder, ImGuiWindowFlags.NoScrollbar))
+            if (ImGuiNET.ImGui.BeginChild($"{Id}", contentRect.Size, HasBorder, ImGuiWindowFlags.NoScrollbar))
             {
                 var localWidths = GetColumnWidths(contentRect.Width, 1f);
                 var localHeights = GetRowHeights(contentRect.Height, 1f);
@@ -96,8 +89,6 @@ namespace ImGui.Forms.Controls.Layouts
 
                 var localCells = Rows.Select(r => r.Cells).ToArray();
                 var localMaxColumns = GetMaxColumnCount();
-
-                var localWindowPadding = ImGuiNET.ImGui.GetStyle().WindowPadding;
 
                 for (var r = 0; r < localCells.Length; r++)
                 {
@@ -142,34 +133,41 @@ namespace ImGui.Forms.Controls.Layouts
                         // HINT: Make child container as big as the component returned
                         if (cell != null && cellWidth > 0 && cellHeight > 0)
                         {
-                            // Define border
-                            var hasBorder = cell.HasBorder;
-                            var borderOffsetX = (int)Math.Ceiling(hasBorder ? localWindowPadding.X : 0);
-                            var borderOffsetY = (int)Math.Ceiling(hasBorder ? localWindowPadding.Y : 0);
+                            // Draw cell border
+                            if (cell.ShowBorder)
+                                ImGuiNET.ImGui.GetWindowDrawList().AddRect(new Vector2(x, y), new Vector2(x + cellWidth, y + cellHeight), Style.GetColor(ImGuiCol.Border).ToUInt32(), 0);
 
-                            // Set position for child
-                            ImGuiNET.ImGui.SetCursorPosX(x + xAdjust);
-                            ImGuiNET.ImGui.SetCursorPosY(y + yAdjust);
+                            // Determine scroll position
+                            var sx = ImGuiNET.ImGui.GetScrollX();
+                            var sy = ImGuiNET.ImGui.GetScrollY();
 
-                            // Draw component container
-                            if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}", new Vector2(cellInternalWidth, cellInternalHeight), hasBorder, ImGuiWindowFlags.NoScrollbar))
+                            // Draw cell container
+                            ImGuiNET.ImGui.SetCursorPosX(x);
+                            ImGuiNET.ImGui.SetCursorPosY(y);
+
+                            if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}", new Vector2(cellWidth, cellHeight), false, ImGuiWindowFlags.NoScrollbar))
                             {
-                                // Set position for child content (should only be altered due to active border)
-                                ImGuiNET.ImGui.SetCursorPosX(borderOffsetX);
-                                ImGuiNET.ImGui.SetCursorPosY(borderOffsetY);
+                                // Draw cell content container
+                                ImGuiNET.ImGui.SetCursorPosX(xAdjust);
+                                ImGuiNET.ImGui.SetCursorPosY(yAdjust);
 
-                                // Draw component
-                                cell.Content?.Update(new Rectangle((int)(contentRect.X + x + xAdjust + borderOffsetX), (int)(contentRect.Y + y + yAdjust + borderOffsetY), cellInternalWidth - borderOffsetX * 2, cellInternalHeight - borderOffsetY * 2));
+                                if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}-content", new Vector2(cellInternalWidth, cellInternalHeight), false, ImGuiWindowFlags.NoScrollbar))
+                                {
+                                    // Draw component
+                                    cell.Content?.Update(new Rectangle((int)(contentRect.X + x + xAdjust - sx), (int)(contentRect.Y + y + yAdjust - sy), cellInternalWidth, cellInternalHeight));
+                                }
+
+                                ImGuiNET.ImGui.EndChild();
                             }
 
                             ImGuiNET.ImGui.EndChild();
                         }
 
-                        x += cellWidth + Spacing.X;
+                        x += cellWidth + (cellWidth <= 0 ? 0 : Spacing.X);
                     }
 
                     x = origX;
-                    y += cellHeight + Spacing.Y;
+                    y += cellHeight + (cellHeight <= 0 ? 0 : Spacing.Y);
                 }
             }
 
@@ -183,7 +181,7 @@ namespace ImGui.Forms.Controls.Layouts
             var maxColumnCount = GetMaxColumnCount();
             var result = Enumerable.Repeat(-1, maxColumnCount).ToArray();
 
-            var availableWidth = (int)(componentWidth * layoutCorrection - (maxColumnCount - 1) * Spacing.X);
+            var availableWidth = (int)(componentWidth * layoutCorrection - Math.Max(0, GetValidColumnCount() - 1) * Spacing.X);
             var maxRelatives = Enumerable.Range(0, maxColumnCount).Select(GetMaxRelativeWidth).ToArray();
 
             // Preset columns with only static widths
@@ -292,7 +290,7 @@ namespace ImGui.Forms.Controls.Layouts
         {
             var result = Enumerable.Repeat(-1, Rows.Count).ToArray();
 
-            var availableHeight = (int)(componentHeight * layoutCorrection - (Rows.Count - 1) * Spacing.Y);
+            var availableHeight = (int)(componentHeight * layoutCorrection - Math.Max(0, GetValidRowCount() - 1) * Spacing.Y);
             var maxRelatives = Enumerable.Range(0, Rows.Count).Select(GetMaxRelativeHeight).ToArray();
 
             // Preset columns with only static heights
@@ -306,11 +304,9 @@ namespace ImGui.Forms.Controls.Layouts
                     {
                         if (cell?.Content == null) continue;
 
-                        var heightValue = (int)cell.Size.Height.Value;
-
-                        var maxValue = heightValue < 0 ?
+                        var maxValue = cell.Size.Height.IsContentAligned ?
                             cell.Content.GetHeight(componentHeight, layoutCorrection) :
-                            heightValue;
+                            (int)cell.Size.Height.Value;
                         maxValue = Math.Min(availableHeight, maxValue);
 
                         if (maxValue > maxCellHeight)
@@ -439,6 +435,33 @@ namespace ImGui.Forms.Controls.Layouts
                 return 0;
 
             return Rows.Max(x => x.Cells.Count);
+        }
+
+        private int GetValidColumnCount()
+        {
+            var res = 0;
+            for (var i = 0; i < GetMaxColumnCount(); i++)
+            {
+                var cells = GetCellsByColumn(i).ToArray();
+                if (cells.Any(x => x?.Content != null && x.Content.Visible || (x?.HasSize ?? false)))
+                    if (cells.All(x => x?.Size.IsVisible ?? true))
+                        res++;
+            }
+
+            return res;
+        }
+
+        private int GetValidRowCount()
+        {
+            var res = 0;
+            foreach (var row in Rows)
+            {
+                if (row.Cells.Any(x => x?.Content != null && x.Content.Visible || (x?.HasSize ?? false)))
+                    if (row.Cells.All(x => x?.Size.IsVisible ?? false))
+                        res++;
+            }
+
+            return res;
         }
 
         #endregion

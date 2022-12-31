@@ -20,6 +20,9 @@ namespace ImGui.Forms
 
         public static void ChangeTheme(Theme theme)
         {
+            if (Theme == theme)
+                return;
+
             switch (theme)
             {
                 case Theme.Light:

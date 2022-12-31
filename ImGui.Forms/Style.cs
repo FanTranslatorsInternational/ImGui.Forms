@@ -14,7 +14,8 @@ namespace ImGui.Forms
         private static readonly IDictionary<Theme, IDictionary<ImGuiCol, Color>> Colors = new Dictionary<Theme, IDictionary<ImGuiCol, Color>>();
         private static readonly IDictionary<Theme, IDictionary<ImGuiStyleVar, object>> Styles = new Dictionary<Theme, IDictionary<ImGuiStyleVar, object>>();
 
-        private static bool _hasChanges;
+        // HINT: Set to true initially, so ApplyStyle gets triggered by the first frame and sets every default style accordingly
+        private static bool _hasChanges = true;
 
         public static Theme Theme { get; private set; } = DefaultTheme_;
 
@@ -22,17 +23,6 @@ namespace ImGui.Forms
         {
             if (Theme == theme)
                 return;
-
-            switch (theme)
-            {
-                case Theme.Light:
-                    ImGuiNET.ImGui.StyleColorsLight();
-                    break;
-
-                case Theme.Dark:
-                    ImGuiNET.ImGui.StyleColorsDark();
-                    break;
-            }
 
             Theme = theme;
             _hasChanges = true;
@@ -112,6 +102,8 @@ namespace ImGui.Forms
 
         #endregion
 
+        #region Color changes
+
         public static void SetColor(ImGuiCol colorIndex, Color color)
         {
             SetColor(Theme, colorIndex, color);
@@ -142,10 +134,23 @@ namespace ImGui.Forms
             return Colors[theme][colorIndex];
         }
 
+        #endregion
+
         internal static void ApplyStyle()
         {
             if (!_hasChanges)
                 return;
+
+            switch (Theme)
+            {
+                case Theme.Light:
+                    ImGuiNET.ImGui.StyleColorsLight();
+                    break;
+
+                case Theme.Dark:
+                    ImGuiNET.ImGui.StyleColorsDark();
+                    break;
+            }
 
             var stylePtr = ImGuiNET.ImGui.GetStyle();
 

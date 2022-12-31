@@ -32,6 +32,5 @@ jobs:
         PROJECT_FILE_PATH: ImGui.Forms/ImGui.Forms.csproj
         VERSION_FILE_PATH: ImGui.Forms/ImGui.Forms.nuspec
         VERSION_REGEX: '^\s*<version>(.*)<\/version>\s*$'
-        BUILD_CONFIGURATION: Release
         TAG_FORMAT: '*'
         NUGET_KEY: ${{secrets.NUGET_API_KEY}}

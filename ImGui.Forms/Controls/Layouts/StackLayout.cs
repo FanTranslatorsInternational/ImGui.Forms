@@ -36,14 +36,8 @@ namespace ImGui.Forms.Controls.Layouts
         }
 
         /// <summary>
-        /// Determines if the layout should have a border.
+        /// Determines the spacing between the items.
         /// </summary>
-        public bool HasBorder
-        {
-            get => _tableLayout.HasBorder;
-            set => _tableLayout.HasBorder = value;
-        }
-
         public int ItemSpacing
         {
             get => (int)_tableLayout.Spacing.X;

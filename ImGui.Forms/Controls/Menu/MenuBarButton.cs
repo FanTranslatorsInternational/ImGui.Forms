@@ -1,4 +1,5 @@
 ﻿using System;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Resources;
 
 namespace ImGui.Forms.Controls.Menu
@@ -7,7 +8,7 @@ namespace ImGui.Forms.Controls.Menu
     {
         public bool Enabled { get; set; } = true;
 
-        public string Caption { get; set; } = string.Empty;
+        public LocalizedString Caption { get; set; } = string.Empty;
 
         public override int Height => GetHeight();
 
@@ -20,7 +21,7 @@ namespace ImGui.Forms.Controls.Menu
         protected override void UpdateInternal()
         {
             // Add menu button
-            if (ImGuiNET.ImGui.MenuItem(Caption ?? string.Empty, Enabled))
+            if (ImGuiNET.ImGui.MenuItem(Caption, Enabled))
                 // Execute click event, if set
                 Clicked?.Invoke(this, new EventArgs());
         }

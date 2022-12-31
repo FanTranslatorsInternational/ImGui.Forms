@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Resources;
 using ImGuiNET;
 
@@ -9,7 +10,7 @@ namespace ImGui.Forms.Controls.Menu
     {
         public bool Enabled { get; set; } = true;
 
-        public string Caption { get; set; } = string.Empty;
+        public LocalizedString Caption { get; set; } = string.Empty;
 
         public Vector2 Padding { get; set; } = new Vector2(8, 8);
 

@@ -1,10 +1,11 @@
 ﻿using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Localization;
 
 namespace ImGui.Forms.Controls
 {
     public class TabPage
     {
-        public string Title { get; set; } = string.Empty;
+        public LocalizedString Title { get; set; }
 
         public Component Content { get; }
 

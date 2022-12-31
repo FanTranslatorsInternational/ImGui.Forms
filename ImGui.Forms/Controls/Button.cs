@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 using ImGuiNET;
@@ -12,15 +13,13 @@ namespace ImGui.Forms.Controls
     {
         #region Properties
 
-        public string Caption { get; set; } = string.Empty;
+        public LocalizedString Caption { get; set; }
 
         public Vector2 Padding { get; set; } = new Vector2(2, 2);
 
         public SizeValue Width { get; set; } = SizeValue.Content;
 
         public FontResource Font { get; set; }
-
-        public bool Enabled { get; set; } = true;
 
         #endregion
 
@@ -34,7 +33,7 @@ namespace ImGui.Forms.Controls
         {
             ApplyStyles(Enabled, Font);
 
-            var textSize = FontResource.MeasureText(Caption);
+            var textSize = FontResource.MeasureText(EscapeCaption());
             SizeValue width = Width.IsContentAligned ? (int)Math.Ceiling(textSize.X) + (int)Padding.X * 2 : Width;
             var height = (int)Math.Ceiling(textSize.Y) + (int)Padding.Y * 2;
 
@@ -50,7 +49,7 @@ namespace ImGui.Forms.Controls
 
             ApplyStyles(enabled, font);
 
-            if (ImGuiNET.ImGui.Button(Caption ?? string.Empty, new Vector2(contentRect.Width, contentRect.Height)) && Enabled)
+            if (ImGuiNET.ImGui.Button(EscapeCaption(), new Vector2(contentRect.Width, contentRect.Height)) && Enabled)
                 OnClicked();
 
             RemoveStyles(enabled, font);
@@ -89,7 +88,7 @@ namespace ImGui.Forms.Controls
 
         protected string EscapeCaption()
         {
-            return Caption?.Replace("\\n", Environment.NewLine) ?? string.Empty;
+            return Caption.ToString().Replace("\\n", Environment.NewLine);
         }
     }
 }

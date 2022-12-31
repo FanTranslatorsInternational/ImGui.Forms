@@ -1,5 +1,6 @@
 ﻿using System;
 using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 using ImGuiNET;
@@ -9,13 +10,11 @@ namespace ImGui.Forms.Controls
 {
     public class CheckBox : Component
     {
-        public string Caption { get; set; } = string.Empty;
+        public LocalizedString Caption { get; set; }
 
-        public string Tooltip { get; set; } = string.Empty;
+        public LocalizedString Tooltip { get; set; }
 
         public bool Checked { get; set; }
-
-        public bool Enabled { get; set; } = true;
 
         #region Events
 
@@ -42,7 +41,7 @@ namespace ImGui.Forms.Controls
             if (IsHovering(contentRect) && !string.IsNullOrEmpty(Tooltip))
                 ImGuiNET.ImGui.SetTooltip(Tooltip);
 
-            if (ImGuiNET.ImGui.Checkbox(Caption ?? string.Empty, ref check) && Enabled)
+            if (ImGuiNET.ImGui.Checkbox(Caption, ref check) && Enabled)
             {
                 Checked = check;
                 OnCheckChanged();

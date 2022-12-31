@@ -1,4 +1,5 @@
 ﻿using System;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Resources;
 
 namespace ImGui.Forms.Controls.Menu
@@ -9,7 +10,7 @@ namespace ImGui.Forms.Controls.Menu
 
         public bool Enabled { get; set; } = true;
 
-        public string Caption { get; set; } = string.Empty;
+        public LocalizedString Caption { get; set; } = string.Empty;
 
         public override int Height => GetHeight();
 
@@ -32,7 +33,7 @@ namespace ImGui.Forms.Controls.Menu
         protected override void UpdateInternal()
         {
             // Add menu check box
-            if (ImGuiNET.ImGui.MenuItem(Caption ?? string.Empty, null, Checked, Enabled))
+            if (ImGuiNET.ImGui.MenuItem(Caption, null, Checked, Enabled))
                 // Invert checked value, if clicked
                 Checked = !Checked;
         }

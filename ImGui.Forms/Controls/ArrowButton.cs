@@ -11,8 +11,6 @@ namespace ImGui.Forms.Controls
     {
         public ImGuiDir Direction { get; set; } = ImGuiDir.None;
 
-        public bool Enabled { get; set; } = true;
-
         #region Events
 
         public event EventHandler Clicked;

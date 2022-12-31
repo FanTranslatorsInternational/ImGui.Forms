@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 using ImGuiNET;
@@ -11,19 +12,14 @@ namespace ImGui.Forms.Controls
     public class TextBox : Component
     {
         private bool _activePreviousFrame;
-        private string _text = string.Empty;
+        private string _text;
 
-        /// <summary>
-        /// Get or set the text shown.
-        /// </summary>
         public string Text
         {
             get => _text;
             set
             {
-                value ??= string.Empty;
-
-                _text = value;
+                _text = value ?? string.Empty;
                 OnTextChanged();
             }
         }
@@ -54,7 +50,7 @@ namespace ImGui.Forms.Controls
         /// </summary>
         public uint MaxCharacters { get; set; } = 256;
 
-        public string Placeholder { get; set; }
+        public LocalizedString Placeholder { get; set; }
 
         #region Events
 

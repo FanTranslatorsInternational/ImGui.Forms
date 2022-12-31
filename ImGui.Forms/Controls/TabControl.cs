@@ -55,7 +55,7 @@ namespace ImGui.Forms.Controls
                     ImGuiNET.ImGui.PushID(Application.Instance.IdFactory.Get(page));
 
                     var stillOpen = true;
-                    if (ImGuiNET.ImGui.BeginTabItem(page.Title ?? string.Empty, ref stillOpen, pageFlags))
+                    if (ImGuiNET.ImGui.BeginTabItem(page.Title, ref stillOpen, pageFlags))
                     {
                         // Check selected page status
                         var wasChanged = _selectedPage != page;

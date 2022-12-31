@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
 using ImGui.Forms.Controls.Layouts;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Resources;
 
 namespace ImGui.Forms.Controls.Tree
@@ -12,7 +13,7 @@ namespace ImGui.Forms.Controls.Tree
 
         private bool _isExpanded;
 
-        public string Caption { get; set; } = string.Empty;
+        public LocalizedString Caption { get; set; } = string.Empty;
 
         public Color TextColor { get; set; }
 

@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Extensions;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 using ImGuiNET;
@@ -13,7 +14,7 @@ namespace ImGui.Forms.Controls
 {
     public class Label : Component
     {
-        public string Caption { get; set; } = string.Empty;
+        public LocalizedString Caption { get; set; }
 
         public FontResource Font { get; set; }
 
@@ -82,7 +83,7 @@ namespace ImGui.Forms.Controls
 
         protected string EscapeCaption()
         {
-            return Caption?.Replace("\n", Environment.NewLine) ?? string.Empty;
+            return (Caption.ToString()).Replace("\n", Environment.NewLine);
         }
     }
 }

@@ -1,19 +1,20 @@
 ﻿using System;
+using ImGui.Forms.Localization;
 
 namespace ImGui.Forms.Controls.Lists
 {
     public class DataTableColumn<TData>
     {
-        private readonly Func<TData, string> _valueGetter;
+        private readonly Func<TData, LocalizedString> _valueGetter;
 
-        public string Name { get; }
+        public LocalizedString Name { get; }
 
-        public DataTableColumn(Func<TData, string> valueGetter, string name = null)
+        public DataTableColumn(Func<TData, LocalizedString> valueGetter, LocalizedString name = default)
         {
             Name = name;
             _valueGetter = valueGetter;
         }
 
-        public string Get(DataTableRow<TData> row) => _valueGetter(row.Data);
+        public LocalizedString Get(DataTableRow<TData> row) => _valueGetter(row.Data);
     }
 }

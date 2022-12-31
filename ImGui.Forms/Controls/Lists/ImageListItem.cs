@@ -1,4 +1,5 @@
-﻿using ImGui.Forms.Resources;
+﻿using ImGui.Forms.Localization;
+using ImGui.Forms.Resources;
 
 namespace ImGui.Forms.Controls.Lists
 {
@@ -6,6 +7,6 @@ namespace ImGui.Forms.Controls.Lists
     {
         public ImageResource Image { get; set; }
 
-        public string Text { get; set; }
+        public LocalizedString Text { get; set; }
     }
 }

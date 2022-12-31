@@ -84,7 +84,7 @@ namespace ImGui.Forms.Controls.Tree
                 if (node.Font != null)
                     ImGuiNET.ImGui.PushFont((ImFontPtr)node.Font);
 
-                var expanded = ImGuiNET.ImGui.TreeNodeEx(node.Caption ?? string.Empty, flags);
+                var expanded = ImGuiNET.ImGui.TreeNodeEx(node.Caption, flags);
                 var changedExpansion = expanded != node.IsExpanded;
                 if (changedExpansion)
                     node.IsExpanded = expanded;

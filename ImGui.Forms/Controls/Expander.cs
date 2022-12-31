@@ -1,5 +1,6 @@
 ﻿using System;
 using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 using ImGuiNET;
@@ -9,7 +10,7 @@ namespace ImGui.Forms.Controls
 {
     public class Expander : Component
     {
-        public string Caption { get; set; } = string.Empty;
+        public LocalizedString Caption { get; set; }
 
         public Component Content { get; set; }
 
@@ -35,7 +36,7 @@ namespace ImGui.Forms.Controls
             var expanded = Expanded;
             var flags = expanded ? ImGuiTreeNodeFlags.DefaultOpen : ImGuiTreeNodeFlags.None;
 
-            expanded = ImGuiNET.ImGui.CollapsingHeader(Caption ?? string.Empty, flags);
+            expanded = ImGuiNET.ImGui.CollapsingHeader(Caption, flags);
             if (expanded)
                 Content?.Update(new Rectangle(contentRect.X, contentRect.Y, contentRect.Width, contentRect.Height));
 

@@ -2,19 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.1</TargetFramework>
+
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
-    <PackageReleaseNotes>Previewversion</PackageReleaseNotes>
-    <Authors>onepiecefreak</Authors>
-    <Company />
-    <Copyright>Fan Translators International</Copyright>
-    <Description>A WinForms-inspired object-oriented framework around Dear ImGui (https://github.com/ocornut/imgui)</Description>
-    <PackageTags>ImGui Forms ImGui.NET Immediate Mode GUI</PackageTags>
-    <Version>1.0.21</Version>
-    <AssemblyVersion>1.0.21.0</AssemblyVersion>
-    <PackageProjectUrl>https://github.com/FanTranslatorsInternational/ImGui.Forms</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/FanTranslatorsInternational/ImGui.Forms</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
+    <PackageOutputPath>..\nuget</PackageOutputPath>
+
+    <NuspecFile>ImGui.Forms.nuspec</NuspecFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">

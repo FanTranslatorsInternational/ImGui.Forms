@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Extensions;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Resources;
 using ImGuiNET;
 using Rectangle = Veldrid.Rectangle;
@@ -18,7 +19,7 @@ namespace ImGui.Forms.Controls
 
         public int Value { get; set; }
 
-        public string Text { get; set; }
+        public LocalizedString Text { get; set; }
 
         public Size Size { get; set; } = Size.Parent;
 
@@ -41,14 +42,13 @@ namespace ImGui.Forms.Controls
             ImGuiNET.ImGui.GetWindowDrawList().AddRect(new Vector2(contentRect.X, contentRect.Y), new Vector2(contentRect.X + contentRect.Width, contentRect.Y + contentRect.Height), ImGuiNET.ImGui.GetColorU32(ImGuiCol.Border));
 
             // Draw text
-            var text = Text ?? string.Empty;
-            var textSize = FontResource.MeasureText(text);
+            var textSize = FontResource.MeasureText(Text);
             var textPos = new Vector2(contentRect.X + (contentRect.Width - textSize.X) / 2, contentRect.Y + (contentRect.Height - textSize.Y) / 2);
 
             if (Font == null)
-                ImGuiNET.ImGui.GetWindowDrawList().AddText(textPos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), text);
+                ImGuiNET.ImGui.GetWindowDrawList().AddText(textPos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), Text);
             else
-                ImGuiNET.ImGui.GetWindowDrawList().AddText((ImFontPtr)Font, Font.Size, textPos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), text);
+                ImGuiNET.ImGui.GetWindowDrawList().AddText((ImFontPtr)Font, Font.Size, textPos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), Text);
         }
 
         protected override void ApplyStyles()

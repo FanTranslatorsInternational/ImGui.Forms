@@ -13,8 +13,6 @@ namespace ImGui.Forms.Controls
         public ImageResource Image { get; set; }
         public Vector2 ImageSize { get; set; } = Vector2.Zero;
 
-        public bool Enabled { get; set; } = true;
-
         public Vector2 Padding { get; set; } = new Vector2(2, 2);
 
         #region Events

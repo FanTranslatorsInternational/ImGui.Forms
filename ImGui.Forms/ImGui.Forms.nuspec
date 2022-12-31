@@ -1,0 +1,32 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>Imgui.Forms</id>
+    <version>1.0.21</version>
+    <description>A WinForms-inspired object-oriented framework around Dear ImGui (https://github.com/ocornut/imgui)</description>
+
+    <authors>onepiecefreak</authors>
+    <owners>onepiecefreak</owners>
+    <copyright>Copyright (c) 2021 onepiecefreak</copyright>
+
+    <projectUrl>https://github.com/FanTranslatorsInternational/ImGui.Forms</projectUrl>
+    <tags>ImGui;Forms;ImGui.NET;GUI</tags>
+
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <license type="expression">GPL-3.0-only</license>
+
+    <repository type="git" url="https://github.com/FanTranslatorsInternational/ImGui.Forms" />
+
+    <dependencies>
+      <group targetFramework="netstandard2.1">
+        <dependency id="ImGui.NET-newest" version="1.82.0" />
+        <dependency id="System.Drawing.Common" version="5.0.3" />
+        <dependency id="Veldrid.StartupUtilities" version="4.8.0" />
+      </group>
+    </dependencies>
+  </metadata>
+
+  <files>
+    <file src="bin\Release\netstandard2.1\*.dll" target="lib\netstandard2.1\"/>
+  </files>
+</package>

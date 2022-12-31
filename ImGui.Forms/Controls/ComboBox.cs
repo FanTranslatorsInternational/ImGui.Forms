@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 using Veldrid;
@@ -66,12 +67,12 @@ namespace ImGui.Forms.Controls
     {
         public TItem Content { get; }
 
-        public string Name { get; }
+        public LocalizedString Name { get; }
 
-        public ComboBoxItem(TItem content, string name = "")
+        public ComboBoxItem(TItem content, LocalizedString name = default)
         {
             Content = content;
-            Name = string.IsNullOrEmpty(name) ? content.ToString() : name;
+            Name = name.IsEmpty ? (LocalizedString)content.ToString() : name;
         }
 
         public static implicit operator ComboBoxItem<TItem>(TItem o) => new ComboBoxItem<TItem>(o);

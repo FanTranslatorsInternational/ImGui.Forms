@@ -18,6 +18,8 @@ namespace ImGui.Forms.Controls.Lists
 
         private IList<DataTableRow<TData>> _rows = new List<DataTableRow<TData>>();
 
+        #region Properties
+
         public IList<DataTableColumn<TData>> Columns { get; } = new List<DataTableColumn<TData>>();
 
         public IList<DataTableRow<TData>> Rows
@@ -46,6 +48,8 @@ namespace ImGui.Forms.Controls.Lists
 
         public ContextMenu ContextMenu { get; set; }
 
+        #endregion
+
         #region Events
 
         public event EventHandler SelectedRowsChanged;
@@ -72,7 +76,7 @@ namespace ImGui.Forms.Controls.Lists
                     if (ShowHeaders)
                     {
                         foreach (var column in Columns)
-                            ImGuiNET.ImGui.TableSetupColumn(column.Name ?? string.Empty);
+                            ImGuiNET.ImGui.TableSetupColumn(column.Name);
                         ImGuiNET.ImGui.TableHeadersRow();
                     }
 

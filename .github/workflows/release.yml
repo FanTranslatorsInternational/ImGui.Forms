@@ -27,15 +27,13 @@ jobs:
 
     # Pack framework
     - name: Pack ImGui.Forms
-      run: |
-        dotnet build ./ImGui.Forms/ImGui.Forms.csproj --configuration Release
-        dotnet pack ./ImGui.Forms/ImGui.Forms.csproj --configuration Release --output .\dist\nuget --verbosity normal
+      run: dotnet build ./ImGui.Forms/ImGui.Forms.csproj --configuration Release
 
     # Upload ImGui.Forms to nuget.org
     - name: Publish ImGui.Forms
       uses: brandedoutcast/publish-nuget@v2
       with:
-        PROJECT_FILE_PATH: ImGui.Forms/ImGui.Forms.csproj
-        VERSION_REGEX: '^\s*<Version>(.*)<\/Version>\s*$'
+        PROJECT_FILE_PATH: ImGui.Forms/ImGui.Forms.nuspec
+        VERSION_REGEX: '^\s*<version>(.*)<\/version>\s*$'
         TAG_FORMAT: '*'
         NUGET_KEY: ${{secrets.NUGET_API_KEY}}

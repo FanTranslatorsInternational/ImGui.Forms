@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
@@ -25,8 +24,6 @@ namespace ImGui.Forms.Controls.Layouts
 
         public HorizontalAlignment HorizontalAlignment { get; set; }
         public VerticalAlignment VerticalAlignment { get; set; }
-
-        public bool HasBorder { get; set; }
 
         #endregion
 
@@ -79,7 +76,7 @@ namespace ImGui.Forms.Controls.Layouts
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            if (ImGuiNET.ImGui.BeginChild($"{Id}", contentRect.Size, HasBorder, ImGuiWindowFlags.NoScrollbar))
+            if (ImGuiNET.ImGui.BeginChild($"{Id}", contentRect.Size, false, ImGuiWindowFlags.NoScrollbar))
             {
                 var localWidths = GetColumnWidths(contentRect.Width, 1f);
                 var localHeights = GetRowHeights(contentRect.Height, 1f);

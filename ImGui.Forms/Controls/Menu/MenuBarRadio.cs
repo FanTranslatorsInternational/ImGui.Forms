@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using ImGui.Forms.Controls.Layouts;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Resources;
 
 namespace ImGui.Forms.Controls.Menu
@@ -10,7 +11,7 @@ namespace ImGui.Forms.Controls.Menu
     {
         private readonly MenuBarMenu _radioMenu;
 
-        public string Caption
+        public LocalizedString Caption
         {
             get => _radioMenu.Caption;
             set => _radioMenu.Caption = value;

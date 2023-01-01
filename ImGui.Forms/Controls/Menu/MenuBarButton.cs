@@ -8,7 +8,7 @@ namespace ImGui.Forms.Controls.Menu
     {
         public bool Enabled { get; set; } = true;
 
-        public LocalizedString Caption { get; set; } = string.Empty;
+        public LocalizedString Text { get; set; } = string.Empty;
 
         public override int Height => GetHeight();
 
@@ -21,7 +21,7 @@ namespace ImGui.Forms.Controls.Menu
         protected override void UpdateInternal()
         {
             // Add menu button
-            if (ImGuiNET.ImGui.MenuItem(Caption, Enabled))
+            if (ImGuiNET.ImGui.MenuItem(Text, Enabled))
                 // Execute click event, if set
                 Clicked?.Invoke(this, new EventArgs());
         }
@@ -30,7 +30,7 @@ namespace ImGui.Forms.Controls.Menu
         {
             ApplyStyles();
 
-            var textSize = FontResource.MeasureText(Caption);
+            var textSize = FontResource.MeasureText(Text);
             var height = (int)(textSize.Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y);
 
             RemoveStyles();

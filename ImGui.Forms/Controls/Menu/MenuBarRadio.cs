@@ -11,10 +11,10 @@ namespace ImGui.Forms.Controls.Menu
     {
         private readonly MenuBarMenu _radioMenu;
 
-        public LocalizedString Caption
+        public LocalizedString Text
         {
-            get => _radioMenu.Caption;
-            set => _radioMenu.Caption = value;
+            get => _radioMenu.Text;
+            set => _radioMenu.Text = value;
         }
 
         public IList<MenuBarCheckBox> CheckItems { get; }
@@ -50,7 +50,7 @@ namespace ImGui.Forms.Controls.Menu
         {
             ApplyStyles();
 
-            var textSize = FontResource.MeasureText(Caption);
+            var textSize = FontResource.MeasureText(Text);
             var height = (int)(textSize.Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y);
 
             RemoveStyles();

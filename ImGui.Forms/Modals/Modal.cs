@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 using ImGuiNET;
@@ -16,7 +17,7 @@ namespace ImGui.Forms.Modals
 
         internal Modal ChildModal { get; set; }
 
-        public string Caption { get; set; } = string.Empty;
+        public LocalizedString Caption { get; set; } = string.Empty;
 
         public Component Content { get; set; }
 
@@ -40,7 +41,7 @@ namespace ImGui.Forms.Modals
 
         protected override async void UpdateInternal(Rectangle contentRect)
         {
-            var id = string.IsNullOrEmpty(Caption) ? "##source" : Caption;
+            var id = Caption.IsEmpty ? "##source" : (string)Caption;
             ImGuiNET.ImGui.OpenPopup(id);
 
             var exists = true;

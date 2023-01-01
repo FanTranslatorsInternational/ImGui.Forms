@@ -14,7 +14,7 @@ namespace ImGui.Forms.Controls
 {
     public class Label : Component
     {
-        public LocalizedString Caption { get; set; }
+        public LocalizedString Text { get; set; }
 
         public FontResource Font { get; set; }
 
@@ -28,7 +28,7 @@ namespace ImGui.Forms.Controls
         {
             ApplyStyles();
 
-            var escapedText = EscapeCaption();
+            var escapedText = EscapeText();
             var lines = escapedText.Split(Environment.NewLine);
 
             var textSize = Vector2.Zero;
@@ -49,7 +49,7 @@ namespace ImGui.Forms.Controls
         {
             ApplyStyles();
 
-            var escapedText = EscapeCaption();
+            var escapedText = EscapeText();
 
             var pos = contentRect.Position + new Vector2(0, ImGuiNET.ImGui.GetScrollY());
             foreach (var line in escapedText.Split(Environment.NewLine))
@@ -81,9 +81,9 @@ namespace ImGui.Forms.Controls
                 ImGuiNET.ImGui.PopStyleColor();
         }
 
-        protected string EscapeCaption()
+        protected string EscapeText()
         {
-            return (Caption.ToString()).Replace("\n", Environment.NewLine);
+            return (Text.ToString()).Replace("\n", Environment.NewLine);
         }
     }
 }

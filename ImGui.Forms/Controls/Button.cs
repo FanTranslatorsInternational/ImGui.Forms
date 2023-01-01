@@ -13,7 +13,7 @@ namespace ImGui.Forms.Controls
     {
         #region Properties
 
-        public LocalizedString Caption { get; set; }
+        public LocalizedString Text { get; set; }
 
         public Vector2 Padding { get; set; } = new Vector2(2, 2);
 
@@ -33,7 +33,7 @@ namespace ImGui.Forms.Controls
         {
             ApplyStyles(Enabled, Font);
 
-            var textSize = FontResource.MeasureText(EscapeCaption());
+            var textSize = FontResource.MeasureText(EscapeText());
             SizeValue width = Width.IsContentAligned ? (int)Math.Ceiling(textSize.X) + (int)Padding.X * 2 : Width;
             var height = (int)Math.Ceiling(textSize.Y) + (int)Padding.Y * 2;
 
@@ -49,7 +49,7 @@ namespace ImGui.Forms.Controls
 
             ApplyStyles(enabled, font);
 
-            if (ImGuiNET.ImGui.Button(EscapeCaption(), new Vector2(contentRect.Width, contentRect.Height)) && Enabled)
+            if (ImGuiNET.ImGui.Button(EscapeText(), new Vector2(contentRect.Width, contentRect.Height)) && Enabled)
                 OnClicked();
 
             RemoveStyles(enabled, font);
@@ -86,9 +86,9 @@ namespace ImGui.Forms.Controls
             Clicked?.Invoke(this, new EventArgs());
         }
 
-        protected string EscapeCaption()
+        protected string EscapeText()
         {
-            return Caption.ToString().Replace("\\n", Environment.NewLine);
+            return Text.ToString().Replace("\\n", Environment.NewLine);
         }
     }
 }

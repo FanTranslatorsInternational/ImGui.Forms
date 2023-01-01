@@ -10,7 +10,7 @@ namespace ImGui.Forms.Controls.Menu
     {
         public bool Enabled { get; set; } = true;
 
-        public LocalizedString Caption { get; set; } = string.Empty;
+        public LocalizedString Text { get; set; } = string.Empty;
 
         public Vector2 Padding { get; set; } = new Vector2(8, 8);
 
@@ -23,7 +23,7 @@ namespace ImGui.Forms.Controls.Menu
             ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(4, 5));
             ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Padding);
 
-            if (ImGuiNET.ImGui.BeginMenu(Caption, Enabled))
+            if (ImGuiNET.ImGui.BeginMenu(Text, Enabled))
             {
                 foreach (var item in Items)
                     item.Update();
@@ -38,7 +38,7 @@ namespace ImGui.Forms.Controls.Menu
         {
             ApplyStyles();
 
-            var textSize = FontResource.MeasureText(Caption);
+            var textSize = FontResource.MeasureText(Text);
             var height = (int)(textSize.Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y);
 
             RemoveStyles();

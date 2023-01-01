@@ -32,9 +32,9 @@ namespace ImGui.Forms.Modals.IO
 
             _treeView = new TreeView<string>();
 
-            _newFolderButton = new Button { Caption = NewFolder_, Enabled = false };
-            _okButton = new Button { Caption = Ok_, Width = ButtonWidth_, Enabled = false };
-            _cancelButton = new Button { Caption = Cancel_, Width = ButtonWidth_ };
+            _newFolderButton = new Button { Text = NewFolder_, Enabled = false };
+            _okButton = new Button { Text = Ok_, Width = ButtonWidth_, Enabled = false };
+            _cancelButton = new Button { Text = Cancel_, Width = ButtonWidth_ };
 
             #endregion
 
@@ -97,11 +97,11 @@ namespace ImGui.Forms.Modals.IO
 
             // Initialize file tree and file view
             var userDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            _treeView.Nodes.Add(new TreeNode<string> { Caption = "Desktop", Data = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), Nodes = { new TreeNode<string>() } });
-            _treeView.Nodes.Add(new TreeNode<string> { Caption = Path.GetFileName(userDir), Data = userDir, Nodes = { new TreeNode<string>() } });
+            _treeView.Nodes.Add(new TreeNode<string> { Text = "Desktop", Data = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), Nodes = { new TreeNode<string>() } });
+            _treeView.Nodes.Add(new TreeNode<string> { Text = Path.GetFileName(userDir), Data = userDir, Nodes = { new TreeNode<string>() } });
 
             foreach (var drive in DriveInfo.GetDrives())
-                _treeView.Nodes.Add(new TreeNode<string> { Caption = drive.Name, Data = drive.RootDirectory.Name, Nodes = { new TreeNode<string>() } });
+                _treeView.Nodes.Add(new TreeNode<string> { Text = drive.Name, Data = drive.RootDirectory.Name, Nodes = { new TreeNode<string>() } });
         }
 
         #region Events
@@ -120,7 +120,7 @@ namespace ImGui.Forms.Modals.IO
                 return;
 
             System.IO.Directory.CreateDirectory(newDir);
-            _treeView.SelectedNode.Nodes.Add(new TreeNode<string> { Caption = newFolderName, Data = Path.Combine(path, newFolderName) });
+            _treeView.SelectedNode.Nodes.Add(new TreeNode<string> { Text = newFolderName, Data = Path.Combine(path, newFolderName) });
         }
 
         private void _okButton_Clicked(object sender, EventArgs e)
@@ -165,7 +165,7 @@ namespace ImGui.Forms.Modals.IO
             {
                 var existingNode = node.Nodes.FirstOrDefault(x => x.Data == dirName);
                 if (existingNode == null)
-                    node.Nodes.Add(new TreeNode<string> { Caption = dirName, Data = dirName, Nodes = { new TreeNode<string>() } });
+                    node.Nodes.Add(new TreeNode<string> { Text = dirName, Data = dirName, Nodes = { new TreeNode<string>() } });
             }
         }
 

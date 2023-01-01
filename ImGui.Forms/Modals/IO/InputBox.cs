@@ -22,10 +22,10 @@ namespace ImGui.Forms.Modals.IO
         {
             #region Controls
 
-            var okButton = new Button { Caption = Ok_, Width = ButtonWidth_ };
-            var cancelButton = new Button { Caption = Cancel_, Width = ButtonWidth_ };
+            var okButton = new Button { Text = Ok_, Width = ButtonWidth_ };
+            var cancelButton = new Button { Text = Cancel_, Width = ButtonWidth_ };
 
-            var label = new Label { Caption = text };
+            var label = new Label { Text = text };
             _textBox = new TextBox { Placeholder = placeHolder };
             if (maxCharacters >= 0)
                 _textBox.MaxCharacters = (uint)maxCharacters;

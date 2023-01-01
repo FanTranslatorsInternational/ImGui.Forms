@@ -10,7 +10,7 @@ namespace ImGui.Forms.Controls
 {
     public class CheckBox : Component
     {
-        public LocalizedString Caption { get; set; }
+        public LocalizedString Text { get; set; }
 
         public LocalizedString Tooltip { get; set; }
 
@@ -24,7 +24,7 @@ namespace ImGui.Forms.Controls
 
         public override Size GetSize()
         {
-            var size = FontResource.MeasureText(Caption);
+            var size = FontResource.MeasureText(Text);
             return new Size((int)(Math.Ceiling(size.X) + 21 + ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.X), (int)Math.Max(Math.Ceiling(size.Y), 21));
         }
 
@@ -41,7 +41,7 @@ namespace ImGui.Forms.Controls
             if (IsHovering(contentRect) && !string.IsNullOrEmpty(Tooltip))
                 ImGuiNET.ImGui.SetTooltip(Tooltip);
 
-            if (ImGuiNET.ImGui.Checkbox(Caption, ref check) && Enabled)
+            if (ImGuiNET.ImGui.Checkbox(Text, ref check) && Enabled)
             {
                 Checked = check;
                 OnCheckChanged();

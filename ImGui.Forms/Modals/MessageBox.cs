@@ -73,7 +73,7 @@ namespace ImGui.Forms.Modals
 
             // Prepare message layout
             var msgType = GetTypeImage(type);
-            var msgLabel = new Label { Caption = text };
+            var msgLabel = new Label { Text = text };
 
             var messageLayout = new StackLayout { Alignment = Alignment.Horizontal, Size = Models.Size.Content, ItemSpacing = 5 };
             if (msgType != null)
@@ -125,14 +125,14 @@ namespace ImGui.Forms.Modals
         {
             if (buttons.HasFlag(MessageBoxButton.Ok))
             {
-                var okButton = new Button { Caption = Ok_, Width = ButtonWidth_ };
+                var okButton = new Button { Text = Ok_, Width = ButtonWidth_ };
                 okButton.Clicked += (s, e) => Close();
 
                 yield return okButton;
             }
             if (buttons.HasFlag(MessageBoxButton.Yes))
             {
-                var yesButton = new Button { Caption = Yes_, Width = ButtonWidth_ };
+                var yesButton = new Button { Text = Yes_, Width = ButtonWidth_ };
                 yesButton.Clicked += (s, e) =>
                 {
                     Result = DialogResult.Yes;
@@ -143,7 +143,7 @@ namespace ImGui.Forms.Modals
             }
             if (buttons.HasFlag(MessageBoxButton.No))
             {
-                var noButton = new Button { Caption = No_, Width = ButtonWidth_ };
+                var noButton = new Button { Text = No_, Width = ButtonWidth_ };
                 noButton.Clicked += (s, e) =>
                 {
                     Result = DialogResult.No;
@@ -154,7 +154,7 @@ namespace ImGui.Forms.Modals
             }
             if (buttons.HasFlag(MessageBoxButton.Cancel))
             {
-                var noButton = new Button { Caption = Cancel_, Width = ButtonWidth_ };
+                var noButton = new Button { Text = Cancel_, Width = ButtonWidth_ };
                 noButton.Clicked += (s, e) =>
                 {
                     Result = DialogResult.Cancel;

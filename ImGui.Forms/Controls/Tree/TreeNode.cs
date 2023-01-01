@@ -13,7 +13,7 @@ namespace ImGui.Forms.Controls.Tree
 
         private bool _isExpanded;
 
-        public LocalizedString Caption { get; set; } = string.Empty;
+        public LocalizedString Text { get; set; } = string.Empty;
 
         public Color TextColor { get; set; }
 

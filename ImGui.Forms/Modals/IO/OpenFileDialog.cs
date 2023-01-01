@@ -65,8 +65,8 @@ namespace ImGui.Forms.Modals.IO
             _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.Type, "Type"));
             _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.DateModified.ToString(CultureInfo.CurrentCulture), "Date modified"));
 
-            var cnlBtn = new Button { Caption = "Cancel", Width = 80 };
-            _openBtn = new Button { Caption = "Open", Width = 80, Enabled = false };
+            var cnlBtn = new Button { Text = "Cancel", Width = 80 };
+            _openBtn = new Button { Text = "Open", Width = 80, Enabled = false };
 
             #endregion
 
@@ -132,7 +132,7 @@ namespace ImGui.Forms.Modals.IO
                         ItemSpacing = 5,
                         Items =
                         {
-                            new Label {Caption = "File name:"},
+                            new Label {Text = "File name:"},
                             _selectedFileTextBox,
                             _fileFilters
                         }
@@ -164,8 +164,8 @@ namespace ImGui.Forms.Modals.IO
 
             // Initialize file tree and file view
             var userDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            _treeView.Nodes.Add(new TreeNode<string> { Caption = "Desktop", Data = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), Nodes = { new TreeNode<string>() } });
-            _treeView.Nodes.Add(new TreeNode<string> { Caption = Path.GetFileName(userDir), Data = userDir, Nodes = { new TreeNode<string>() } });
+            _treeView.Nodes.Add(new TreeNode<string> { Text = "Desktop", Data = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), Nodes = { new TreeNode<string>() } });
+            _treeView.Nodes.Add(new TreeNode<string> { Text = Path.GetFileName(userDir), Data = userDir, Nodes = { new TreeNode<string>() } });
 
             UpdateFileView();
         }
@@ -336,7 +336,7 @@ namespace ImGui.Forms.Modals.IO
             {
                 var existingNode = node.Nodes.FirstOrDefault(x => x.Data == dirName);
                 if (existingNode == null)
-                    node.Nodes.Add(new TreeNode<string> { Caption = dirName, Data = dirName, Nodes = { new TreeNode<string>() } });
+                    node.Nodes.Add(new TreeNode<string> { Text = dirName, Data = dirName, Nodes = { new TreeNode<string>() } });
             }
         }
 

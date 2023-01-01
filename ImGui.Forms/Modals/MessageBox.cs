@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Layouts;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 
@@ -19,7 +20,7 @@ namespace ImGui.Forms.Modals
 
         private const int ButtonWidth_ = 75;
 
-        private MessageBox(string caption, string text, MessageBoxType type, MessageBoxButton buttons)
+        private MessageBox(LocalizedString caption, LocalizedString text, MessageBoxType type, MessageBoxButton buttons)
         {
             CreateLayout(caption, text, type, buttons);
 
@@ -33,27 +34,27 @@ namespace ImGui.Forms.Modals
 
         #region Static accessors
 
-        public static Task<DialogResult> ShowErrorAsync(string caption = "", string text = "", bool blockFormClosing = false)
+        public static Task<DialogResult> ShowErrorAsync(LocalizedString caption = default, LocalizedString text = default, bool blockFormClosing = false)
         {
             return ShowAsync(caption, text, MessageBoxType.Error, blockFormClosing: blockFormClosing);
         }
 
-        public static Task<DialogResult> ShowInformationAsync(string caption = "", string text = "", bool blockFormClosing = false)
+        public static Task<DialogResult> ShowInformationAsync(LocalizedString caption = default, LocalizedString text = default, bool blockFormClosing = false)
         {
             return ShowAsync(caption, text, blockFormClosing: blockFormClosing);
         }
 
-        public static Task<DialogResult> ShowYesNoAsync(string caption = "", string text = "", bool blockFormClosing = false)
+        public static Task<DialogResult> ShowYesNoAsync(LocalizedString caption = default, LocalizedString text = default, bool blockFormClosing = false)
         {
             return ShowAsync(caption, text, MessageBoxType.Warning, MessageBoxButton.Yes | MessageBoxButton.No, blockFormClosing);
         }
 
-        public static Task<DialogResult> ShowYesNoCancelAsync(string caption = "", string text = "", bool blockFormClosing = false)
+        public static Task<DialogResult> ShowYesNoCancelAsync(LocalizedString caption = default, LocalizedString text = default, bool blockFormClosing = false)
         {
             return ShowAsync(caption, text, MessageBoxType.Warning, MessageBoxButton.Yes | MessageBoxButton.No | MessageBoxButton.Cancel, blockFormClosing);
         }
 
-        private static async Task<DialogResult> ShowAsync(string caption = "", string text = "", MessageBoxType type = MessageBoxType.Information, MessageBoxButton buttons = MessageBoxButton.Ok, bool blockFormClosing = false)
+        private static async Task<DialogResult> ShowAsync(LocalizedString caption = default, LocalizedString text = default, MessageBoxType type = MessageBoxType.Information, MessageBoxButton buttons = MessageBoxButton.Ok, bool blockFormClosing = false)
         {
             // Even though modal.Show already checks for null, we do that here, so the layout is not created only to be disposed again, when the Modal is about to be shown
             if (Application.Instance?.MainForm == null)
@@ -67,7 +68,7 @@ namespace ImGui.Forms.Modals
 
         #endregion
 
-        private void CreateLayout(string caption, string text, MessageBoxType type, MessageBoxButton buttons)
+        private void CreateLayout(LocalizedString caption, LocalizedString text, MessageBoxType type, MessageBoxButton buttons)
         {
             Caption = caption;
 

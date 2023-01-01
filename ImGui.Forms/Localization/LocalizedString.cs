@@ -10,7 +10,7 @@ namespace ImGui.Forms.Localization
     public struct LocalizedString
     {
         private readonly string _id;
-        private readonly Func<string>[] _args;
+        private readonly Func<object>[] _args;
 
         private readonly string _fixedText;
 
@@ -23,7 +23,7 @@ namespace ImGui.Forms.Localization
         /// Set up a localized string, based on a localization ID.
         /// </summary>
         /// <param name="id">The ID of the localization to return.</param>
-        public LocalizedString(string id) : this(id, null, Array.Empty<Func<string>>())
+        public LocalizedString(string id) : this(id, null, Array.Empty<Func<object>>())
         { }
 
         /// <summary>
@@ -31,10 +31,10 @@ namespace ImGui.Forms.Localization
         /// </summary>
         /// <param name="id">The ID of the localization to return.</param>
         /// <param name="args">The arguments of the localization to return.</param>
-        public LocalizedString(string id, params Func<string>[] args) : this(id, null, args)
+        public LocalizedString(string id, params Func<object>[] args) : this(id, null, args)
         { }
 
-        private LocalizedString(string id, string fixedText, Func<string>[] args)
+        private LocalizedString(string id, string fixedText, Func<object>[] args)
         {
             _args = args;
 
@@ -59,11 +59,11 @@ namespace ImGui.Forms.Localization
             if (app?.Localizer == null || _id == null || _args == null)
                 return string.Empty;
 
-            var args = _args.Select(x => x?.Invoke() ?? string.Empty).Cast<object>().ToArray();
+            var args = _args.Select(x => x?.Invoke() ?? string.Empty).ToArray();
             return app.Localizer.Localize(_id, args);
         }
 
-        public static implicit operator LocalizedString(string s) => new LocalizedString(null, s ?? string.Empty, Array.Empty<Func<string>>());
+        public static implicit operator LocalizedString(string s) => new LocalizedString(null, s ?? string.Empty, Array.Empty<Func<object>>());
         public static implicit operator string(LocalizedString s) => s.ToString();
     }
 }

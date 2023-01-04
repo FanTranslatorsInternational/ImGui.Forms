@@ -18,16 +18,15 @@ namespace ImGui.Forms.Controls.Lists
         // HINT: ImGuiCol.HeaderActive is used for hovered and clicked items
 
         public IList<ImageListItem> Items { get; }
-
-        public Size ThumbnailSize { get; set; } = new Size(30, 30);
-
         public ImageListItem SelectedItem { get; set; }
+        public Size ThumbnailSize { get; set; } = new Size(30, 30);
 
         public FontResource Font { get; set; }
 
         public Vector2 Padding { get; set; } = new Vector2(2, 2);
-
         public int ItemPadding { get; set; } = 2;
+
+        public Size Size { get; set; } = Size.Parent;
 
         #region Events
 
@@ -46,10 +45,7 @@ namespace ImGui.Forms.Controls.Lists
             Items = items;
         }
 
-        public override Size GetSize()
-        {
-            return Size.Parent;
-        }
+        public override Size GetSize() => Size;
 
         protected override void UpdateInternal(Rectangle contentRect)
         {

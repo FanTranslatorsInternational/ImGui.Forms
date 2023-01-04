@@ -3,13 +3,14 @@ using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
+using ImGui.Forms.Support;
 using ImGuiNET;
 
 namespace ImGui.Forms.Controls
 {
     public class ZoomablePictureBox : Component
     {
-        private Matrix3x2 _transform;
+        private Matrix3x2 _transform = new Matrix3x2(1, 0, 0, 1, 0, 0);
 
         private bool _mouseDown;
         private Vector2 _mouseDownPosition;
@@ -23,8 +24,6 @@ namespace ImGui.Forms.Controls
             {
                 _baseImg?.Destroy();
                 _baseImg = value;
-
-                _transform = new Matrix3x2(1, 0, 0, 1, 0, 0);
             }
         }
 
@@ -43,6 +42,8 @@ namespace ImGui.Forms.Controls
         {
             if (Image == null || (IntPtr)_baseImg == IntPtr.Zero)
                 return;
+
+            ImGuiSupport.Dummy(Id, contentRect.Size);
 
             var centerPosition = new Vector2(contentRect.X, contentRect.Y) + new Vector2((float)contentRect.Width / 2, (float)contentRect.Height / 2);
             var imgCenterPoint = centerPosition + _transform.Translation;
@@ -93,8 +94,9 @@ namespace ImGui.Forms.Controls
 
         private bool IsHovering(Veldrid.Rectangle contentRect)
         {
-            return ImGuiNET.ImGui.IsMouseHoveringRect(new Vector2(contentRect.X, contentRect.Y),
-                new Vector2(contentRect.X + contentRect.Width, contentRect.Y + contentRect.Height));
+            return ImGuiNET.ImGui.IsItemHovered();
+            //ImGuiNET.ImGui.IsMouseHoveringRect(new Vector2(contentRect.X, contentRect.Y),
+            //    new Vector2(contentRect.X + contentRect.Width, contentRect.Y + contentRect.Height));
         }
 
         private void OnMouseScrolled()

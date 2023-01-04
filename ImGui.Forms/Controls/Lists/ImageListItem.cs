@@ -17,6 +17,8 @@ namespace ImGui.Forms.Controls.Lists
             }
         }
 
+        public bool RetainAspectRatio { get; set; } = true;
+
         public LocalizedString Text { get; set; }
     }
 }

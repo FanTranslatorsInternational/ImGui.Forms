@@ -23,15 +23,15 @@ namespace ImGui.Forms.Controls
 
         public override Size GetSize()
         {
-            return new Size(Image.Width, Image.Height);
+            return new Size(_baseImg.Width, _baseImg.Height);
         }
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            if (Image == null || (IntPtr)_baseImg == IntPtr.Zero)
+            if (_baseImg == null || (IntPtr)_baseImg == IntPtr.Zero)
                 return;
 
-            ImGuiNET.ImGui.Image((IntPtr)Image, new Vector2(Image.Width, Image.Height));
+            ImGuiNET.ImGui.Image((IntPtr)Image, new Vector2(_baseImg.Width, _baseImg.Height));
         }
     }
 }

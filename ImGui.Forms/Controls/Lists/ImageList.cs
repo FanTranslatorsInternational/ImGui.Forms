@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Layouts;
+using ImGui.Forms.Extensions;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 using ImGuiNET;
@@ -19,12 +20,14 @@ namespace ImGui.Forms.Controls.Lists
 
         public IList<ImageListItem> Items { get; }
         public ImageListItem SelectedItem { get; set; }
-        public Size ThumbnailSize { get; set; } = new Size(30, 30);
+
+        public Vector2 ThumbnailSize { get; set; } = new Vector2(30, 30);
+        public bool ShowThumbnailBorder { get; set; }
 
         public FontResource Font { get; set; }
 
-        public Vector2 Padding { get; set; } = new Vector2(2, 2);
-        public int ItemPadding { get; set; } = 2;
+        public Vector2 Padding { get; set; }
+        public int ItemPadding { get; set; }
 
         public Size Size { get; set; } = Size.Parent;
 
@@ -53,10 +56,9 @@ namespace ImGui.Forms.Controls.Lists
             {
                 var textHeight = FontResource.GetCurrentLineHeight(Font);
 
-                var itemHeight = Math.Max((int)ThumbnailSize.Height.Value, textHeight);
+                var itemHeight = Math.Max((int)ThumbnailSize.Y, textHeight);
                 var itemDimensions = new Vector2(contentRect.Width - Padding.X * 2, itemHeight);
                 var contentPos = new Vector2(contentRect.X + Padding.X, contentRect.Y + Padding.Y);
-                var thumbnailRect = new Vector2(ThumbnailSize.Width.Value, ThumbnailSize.Height.Value);
                 var scrollY = ImGuiNET.ImGui.GetScrollY();
 
                 var localItems = Items.ToArray();
@@ -98,14 +100,35 @@ namespace ImGui.Forms.Controls.Lists
                             ImGuiNET.ImGui.GetWindowDrawList().AddRectFilled(contentScrollPos, contentScrollEndPos, color);
 
                         // Add thumbnail
-                        if (item.Image != null)
+                        if (item.Image != null && ThumbnailSize.X != 0 && ThumbnailSize.Y != 0)
                         {
-                            var imgPos = contentScrollPos + new Vector2();
-                            ImGuiNET.ImGui.GetWindowDrawList().AddImage((IntPtr)item.Image, contentScrollPos, contentScrollPos + thumbnailRect);
+                            var imgPos = contentScrollPos;
+                            var thumbnailRect = new Vector2(ThumbnailSize.X, ThumbnailSize.Y);
+
+                            if (item.RetainAspectRatio)
+                            {
+                                var heightSmaller = item.Image.Height < item.Image.Width;
+                                var ratio = heightSmaller ?
+                                    (float)item.Image.Height / item.Image.Width :
+                                    (float)item.Image.Width / item.Image.Height;
+
+                                var retainedWidth = !heightSmaller ? ThumbnailSize.Y * ratio : ThumbnailSize.X;
+                                var retainedHeight = heightSmaller ? ThumbnailSize.X * ratio : ThumbnailSize.Y;
+
+                                imgPos = heightSmaller ?
+                                    new Vector2(imgPos.X, imgPos.Y + (ThumbnailSize.Y - retainedHeight) / 2f) :
+                                    new Vector2(imgPos.X + (ThumbnailSize.X - retainedWidth) / 2f, imgPos.Y);
+                                thumbnailRect = new Vector2(retainedWidth, retainedHeight);
+                            }
+
+                            ImGuiNET.ImGui.GetWindowDrawList().AddImage((IntPtr)item.Image, imgPos, imgPos + thumbnailRect);
+
+                            if (ShowThumbnailBorder)
+                                ImGuiNET.ImGui.GetWindowDrawList().AddRect(contentScrollPos, contentScrollPos + new Vector2(ThumbnailSize.X, ThumbnailSize.Y), Style.GetColor(ImGuiCol.Border).ToUInt32(), 0);
                         }
 
                         // Add text
-                        var textPos = contentScrollPos + new Vector2(ThumbnailSize.Width.Value + 2, (itemHeight - textHeight) / 2f);
+                        var textPos = contentScrollPos + new Vector2(ThumbnailSize.X + 2, (itemHeight - textHeight) / 2f);
 
                         if (Font != null)
                             ImGuiNET.ImGui.GetWindowDrawList().AddText((ImFontPtr)Font, Font.Size, textPos, 0xFFFFFFFF, item.Text);

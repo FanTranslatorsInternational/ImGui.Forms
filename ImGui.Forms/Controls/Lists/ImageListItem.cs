@@ -5,7 +5,17 @@ namespace ImGui.Forms.Controls.Lists
 {
     public class ImageListItem
     {
-        public ImageResource Image { get; set; }
+        private ImageResource _baseImg;
+
+        public ImageResource Image
+        {
+            get => _baseImg;
+            set
+            {
+                _baseImg?.Destroy();
+                _baseImg = value;
+            }
+        }
 
         public LocalizedString Text { get; set; }
     }

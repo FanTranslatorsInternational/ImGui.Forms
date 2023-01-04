@@ -9,15 +9,15 @@ namespace ImGui.Forms.Controls
 {
     public class PictureBox : Component
     {
-        private ImageResource _img;
+        private ImageResource _baseImg;
 
         public ImageResource Image
         {
-            get => _img;
+            get => _baseImg;
             set
             {
-                _img?.Destroy();
-                _img = value;
+                _baseImg?.Destroy();
+                _baseImg = value;
             }
         }
 
@@ -28,7 +28,7 @@ namespace ImGui.Forms.Controls
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            if (Image == null || (IntPtr)_img == IntPtr.Zero)
+            if (Image == null || (IntPtr)_baseImg == IntPtr.Zero)
                 return;
 
             ImGuiNET.ImGui.Image((IntPtr)Image, new Vector2(Image.Width, Image.Height));

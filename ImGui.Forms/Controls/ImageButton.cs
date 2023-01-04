@@ -10,7 +10,17 @@ namespace ImGui.Forms.Controls
 {
     public class ImageButton : Component
     {
-        public ImageResource Image { get; set; }
+        private ImageResource _baseImg;
+
+        public ImageResource Image
+        {
+            get => _baseImg;
+            set
+            {
+                _baseImg?.Destroy();
+                _baseImg = value;
+            }
+        }
         public Vector2 ImageSize { get; set; } = Vector2.Zero;
 
         public Vector2 Padding { get; set; } = new Vector2(2, 2);

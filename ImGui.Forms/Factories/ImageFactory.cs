@@ -13,26 +13,41 @@ namespace ImGui.Forms.Factories
         private readonly ImGuiRenderer _controller;
 
         private readonly IDictionary<object, IntPtr> _inputPointers;
+        private readonly IDictionary<IntPtr, object> _inputPointersReverse;
         private readonly IDictionary<IntPtr, Texture> _ptrTextures;
+        private readonly IDictionary<IntPtr, int> _ptrTexturesRefCount;
 
-        private readonly IList<Texture> _unloadQueue;
+        private readonly IList<IntPtr> _unloadQueue;
 
         public ImageFactory(GraphicsDevice gd, ImGuiRenderer controller)
         {
             _gd = gd;
             _controller = controller;
             _inputPointers = new Dictionary<object, IntPtr>();
+            _inputPointersReverse = new Dictionary<IntPtr, object>();
             _ptrTextures = new Dictionary<IntPtr, Texture>();
-            _unloadQueue = new List<Texture>();
+            _ptrTexturesRefCount = new Dictionary<IntPtr, int>();
+            _unloadQueue = new List<IntPtr>();
         }
 
         public IntPtr LoadImage(Bitmap img)
         {
-            if (_inputPointers.ContainsKey(img))
-                return _inputPointers[img];
+            IntPtr ptr;
 
-            var ptr = LoadImageInternal(img);
+            if (_inputPointers.ContainsKey(img))
+            {
+                ptr = _inputPointers[img];
+
+                _ptrTexturesRefCount[ptr]++;
+
+                return ptr;
+            }
+
+            ptr = LoadImageInternal(img);
+
             _inputPointers[img] = ptr;
+            _inputPointersReverse[ptr] = img;
+            _ptrTexturesRefCount[ptr] = 1;
 
             return ptr;
         }
@@ -42,7 +57,8 @@ namespace ImGui.Forms.Factories
             if (!_ptrTextures.ContainsKey(ptr))
                 return;
 
-            _unloadQueue.Add(_ptrTextures[ptr]);
+            _ptrTexturesRefCount[ptr]--;
+            _unloadQueue.Add(ptr);
         }
 
         private IntPtr LoadImageInternal(Bitmap image)
@@ -68,11 +84,22 @@ namespace ImGui.Forms.Factories
         internal void FreeTextures()
         {
             foreach (var toFree in _unloadQueue)
-                _controller.RemoveImGuiBinding(toFree);
+            {
+                // Textures that were marked to unload, but somehow retained/regained references afterwards should not be unloaded
+                if (_ptrTexturesRefCount[toFree] > 0)
+                    continue;
+
+                _controller.RemoveImGuiBinding(_ptrTextures[toFree]);
+
+                _ptrTextures.Remove(toFree);
+                _ptrTexturesRefCount.Remove(toFree);
+
+                var obj = _inputPointersReverse[toFree];
+                _inputPointersReverse.Remove(toFree);
+                _inputPointers.Remove(obj);
+            }
 
             _unloadQueue.Clear();
-
-            // TODO: Remove entries for those pointers from dictionaries
         }
     }
 }

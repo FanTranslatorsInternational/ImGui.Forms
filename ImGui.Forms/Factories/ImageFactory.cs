@@ -86,7 +86,7 @@ namespace ImGui.Forms.Factories
             foreach (var toFree in _unloadQueue)
             {
                 // Textures that were marked to unload, but somehow retained/regained references afterwards should not be unloaded
-                if (_ptrTexturesRefCount[toFree] > 0)
+                if (!_ptrTexturesRefCount.ContainsKey(toFree) || _ptrTexturesRefCount[toFree] > 0)
                     continue;
 
                 _controller.RemoveImGuiBinding(_ptrTextures[toFree]);

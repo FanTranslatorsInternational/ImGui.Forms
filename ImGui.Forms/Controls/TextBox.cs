@@ -12,7 +12,7 @@ namespace ImGui.Forms.Controls
     public class TextBox : Component
     {
         private bool _activePreviousFrame;
-        private string _text;
+        private string _text=string.Empty;
 
         public string Text
         {

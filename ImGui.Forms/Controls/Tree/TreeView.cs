@@ -25,8 +25,11 @@ namespace ImGui.Forms.Controls.Tree
             get => _selectedNode;
             set
             {
+                var invokeChanged = _selectedNode != value;
+
                 _selectedNode = value;
-                OnSelectedNodeChanged();
+                if (invokeChanged)
+                    OnSelectedNodeChanged();
             }
         }
 

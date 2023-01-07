@@ -11,7 +11,8 @@ namespace ImGui.Forms.Controls
 {
     public class TabControl : Component
     {
-        private bool _setPageManually;
+        private int _selectedTabPageCount;
+        private TabPage _selectedPageTemp;
         private TabPage _selectedPage;
 
         private readonly List<TabPage> _pages = new List<TabPage>();
@@ -20,11 +21,11 @@ namespace ImGui.Forms.Controls
 
         public TabPage SelectedPage
         {
-            get => _selectedPage;
+            get => _selectedPageTemp ?? _selectedPage;
             set
             {
-                _setPageManually = true;
-                _selectedPage = value;
+                _selectedTabPageCount = 2;
+                _selectedPageTemp = value;
             }
         }
 
@@ -43,6 +44,8 @@ namespace ImGui.Forms.Controls
 
         protected override async void UpdateInternal(Rectangle contentRect)
         {
+            var wasManuallyChanged = _selectedPageTemp != null && _selectedTabPageCount-- > 0 && _selectedPageTemp != _selectedPage;
+
             if (ImGuiNET.ImGui.BeginTabBar(Id.ToString(), ImGuiTabBarFlags.None))
             {
                 var toRemovePages = new HashSet<TabPage>();
@@ -50,23 +53,27 @@ namespace ImGui.Forms.Controls
                 {
                     var pageFlags = ImGuiTabItemFlags.None;
                     if (page.HasChanges) pageFlags |= ImGuiTabItemFlags.UnsavedDocument;
-                    if (_setPageManually && _selectedPage == page) pageFlags |= ImGuiTabItemFlags.SetSelected;
+                    if (wasManuallyChanged && _selectedPageTemp == page) pageFlags |= ImGuiTabItemFlags.SetSelected;
 
                     ImGuiNET.ImGui.PushID(Application.Instance.IdFactory.Get(page));
 
                     var stillOpen = true;
-                    if (ImGuiNET.ImGui.BeginTabItem(page.Title, ref stillOpen, pageFlags))
+                    if (ImGuiNET.ImGui.BeginTabItem(page.Title, ref stillOpen, pageFlags) && !wasManuallyChanged)
                     {
                         // Check selected page status
                         var wasChanged = _selectedPage != page;
+
+                        _selectedPageTemp = null;
                         _selectedPage = page;
 
                         if (wasChanged)
                             OnSelectedPageChanged();
 
+                        // Remove tab page on middle mouse click
                         if (ImGuiNET.ImGui.IsItemHovered() && ImGuiNET.ImGui.IsMouseClicked(ImGuiMouseButton.Middle))
                             toRemovePages.Add(page);
 
+                        // Draw content of tab page
                         var pageWidth = page.Content.GetWidth(contentRect.Width);
                         var pageHeight = page.Content.GetHeight(contentRect.Height - (int)ImGuiNET.ImGui.GetCursorPosY());
 
@@ -83,13 +90,19 @@ namespace ImGui.Forms.Controls
 
                 ImGuiNET.ImGui.EndTabBar();
 
-                if (_setPageManually)
-                    _setPageManually = false;
-
                 // Handle pages to remove asynchronously
                 foreach (var toRemove in toRemovePages)
                     await RemovePage(toRemove);
             }
+
+            //if (!wasManuallyChanged)
+            //    return;
+
+            // If tab page was manually changed
+            //OnSelectedPageChanged();
+
+            //_selectedPage = _selectedPageTemp;
+            //_selectedPageTemp = null;
         }
 
         public void AddPage(TabPage page)

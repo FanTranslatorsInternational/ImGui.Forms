@@ -92,25 +92,33 @@ namespace ImGui.Forms.Controls
 
                 // Handle pages to remove asynchronously
                 foreach (var toRemove in toRemovePages)
-                    await RemovePage(toRemove);
+                    await RemovePageInternal(toRemove);
             }
-
-            //if (!wasManuallyChanged)
-            //    return;
-
-            // If tab page was manually changed
-            //OnSelectedPageChanged();
-
-            //_selectedPage = _selectedPageTemp;
-            //_selectedPageTemp = null;
         }
 
+        /// <summary>
+        /// Adds a page to the <see cref="TabControl"/>
+        /// </summary>
+        /// <param name="page">the <see cref="TabPage"/> to add.</param>
         public void AddPage(TabPage page)
         {
             _pages.Add(page);
         }
 
-        public async Task<bool> RemovePage(TabPage page)
+        /// <summary>
+        /// Removes a page from the <see cref="TabControl"/>.
+        /// </summary>
+        /// <param name="page">The <see cref="TabPage"/> to remove.</param>
+        /// <remarks>Does not invoke <see cref="PageRemoving"/> and <see cref="PageRemoved"/>.</remarks>
+        public void RemovePage(TabPage page)
+        {
+            if (_selectedPage == page)
+                _selectedPage = null;
+
+            _pages.Remove(page);
+        }
+
+        private async Task<bool> RemovePageInternal(TabPage page)
         {
             if (await OnPageRemoving(page))
                 return false;

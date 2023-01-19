@@ -96,7 +96,7 @@ namespace ImGui.Forms.Controls.Lists
                             if (rowColor != Color.Empty)
                                 ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Text, row.TextColor.ToUInt32());
 
-                            if (IsSelectable && c == 0)
+                            if (IsSelectable && row.CanSelect && c == 0)
                             {
                                 var isSelected = ImGuiNET.ImGui.Selectable(column.Get(row), isRowSelected, ImGuiSelectableFlags.SpanAllColumns);
                                 isSelected |= ImGuiNET.ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByPopup) && ImGuiNET.ImGui.IsMouseClicked(ImGuiMouseButton.Right);

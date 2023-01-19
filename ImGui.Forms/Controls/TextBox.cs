@@ -14,6 +14,9 @@ namespace ImGui.Forms.Controls
         private bool _activePreviousFrame;
         private string _text=string.Empty;
 
+        /// <summary>
+        /// The text that was set or changed in this component.
+        /// </summary>
         public string Text
         {
             get => _text;
@@ -24,10 +27,19 @@ namespace ImGui.Forms.Controls
             }
         }
 
+        /// <summary>
+        /// The width of this component. Is set to 100% by default.
+        /// </summary>
         public SizeValue Width { get; set; } = SizeValue.Relative(1f);
 
+        /// <summary>
+        /// The distance between the border of the component and the text.
+        /// </summary>
         public Vector2 Padding { get; set; } = new Vector2(2, 2);
 
+        /// <summary>
+        /// The font to use for the text. Uses the default font, if not set explicitly.
+        /// </summary>
         public FontResource Font { get; set; }
 
         /// <summary>
@@ -50,6 +62,9 @@ namespace ImGui.Forms.Controls
         /// </summary>
         public uint MaxCharacters { get; set; } = 256;
 
+        /// <summary>
+        /// The text hint shown, when no text is set.
+        /// </summary>
         public LocalizedString Placeholder { get; set; }
 
         #region Events

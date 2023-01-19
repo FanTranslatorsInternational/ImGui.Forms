@@ -124,6 +124,7 @@ namespace ImGui.Forms
             _frameHandledDragDrop = false;
 
             ImageFactory.FreeTextures();
+            IdFactory.FreeIds();
 
             // Snapshot current machine state
             var snapshot = _executionContext.Window.PumpEvents();

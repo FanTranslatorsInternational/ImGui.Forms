@@ -43,7 +43,7 @@ namespace ImGui.Forms.Controls
             if (Image == null || (IntPtr)_baseImg == IntPtr.Zero)
                 return;
 
-            ImGuiSupport.Dummy(Id, contentRect.Size);
+            ImGuiSupport.Dummy(Id, contentRect.Position, contentRect.Size);
 
             var centerPosition = new Vector2(contentRect.X, contentRect.Y) + new Vector2((float)contentRect.Width / 2, (float)contentRect.Height / 2);
             var imgCenterPoint = centerPosition + _transform.Translation;

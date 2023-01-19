@@ -7,6 +7,7 @@ using ImGui.Forms.Controls.Layouts;
 using ImGui.Forms.Extensions;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
+using ImGui.Forms.Support;
 using ImGuiNET;
 using Veldrid;
 
@@ -52,7 +53,9 @@ namespace ImGui.Forms.Controls.Lists
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            if (ImGuiNET.ImGui.BeginChild($"##{Id}", new Vector2(contentRect.Width, contentRect.Height), false))
+            ImageListItem selectedItem = null;
+
+            if (ImGuiNET.ImGui.BeginChild($"##{Id}_out", new Vector2(contentRect.Width, contentRect.Height), false))
             {
                 var textHeight = FontResource.GetCurrentLineHeight(Font);
 
@@ -65,36 +68,37 @@ namespace ImGui.Forms.Controls.Lists
 
                 if (ImGuiNET.ImGui.BeginChild($"##{Id}_in", new Vector2(contentRect.Width, Padding.Y * 2 + localItems.Length * (itemHeight + ItemPadding)), false, ImGuiWindowFlags.NoScrollbar))
                 {
-                    if (IsHovering(contentRect) && ImGuiNET.ImGui.IsMouseClicked(ImGuiMouseButton.Left))
-                    {
-                        var selected = SelectedItem;
-                        var selectedIndex = (int)(ImGuiNET.ImGui.GetMousePos().Y - contentPos.Y - Padding.Y + scrollY) / (itemHeight + ItemPadding);
-                        if (selectedIndex >= 0 && selectedIndex < localItems.Length)
-                            SelectedItem = localItems[selectedIndex];
-
-                        if (selected != SelectedItem)
-                            OnSelectedItemChanged();
-                    }
-
                     for (var i = 0; i < localItems.Length; i++)
                     {
                         var item = localItems[i];
-
-                        var isItemSelected = item == SelectedItem;
-                        var isItemHovered = IsHovering(contentRect) &&
-                                            (int)(ImGuiNET.ImGui.GetMousePos().Y - contentPos.Y - Padding.Y + scrollY) /
-                                            (itemHeight + ItemPadding) == i;
-                        var isItemClicked = isItemHovered && ImGuiNET.ImGui.IsMouseDown(ImGuiMouseButton.Left);
+                        var itemId = Application.Instance.IdFactory.Get(item);
 
                         var itemPos = new Vector2(Padding.X, i * itemHeight + Padding.Y + i * ItemPadding);
                         var contentItemPos = contentPos + itemPos;
                         var contentScrollPos = contentItemPos - new Vector2(0, scrollY);
                         var contentScrollEndPos = contentScrollPos + itemDimensions;
 
+                        // Create dummy control for states
+                        ImGuiNET.ImGui.PushID(itemId);
+                        ImGuiSupport.Dummy(itemId, itemPos - new Vector2(0, scrollY), itemDimensions);
+
+                        // Create item states
+                        var isItemSelected = item == SelectedItem;
+                        var isItemHovered = ImGuiNET.ImGui.IsItemHovered() &&
+                                            (int)(ImGuiNET.ImGui.GetMousePos().Y - contentPos.Y - Padding.Y + scrollY) /
+                                            (itemHeight + ItemPadding) == i;
+                        var isItemClicked = isItemHovered && ImGuiNET.ImGui.IsMouseDown(ImGuiMouseButton.Left);
+
+                        ImGuiNET.ImGui.PopID();
+
+                        // Set selected item locally
+                        if (isItemHovered && ImGuiNET.ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+                            selectedItem = item;
+
                         // Add background color for selection
                         var color = isItemClicked ? ImGuiNET.ImGui.GetColorU32(ImGuiCol.HeaderActive) :
-                            isItemHovered ? ImGuiNET.ImGui.GetColorU32(ImGuiCol.HeaderHovered) :
-                            isItemSelected ? ImGuiNET.ImGui.GetColorU32(ImGuiCol.Header) : 0;
+                        isItemHovered ? ImGuiNET.ImGui.GetColorU32(ImGuiCol.HeaderHovered) :
+                        isItemSelected ? ImGuiNET.ImGui.GetColorU32(ImGuiCol.Header) : 0;
 
                         if (isItemHovered || isItemSelected)
                             ImGuiNET.ImGui.GetWindowDrawList().AddRectFilled(contentScrollPos, contentScrollEndPos, color);
@@ -141,12 +145,13 @@ namespace ImGui.Forms.Controls.Lists
             }
 
             ImGuiNET.ImGui.EndChild();
-        }
 
-        private bool IsHovering(Rectangle contentRect)
-        {
-            return ImGuiNET.ImGui.IsMouseHoveringRect(new Vector2(contentRect.X, contentRect.Y),
-                new Vector2(contentRect.X + contentRect.Width, contentRect.Y + contentRect.Height));
+            // Invoke selected item change event
+            if (selectedItem != null && SelectedItem != selectedItem)
+            {
+                SelectedItem = selectedItem;
+                OnSelectedItemChanged();
+            }
         }
 
         #region Event Invokers

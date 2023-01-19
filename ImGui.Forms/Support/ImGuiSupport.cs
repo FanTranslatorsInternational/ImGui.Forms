@@ -3,7 +3,7 @@ using ImGuiNET;
 
 namespace ImGui.Forms.Support
 {
-    static class ImGuiSupport
+    public static class ImGuiSupport
     {
         public static void Dummy(int id, Vector2 pos, Vector2 size)
         {

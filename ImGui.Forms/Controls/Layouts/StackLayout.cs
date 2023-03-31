@@ -278,7 +278,7 @@ namespace ImGui.Forms.Controls.Layouts
         }
     }
 
-    class ItemEventArgs<TItem> : EventArgs
+    public class ItemEventArgs<TItem> : EventArgs
     {
         public TItem Item { get; }
         public int Index { get; }
@@ -290,7 +290,7 @@ namespace ImGui.Forms.Controls.Layouts
         }
     }
 
-    class ItemSetEventArgs<TItem> : ItemEventArgs<TItem>
+    public class ItemSetEventArgs<TItem> : ItemEventArgs<TItem>
     {
         public TItem PreviousItem { get; set; }
 

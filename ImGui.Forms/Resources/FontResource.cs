@@ -61,6 +61,26 @@ namespace ImGui.Forms.Resources
         }
 
         /// <summary>
+        /// Measure the <paramref name="text"/> with the current font on the stack.
+        /// </summary>
+        /// <param name="text">The text to measure.</param>
+        /// <param name="font">The font to measure the text with.</param>
+        /// <param name="withDescent">Calculate height with respect to the font descent.</param>
+        /// <returns>The measured size of <paramref name="text"/>.</returns>
+        public static Vector2 MeasureText(string text, FontResource font, bool withDescent = false)
+        {
+            if (font != null)
+                ImGuiNET.ImGui.PushFont((ImFontPtr)font);
+
+            var size = MeasureText(text, withDescent);
+
+            if (font != null)
+                ImGuiNET.ImGui.PopFont();
+
+            return size;
+        }
+
+        /// <summary>
         /// Measure the height of a single line for the given font or the current font on the stack.
         /// </summary>
         /// <param name="font">Optional. The font to measure the line height with.</param>
@@ -72,7 +92,7 @@ namespace ImGui.Forms.Resources
                 ImGuiNET.ImGui.PushFont((ImFontPtr)font);
 
             var currentFont = ImGuiNET.ImGui.GetFont();
-            var lineHeight = (int)Math.Ceiling(currentFont.Ascent+ (withDescent ? -currentFont.Descent : 0));
+            var lineHeight = (int)Math.Ceiling(currentFont.Ascent + (withDescent ? -currentFont.Descent : 0));
 
             if (font != null)
                 ImGuiNET.ImGui.PopFont();
@@ -127,17 +147,6 @@ namespace ImGui.Forms.Resources
 
             return _ptr;
         }
-
-        //private ImFontPtr GetPointer()
-        //{
-        //    if (IsLoaded())
-        //        return _ptr;
-
-        //    if (!string.IsNullOrEmpty(_path))
-        //        return _ptr = Application.Instance?.FontFactory.LoadFont(_path, Size) ?? null;
-
-        //    return _ptr = Application.Instance?.FontFactory.LoadFont(_assembly, _resourceName, Size) ?? null;
-        //}
 
         private unsafe bool IsLoaded()
         {

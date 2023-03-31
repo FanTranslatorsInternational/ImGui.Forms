@@ -7,42 +7,21 @@ namespace ImGui.Forms.Controls.Lists
 {
     public class ActivableList : BaseList<ActivableComponent>
     {
-        public ActivableList()
-        {
-            InitializeItems();
-        }
-
-        #region Item initialization
-
-        private void InitializeItems()
-        {
-            var items = new ObservableList<ActivableComponent>();
-
-            items.ItemInserted += Items_NewItem;
-            items.ItemAdded += Items_NewItem;
-            items.ItemSet += Items_ItemSet;
-            items.ItemRemoved += Items_ItemRemoved;
-
-            Items = items;
-        }
-
-        private void Items_NewItem(object sender, ItemEventArgs<ActivableComponent> e)
+        protected override void OnItemAdded(ItemEventArgs<ActivableComponent> e)
         {
             e.Item.Activated += Item_Activated;
         }
 
-        private void Items_ItemSet(object sender, ItemSetEventArgs<ActivableComponent> e)
+        protected override void OnItemSet(ItemSetEventArgs<ActivableComponent> e)
         {
             e.PreviousItem.Activated -= Item_Activated;
             e.Item.Activated += Item_Activated;
         }
 
-        private void Items_ItemRemoved(object sender, ItemEventArgs<ActivableComponent> e)
+        protected override void OnItemRemoved(ItemEventArgs<ActivableComponent> e)
         {
             e.Item.Activated -= Item_Activated;
         }
-
-        #endregion
 
         private void Item_Activated(object sender, EventArgs e)
         {

@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Threading.Tasks;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Layouts;
 using ImGui.Forms.Controls.Lists;
@@ -90,6 +89,8 @@ namespace ImGui.Forms.Modals.IO
             _openBtn.Clicked += OpenBtnClicked;
 
             #endregion
+
+            Result = DialogResult.Cancel;
 
             var width = (int)Math.Ceiling(Application.Instance.MainForm.Width * .9f);
             var height = (int)Math.Ceiling(Application.Instance.MainForm.Height * .8f);
@@ -438,7 +439,7 @@ namespace ImGui.Forms.Modals.IO
 
         #endregion
 
-        private class FileEntry
+        class FileEntry
         {
             public string Name { get; set; }
             public string Type { get; set; }

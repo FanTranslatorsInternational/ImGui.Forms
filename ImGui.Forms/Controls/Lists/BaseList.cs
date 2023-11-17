@@ -163,7 +163,7 @@ namespace ImGui.Forms.Controls.Lists
 
         protected virtual void OnItemAdded(ItemEventArgs<TItem> e)
         {
-            _scrollToLast = true;
+            _scrollToLast = ScrollToLastItem;
         }
 
         protected virtual void OnItemSet(ItemSetEventArgs<TItem> e) { }

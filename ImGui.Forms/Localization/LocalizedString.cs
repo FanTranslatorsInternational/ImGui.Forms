@@ -17,7 +17,7 @@ namespace ImGui.Forms.Localization
         /// <summary>
         /// Determines, if this localized string has localization information set.
         /// </summary>
-        public bool IsEmpty => _fixedText == null && (_id == null || _args == null);
+        public bool IsEmpty => string.IsNullOrEmpty(_fixedText) && (string.IsNullOrEmpty(_id) || _args == null);
 
         /// <summary>
         /// Set up a localized string, based on a localization ID.

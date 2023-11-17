@@ -27,7 +27,7 @@ namespace ImGui.Forms.Controls
         /// <summary>
         /// Get or set the max count of characters allowed in the text box.
         /// </summary>
-        public uint MaxCharacters { get; set; } = 1024;
+        public uint MaxCharacters { get; set; } = 2048;
 
         #endregion
 

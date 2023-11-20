@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
 using ImGui.Forms.Extensions;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Modals;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
@@ -25,7 +26,7 @@ namespace ImGui.Forms
 
         #region Properties
 
-        public string Title { get; set; } = string.Empty;
+        public LocalizedString Title { get; set; } = string.Empty;
         public Vector2 Size { get; set; } = new Vector2(700, 400);
         public int Width => (int)Size.X;
         public int Height => (int)Size.Y;

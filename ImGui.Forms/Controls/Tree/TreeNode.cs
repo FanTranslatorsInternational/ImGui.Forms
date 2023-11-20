@@ -90,7 +90,7 @@ namespace ImGui.Forms.Controls.Tree
 
             foreach (var node in input.Nodes)
             {
-                if (_parentView.SelectedNode == node)
+                if (_parentView != null && _parentView.SelectedNode == node)
                     _parentView.SelectedNode = null;
 
                 SetParents(node, parent);

@@ -76,96 +76,108 @@ namespace ImGui.Forms.Controls.Layouts
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            if (ImGuiNET.ImGui.BeginChild($"{Id}", contentRect.Size, false, ImGuiWindowFlags.NoScrollbar))
+            var localWidths = GetColumnWidths(contentRect.Width, 1f);
+            var localHeights = GetRowHeights(contentRect.Height, 1f);
+
+            var totalWidth = localWidths.Sum() + Spacing.X * (localWidths.Length - 1);
+            var totalHeight = localHeights.Sum() + Spacing.Y * (localHeights.Length - 1);
+
+            var childFlags = ImGuiWindowFlags.NoScrollbar;
+            if (contentRect.Height < totalHeight)
+                childFlags |= ImGuiWindowFlags.AlwaysVerticalScrollbar;
+
+            if (ImGuiNET.ImGui.BeginChild($"{Id}", contentRect.Size, false, childFlags))
             {
-                var localWidths = GetColumnWidths(contentRect.Width, 1f);
-                var localHeights = GetRowHeights(contentRect.Height, 1f);
-
-                var (x, y) = GetInitPoint(localWidths, localHeights, contentRect);
-                var origX = x;
-
-                var localCells = Rows.Select(r => r.Cells).ToArray();
-                var localMaxColumns = GetMaxColumnCount();
-
-                for (var r = 0; r < localCells.Length; r++)
+                if (ImGuiNET.ImGui.BeginChild($"{Id}-in", new Vector2(totalWidth, totalHeight), false, ImGuiWindowFlags.NoScrollbar))
                 {
-                    var row = localCells[r];
-                    var cellHeight = localHeights[r];
+                    var (x, y) = GetInitPoint(localWidths, localHeights, contentRect);
+                    var origX = x;
 
-                    for (var c = 0; c < localMaxColumns; c++)
+                    var localCells = Rows.Select(r => r.Cells).ToArray();
+                    var localMaxColumns = GetMaxColumnCount();
+
+                    for (var r = 0; r < localCells.Length; r++)
                     {
-                        var cell = c < row.Count ? row[c] : null;
-                        var cellWidth = localWidths[c];
+                        var row = localCells[r];
+                        var cellHeight = localHeights[r];
 
-                        // Apply cell alignment
-                        var cellInternalSize = cell?.Content?.GetSize() ?? Size.Parent;
-                        var cellInternalWidth = cellInternalSize.Width.IsAbsolute ? cell?.Content?.GetWidth(cellWidth) ?? 0 : cellWidth;
-                        var cellInternalHeight = cellInternalSize.Height.IsAbsolute ? cell?.Content?.GetHeight(cellHeight) ?? 0 : cellHeight;
-                        var xAdjust = 0f;
-                        var yAdjust = 0f;
-
-                        switch (cell?.HorizontalAlignment ?? HorizontalAlignment.Left)
+                        for (var c = 0; c < localMaxColumns; c++)
                         {
-                            case HorizontalAlignment.Center:
-                                xAdjust = (cellWidth - cellInternalWidth) / 2f;
-                                break;
+                            var cell = c < row.Count ? row[c] : null;
+                            var cellWidth = localWidths[c];
 
-                            case HorizontalAlignment.Right:
-                                xAdjust = cellWidth - cellInternalWidth;
-                                break;
-                        }
+                            // Apply cell alignment
+                            var cellInternalSize = cell?.Content?.GetSize() ?? Size.Parent;
+                            var cellInternalWidth = cellInternalSize.Width.IsAbsolute ? cell?.Content?.GetWidth(cellWidth) ?? 0 : cellWidth;
+                            var cellInternalHeight = cellInternalSize.Height.IsAbsolute ? cell?.Content?.GetHeight(cellHeight) ?? 0 : cellHeight;
+                            var xAdjust = 0f;
+                            var yAdjust = 0f;
 
-                        switch (cell?.VerticalAlignment ?? VerticalAlignment.Top)
-                        {
-                            case VerticalAlignment.Center:
-                                yAdjust = (cellHeight - cellInternalHeight) / 2f;
-                                break;
-
-                            case VerticalAlignment.Bottom:
-                                yAdjust = cellHeight - cellInternalHeight;
-                                break;
-                        }
-
-                        // Rendering
-                        // HINT: Make child container as big as the component returned
-                        if (cell != null && cellWidth > 0 && cellHeight > 0)
-                        {
-                            // Draw cell border
-                            if (cell.ShowBorder)
-                                ImGuiNET.ImGui.GetWindowDrawList().AddRect(new Vector2(x, y), new Vector2(x + cellWidth, y + cellHeight), Style.GetColor(ImGuiCol.Border).ToUInt32(), 0);
-
-                            // Determine scroll position
-                            var sx = ImGuiNET.ImGui.GetScrollX();
-                            var sy = ImGuiNET.ImGui.GetScrollY();
-
-                            // Draw cell container
-                            ImGuiNET.ImGui.SetCursorPosX(x);
-                            ImGuiNET.ImGui.SetCursorPosY(y);
-
-                            if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}", new Vector2(cellWidth, cellHeight), false, ImGuiWindowFlags.NoScrollbar))
+                            switch (cell?.HorizontalAlignment ?? HorizontalAlignment.Left)
                             {
-                                // Draw cell content container
-                                ImGuiNET.ImGui.SetCursorPosX(xAdjust);
-                                ImGuiNET.ImGui.SetCursorPosY(yAdjust);
+                                case HorizontalAlignment.Center:
+                                    xAdjust = (cellWidth - cellInternalWidth) / 2f;
+                                    break;
 
-                                if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}-content", new Vector2(cellInternalWidth, cellInternalHeight), false, ImGuiWindowFlags.NoScrollbar))
+                                case HorizontalAlignment.Right:
+                                    xAdjust = cellWidth - cellInternalWidth;
+                                    break;
+                            }
+
+                            switch (cell?.VerticalAlignment ?? VerticalAlignment.Top)
+                            {
+                                case VerticalAlignment.Center:
+                                    yAdjust = (cellHeight - cellInternalHeight) / 2f;
+                                    break;
+
+                                case VerticalAlignment.Bottom:
+                                    yAdjust = cellHeight - cellInternalHeight;
+                                    break;
+                            }
+
+                            // Rendering
+                            // HINT: Make child container as big as the component returned
+                            if (cell != null && cellWidth > 0 && cellHeight > 0)
+                            {
+                                // Draw cell border
+                                if (cell.ShowBorder)
+                                    ImGuiNET.ImGui.GetWindowDrawList().AddRect(new Vector2(x, y), new Vector2(x + cellWidth, y + cellHeight), Style.GetColor(ImGuiCol.Border).ToUInt32(), 0);
+
+                                // Determine scroll position
+                                var sx = ImGuiNET.ImGui.GetScrollX();
+                                var sy = ImGuiNET.ImGui.GetScrollY();
+
+                                // Draw cell container
+                                ImGuiNET.ImGui.SetCursorPosX(x);
+                                ImGuiNET.ImGui.SetCursorPosY(y);
+
+                                if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}", new Vector2(cellWidth, cellHeight), false, ImGuiWindowFlags.NoScrollbar))
                                 {
-                                    // Draw component
-                                    cell.Content?.Update(new Rectangle((int)(contentRect.X + x + xAdjust - sx), (int)(contentRect.Y + y + yAdjust - sy), cellInternalWidth, cellInternalHeight));
+                                    // Draw cell content container
+                                    ImGuiNET.ImGui.SetCursorPosX(xAdjust);
+                                    ImGuiNET.ImGui.SetCursorPosY(yAdjust);
+
+                                    if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}-content", new Vector2(cellInternalWidth, cellInternalHeight), false, ImGuiWindowFlags.NoScrollbar))
+                                    {
+                                        // Draw component
+                                        cell.Content?.Update(new Rectangle((int)(contentRect.X + x + xAdjust - sx), (int)(contentRect.Y + y + yAdjust - sy), cellInternalWidth, cellInternalHeight));
+                                    }
+
+                                    ImGuiNET.ImGui.EndChild();
                                 }
 
                                 ImGuiNET.ImGui.EndChild();
                             }
 
-                            ImGuiNET.ImGui.EndChild();
+                            x += cellWidth + (cellWidth <= 0 ? 0 : Spacing.X);
                         }
 
-                        x += cellWidth + (cellWidth <= 0 ? 0 : Spacing.X);
+                        x = origX;
+                        y += cellHeight + (cellHeight <= 0 ? 0 : Spacing.Y);
                     }
-
-                    x = origX;
-                    y += cellHeight + (cellHeight <= 0 ? 0 : Spacing.Y);
                 }
+
+                ImGuiNET.ImGui.EndChild();
             }
 
             ImGuiNET.ImGui.EndChild();
@@ -304,13 +316,15 @@ namespace ImGui.Forms.Controls.Layouts
                         var maxValue = cell.Size.Height.IsContentAligned ?
                             cell.Content.GetHeight(componentHeight, layoutCorrection) :
                             (int)cell.Size.Height.Value;
-                        maxValue = Math.Min(availableHeight, maxValue);
+                        if (!Size.Height.IsContentAligned)
+                            maxValue = Math.Min(availableHeight, maxValue);
 
                         if (maxValue > maxCellHeight)
                             maxCellHeight = maxValue;
                     }
 
-                    availableHeight -= maxCellHeight;
+                    if (!Size.Height.IsContentAligned)
+                        availableHeight -= maxCellHeight;
                     result[r] = maxCellHeight;
                 }
             }
@@ -340,10 +354,11 @@ namespace ImGui.Forms.Controls.Layouts
                     {
                         maxIsAbsolute = true;
 
-                        var maxValue = cellHeight.Value < 0 ?
+                        var maxValue = cellHeight.IsContentAligned ?
                             cell.GetHeight(componentHeight, layoutCorrection) :
                             cellHeight.Value;
-                        maxValue = Math.Min(availableHeight, maxValue);
+                        if (!Size.Height.IsContentAligned)
+                            maxValue = Math.Min(availableHeight, maxValue);
 
                         if (maxValue > maxCellHeight)
                             maxCellHeight = (int)maxValue;
@@ -363,8 +378,9 @@ namespace ImGui.Forms.Controls.Layouts
                 maxRelatives[r] = 0f;
 
                 heightCorrection = 1f / (maxRelatives.Sum() <= 1f ? 1f : maxRelatives.Sum());
-                availableHeight -= maxCellHeight;
 
+                if (!Size.Height.IsContentAligned)
+                    availableHeight -= maxCellHeight;
                 result[r] = maxCellHeight;
             }
 
@@ -374,6 +390,8 @@ namespace ImGui.Forms.Controls.Layouts
                 // Skip column, if it doesn't have any relative width anymore
                 if (maxRelatives[c] == 0)
                     continue;
+
+                // HINT: If layout is content aligned, this will apply
 
                 result[c] = (int)(availableHeight * maxRelatives[c] * heightCorrection);
             }
@@ -441,7 +459,7 @@ namespace ImGui.Forms.Controls.Layouts
             {
                 var cells = GetCellsByColumn(i).ToArray();
                 if (cells.Any(x => x?.Content != null && x.Content.Visible || (x?.HasSize ?? false)))
-                    if (cells.All(x => x?.Size.IsVisible ?? true))
+                    if (cells.All(x => x?.Size.Width.IsVisible ?? true))
                         res++;
             }
 
@@ -454,7 +472,7 @@ namespace ImGui.Forms.Controls.Layouts
             foreach (var row in Rows)
             {
                 if (row.Cells.Any(x => x?.Content != null && x.Content.Visible || (x?.HasSize ?? false)))
-                    if (row.Cells.All(x => x?.Size.IsVisible ?? false))
+                    if (row.Cells.All(x => x?.Size.Height.IsVisible ?? false))
                         res++;
             }
 

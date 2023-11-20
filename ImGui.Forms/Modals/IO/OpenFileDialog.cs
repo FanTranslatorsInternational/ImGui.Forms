@@ -205,9 +205,30 @@ namespace ImGui.Forms.Modals.IO
 
             // Apply extension filter, if set
             if (!useSearch && _fileFilters.SelectedItem != null)
-                files = files.Where(f => _fileFilters.SelectedItem.Content.Extensions.Contains(Path.GetExtension(f)));
+                files = files.Where(f => GetFileExtensions(f).Any(e => _fileFilters.SelectedItem.Content.Extensions.Contains(e)));
 
             return files.Select(x => new FileEntry { Name = Path.GetFileName(x), Type = "F", DateModified = File.GetLastWriteTime(x) });
+        }
+
+        private string[] GetFileExtensions(string filePath)
+        {
+            string fileName = Path.GetFileName(filePath);
+
+            string[] fileNameParts = fileName.Split('.');
+            if (fileNameParts.Length - 1 < 0)
+                return Array.Empty<string>();
+
+            var result = new string[fileNameParts.Length - 1];
+            for (var i = 1; i < fileNameParts.Length; i++)
+            {
+                string extension = fileNameParts[i];
+                if (i - 1 > 0)
+                    extension = result[i - 2] + '.' + extension;
+
+                result[i - 1] = extension;
+            }
+
+            return result;
         }
 
         #endregion

@@ -14,6 +14,9 @@ namespace ImGui.Forms.Localization
 
         private readonly string _fixedText;
 
+        private string _locale;
+        private string _localizedText;
+
         /// <summary>
         /// Determines, if this localized string has localization information set.
         /// </summary>
@@ -36,6 +39,9 @@ namespace ImGui.Forms.Localization
 
         private LocalizedString(string id, string fixedText, Func<object>[] args)
         {
+            _locale = null;
+            _localizedText = null;
+
             _args = args;
 
             if (fixedText != null)
@@ -59,8 +65,13 @@ namespace ImGui.Forms.Localization
             if (app?.Localizer == null || _id == null || _args == null)
                 return string.Empty;
 
-            var args = _args.Select(x => x?.Invoke() ?? string.Empty).ToArray();
-            return app.Localizer.Localize(_id, args);
+            if (app.Localizer.CurrentLocale == _locale)
+                return _localizedText;
+
+            _locale = app.Localizer.CurrentLocale;
+
+            object[] args = _args.Select(x => x?.Invoke() ?? string.Empty).ToArray();
+            return _localizedText = app.Localizer.Localize(_id, args);
         }
 
         public static implicit operator LocalizedString(string s) => new LocalizedString(null, s ?? string.Empty, Array.Empty<Func<object>>());

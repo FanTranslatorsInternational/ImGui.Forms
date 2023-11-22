@@ -88,9 +88,13 @@ namespace ImGui.Forms.Controls.Layouts
 
             if (ImGuiNET.ImGui.BeginChild($"{Id}", contentRect.Size, false, childFlags))
             {
+                var (x, y) = GetInitPoint(localWidths, localHeights, contentRect);
+                ImGuiNET.ImGui.SetCursorPosX(x);
+                ImGuiNET.ImGui.SetCursorPosY(y);
+
                 if (ImGuiNET.ImGui.BeginChild($"{Id}-in", new Vector2(totalWidth, totalHeight), false, ImGuiWindowFlags.NoScrollbar))
                 {
-                    var (x, y) = GetInitPoint(localWidths, localHeights, contentRect);
+                    (x, y) = (0, 0);
                     var origX = x;
 
                     var localCells = Rows.Select(r => r.Cells).ToArray();

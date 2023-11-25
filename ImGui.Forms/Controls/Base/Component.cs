@@ -2,6 +2,7 @@
 using System.Drawing;
 using ImGui.Forms.Extensions;
 using ImGui.Forms.Models;
+using ImGui.Forms.Models.IO;
 using ImGuiNET;
 using Veldrid.Sdl2;
 using Rectangle = Veldrid.Rectangle;
@@ -162,6 +163,28 @@ namespace ImGui.Forms.Controls.Base
         /// Removes any styles specific to this component, after <see cref="UpdateInternal"/> is invoked.
         /// </summary>
         protected virtual void RemoveStyles() { }
+
+        protected bool IsKeyDown(KeyCommand keyDown)
+        {
+            if (keyDown == default)
+                return false;
+
+            if (!Application.Instance.TryGetKeyDownCommand(out KeyCommand internalKeyDown))
+                return false;
+
+            return keyDown == internalKeyDown;
+        }
+
+        protected bool IsKeyUp(KeyCommand keyUp)
+        {
+            if (keyUp == default)
+                return false;
+
+            if (!Application.Instance.TryGetKeyDownCommand(out KeyCommand internalKeyUp))
+                return false;
+
+            return keyUp == internalKeyUp;
+        }
 
         /// <summary>
         /// Invoke the DragDrop event of this component.

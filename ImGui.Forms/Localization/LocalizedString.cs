@@ -65,7 +65,7 @@ namespace ImGui.Forms.Localization
             if (app?.Localizer == null || _id == null || _args == null)
                 return string.Empty;
 
-            if (app.Localizer.CurrentLocale == _locale)
+            if (app.Localizer.CurrentLocale == _locale && _args.Length <= 0)
                 return _localizedText;
 
             _locale = app.Localizer.CurrentLocale;

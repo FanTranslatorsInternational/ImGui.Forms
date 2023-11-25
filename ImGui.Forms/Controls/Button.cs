@@ -3,6 +3,7 @@ using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
+using ImGui.Forms.Models.IO;
 using ImGui.Forms.Resources;
 using ImGuiNET;
 using Veldrid;
@@ -14,6 +15,9 @@ namespace ImGui.Forms.Controls
         #region Properties
 
         public LocalizedString Text { get; set; }
+        public LocalizedString Tooltip { get; set; }
+
+        public KeyCommand KeyAction { get; set; }
 
         public Vector2 Padding { get; set; } = new Vector2(2, 2);
 
@@ -51,6 +55,13 @@ namespace ImGui.Forms.Controls
 
             if (ImGuiNET.ImGui.Button(EscapeText(), new Vector2(contentRect.Width, contentRect.Height)) && Enabled)
                 OnClicked();
+
+            if (Tooltip is { IsEmpty: false } && IsHoveredCore())
+            {
+                ImGuiNET.ImGui.BeginTooltip();
+                ImGuiNET.ImGui.Text(Tooltip);
+                ImGuiNET.ImGui.EndTooltip();
+            }
 
             RemoveStyles(enabled, font);
         }

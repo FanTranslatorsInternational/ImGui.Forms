@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Numerics;
 using ImGui.Forms.Factories;
 using ImGui.Forms.Localization;
+using ImGui.Forms.Models.IO;
 using ImGui.Forms.Support.Veldrid.ImGui;
 using Veldrid;
 using Veldrid.Sdl2;
@@ -18,6 +19,8 @@ namespace ImGui.Forms
         private ExecutionContext _executionContext;
 
         private DragDropEventEx _dragDropEvent;
+        private KeyCommand _keyUpCommand;
+        private KeyCommand _keyDownCommand;
         private bool _frameHandledDragDrop;
 
         #region Static properties
@@ -68,6 +71,8 @@ namespace ImGui.Forms
 
             _executionContext.Window.Resized += Window_Resized;
             _executionContext.Window.DragDrop += Window_DragDrop;
+            _executionContext.Window.KeyDown += Window_KeyDown;
+            _executionContext.Window.KeyUp += Window_KeyUp;
             _executionContext.Window.Shown += Window_Shown;
             _executionContext.Window.SetCloseRequestedHandler(ShouldCancelClose);
 
@@ -121,6 +126,8 @@ namespace ImGui.Forms
         private bool UpdateFrame(CommandList cl)
         {
             _dragDropEvent = default;
+            _keyUpCommand = default;
+            _keyDownCommand = default;
             _frameHandledDragDrop = false;
 
             ImageFactory.FreeTextures();
@@ -197,7 +204,23 @@ namespace ImGui.Forms
 
         private void Window_DragDrop(DragDropEvent obj)
         {
+            Console.WriteLine("[EVENT] DragDrop");
+
             _dragDropEvent = new DragDropEventEx(obj, ImGuiNET.ImGui.GetMousePos());
+        }
+
+        private void Window_KeyUp(KeyEvent obj)
+        {
+            Console.WriteLine("[EVENT] KeyUp");
+
+            _keyUpCommand = new KeyCommand(obj.Modifiers, obj.Key);
+        }
+
+        private void Window_KeyDown(KeyEvent obj)
+        {
+            Console.WriteLine("[EVENT] KeyDown");
+
+            _keyDownCommand = new KeyCommand(obj.Modifiers, obj.Key);
         }
 
         #endregion
@@ -205,6 +228,20 @@ namespace ImGui.Forms
         private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             UnhandledException?.Invoke(this, e.ExceptionObject as Exception);
+        }
+
+        internal bool TryGetKeyUpCommand(out KeyCommand keyUp)
+        {
+            keyUp = _keyUpCommand;
+
+            return _keyUpCommand != default;
+        }
+
+        internal bool TryGetKeyDownCommand(out KeyCommand keyDown)
+        {
+            keyDown = _keyDownCommand;
+
+            return _keyDownCommand != default;
         }
 
         internal bool TryGetDragDrop(Veldrid.Rectangle controlRect, out DragDropEventEx obj)

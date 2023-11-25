@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
+using ImGui.Forms.Models.IO;
 using ImGui.Forms.Resources;
 using ImGuiNET;
 using Veldrid;
@@ -11,6 +13,10 @@ namespace ImGui.Forms.Controls
     public class ImageButton : Component
     {
         private ImageResource _baseImg;
+
+        public LocalizedString? Tooltip { get; set; }
+
+        public KeyCommand KeyAction { get; set; }
 
         public ImageResource Image
         {
@@ -44,13 +50,20 @@ namespace ImGui.Forms.Controls
 
             if ((IntPtr)Image != IntPtr.Zero)
             {
-                if (ImGuiNET.ImGui.ImageButton((IntPtr)Image, GetImageSize()) && Enabled)
+                if ((ImGuiNET.ImGui.ImageButton((IntPtr)Image, GetImageSize()) || IsKeyDown(KeyAction)) && Enabled)
                     OnClicked();
             }
             else
             {
-                if (ImGuiNET.ImGui.Button(string.Empty, GetImageSize() + Padding * 2) && Enabled)
+                if ((ImGuiNET.ImGui.Button(string.Empty, GetImageSize() + Padding * 2) || IsKeyDown(KeyAction)) && Enabled)
                     OnClicked();
+            }
+
+            if (Enabled && Tooltip is { IsEmpty: false } && IsHoveredCore())
+            {
+                ImGuiNET.ImGui.BeginTooltip();
+                ImGuiNET.ImGui.Text(Tooltip);
+                ImGuiNET.ImGui.EndTooltip();
             }
 
             RemoveStyles(enabled);

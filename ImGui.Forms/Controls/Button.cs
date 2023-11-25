@@ -53,7 +53,7 @@ namespace ImGui.Forms.Controls
 
             ApplyStyles(enabled, font);
 
-            if (ImGuiNET.ImGui.Button(EscapeText(), new Vector2(contentRect.Width, contentRect.Height)) && Enabled)
+            if ((ImGuiNET.ImGui.Button(EscapeText(), new Vector2(contentRect.Width, contentRect.Height)) || IsKeyDown(KeyAction)) && Enabled)
                 OnClicked();
 
             if (Tooltip is { IsEmpty: false } && IsHoveredCore())

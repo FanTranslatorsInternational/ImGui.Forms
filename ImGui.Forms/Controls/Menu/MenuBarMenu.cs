@@ -30,8 +30,17 @@ namespace ImGui.Forms.Controls.Menu
 
                 ImGuiNET.ImGui.EndMenu();
             }
+            else
+                UpdateEventsInternal();
+
 
             ImGuiNET.ImGui.PopStyleVar(2);
+        }
+
+        protected override void UpdateEventsInternal()
+        {
+            foreach (var item in Items)
+                item.UpdateEvents();
         }
 
         private int GetHeight()

@@ -8,5 +8,9 @@
         {
             ImGuiNET.ImGui.Separator();
         }
+
+        protected override void UpdateEventsInternal()
+        {
+        }
     }
 }

@@ -38,6 +38,10 @@ namespace ImGui.Forms.Controls.Menu
                 Checked = !Checked;
         }
 
+        protected override void UpdateEventsInternal()
+        {
+        }
+
         private int GetHeight()
         {
             ApplyStyles();

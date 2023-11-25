@@ -46,6 +46,11 @@ namespace ImGui.Forms.Controls.Menu
             _radioMenu.Update();
         }
 
+        protected override void UpdateEventsInternal()
+        {
+            _radioMenu.UpdateEvents();
+        }
+
         private int GetHeight()
         {
             ApplyStyles();

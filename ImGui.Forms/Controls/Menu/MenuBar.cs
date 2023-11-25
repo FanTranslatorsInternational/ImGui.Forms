@@ -30,16 +30,23 @@ namespace ImGui.Forms.Controls.Menu
                 ImGuiNET.ImGui.PushFont((ImFontPtr)Font);
 
             // Begin menu bar
-            if (_isMain) ImGuiNET.ImGui.BeginMainMenuBar();
-            else ImGuiNET.ImGui.BeginMenuBar();
+            bool isMenuOpen = _isMain ? 
+                ImGuiNET.ImGui.BeginMainMenuBar() : 
+                ImGuiNET.ImGui.BeginMenuBar();
+            if (isMenuOpen)
+            {
+                // Add content to menu bar
+                foreach (var child in Items)
+                    child.Update();
 
-            // Add content to menu bar
-            foreach (var child in Items)
-                child.Update();
-
-            // End menu bar
-            if (_isMain) ImGuiNET.ImGui.EndMainMenuBar();
-            else ImGuiNET.ImGui.EndMenuBar();
+                if (_isMain) ImGuiNET.ImGui.EndMainMenuBar();
+                else ImGuiNET.ImGui.EndMenuBar();
+            }
+            else
+            {
+                foreach (var child in Items)
+                    child.UpdateEvents();
+            }
 
             if (Font != null)
                 ImGuiNET.ImGui.PopFont();

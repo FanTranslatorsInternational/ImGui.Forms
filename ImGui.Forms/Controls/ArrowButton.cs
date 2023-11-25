@@ -1,6 +1,7 @@
 ﻿using System;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
+using ImGui.Forms.Models.IO;
 using ImGui.Forms.Resources;
 using ImGuiNET;
 using Veldrid;
@@ -9,6 +10,8 @@ namespace ImGui.Forms.Controls
 {
     public class ArrowButton : Component
     {
+        public KeyCommand KeyAction { get; set; }
+
         public ImGuiDir Direction { get; set; } = ImGuiDir.None;
 
         #region Events
@@ -22,7 +25,7 @@ namespace ImGui.Forms.Controls
             var height = FontResource.GetCurrentLineHeight();
             var padding = ImGuiNET.ImGui.GetStyle().FramePadding;
 
-            return new Size((int)Math.Ceiling(height + padding.X*2), (int)Math.Ceiling(height + padding.Y*2));
+            return new Size((int)Math.Ceiling(height + padding.X * 2), (int)Math.Ceiling(height + padding.Y * 2));
         }
 
         protected override void UpdateInternal(Rectangle contentRect)
@@ -36,7 +39,7 @@ namespace ImGui.Forms.Controls
                 ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xFF666666);
             }
 
-            if (ImGuiNET.ImGui.ArrowButton($"##{Id}", Direction) && Enabled)
+            if ((ImGuiNET.ImGui.ArrowButton($"##{Id}", Direction) || IsKeyDown(KeyAction)) && Enabled)
                 OnClicked();
 
             if (!enabled)

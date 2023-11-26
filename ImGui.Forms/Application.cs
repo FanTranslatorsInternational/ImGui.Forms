@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Numerics;
 using ImGui.Forms.Factories;
 using ImGui.Forms.Localization;
-using ImGui.Forms.Models;
 using ImGui.Forms.Models.IO;
 using ImGui.Forms.Support.Veldrid.ImGui;
 using Veldrid;
@@ -16,6 +15,8 @@ namespace ImGui.Forms
     {
         private bool _isClosing;
         private bool _shouldClose;
+
+        private GraphicsBackend? _backend = null;
 
         private ExecutionContext _executionContext;
 
@@ -56,8 +57,10 @@ namespace ImGui.Forms
 
         #endregion
 
-        public Application(ILocalizer localizer = null)
+        public Application(ILocalizer localizer = null, GraphicsBackend? backend = null)
         {
+            _backend = backend;
+
             Localizer = localizer;
 
             AppDomain.CurrentDomain.UnhandledException += OnUnhandledException;
@@ -108,11 +111,7 @@ namespace ImGui.Forms
         private void CreateApplication(Form form)
         {
             // Create window
-            VeldridStartup.CreateWindowAndGraphicsDevice(
-                new WindowCreateInfo(20, 20, form.Width, form.Height, WindowState.Normal, form.Title),
-                new GraphicsDeviceOptions(true, null, true, ResourceBindingModel.Improved, true, true),
-                out var window,
-                out var gd);
+            CreateWindow(form, out var window, out var gd);
 
             _executionContext = new ExecutionContext(form, gd, window);
 
@@ -122,6 +121,55 @@ namespace ImGui.Forms
             FontFactory.Initialize(ImGuiNET.ImGui.GetIO(), _executionContext.Renderer);
 
             Instance = this;
+        }
+
+        private void CreateWindow(Form form, out Sdl2Window window, out GraphicsDevice gd)
+        {
+            var windowInfo = new WindowCreateInfo(20, 20, form.Width, form.Height, WindowState.Normal, form.Title);
+            var graphicsDeviceOptions = new GraphicsDeviceOptions(true, null, true, ResourceBindingModel.Improved, true, true);
+
+            if (_backend.HasValue)
+            {
+                if (TryCreateWindow(windowInfo, graphicsDeviceOptions, _backend.Value, out window, out gd))
+                    return;
+
+                throw new InvalidOperationException($"[ERROR] Can't create window with fixed backend {_backend}. Shutting down.");
+            }
+
+            GraphicsBackend defaultBackend = VeldridStartup.GetPlatformDefaultBackend();
+            if (TryCreateWindow(windowInfo, graphicsDeviceOptions, defaultBackend, out window, out gd))
+                return;
+
+            for (var i = 0; i < 5; i++)
+            {
+                if (i == (int)defaultBackend)
+                    continue;
+
+                if (TryCreateWindow(windowInfo, graphicsDeviceOptions, (GraphicsBackend)i, out window, out gd))
+                    return;
+            }
+
+            throw new InvalidOperationException("[ERROR] Can't create window with any backend. Shutting down.");
+        }
+
+        private bool TryCreateWindow(WindowCreateInfo windowInfo, GraphicsDeviceOptions graphicsDeviceOptions, GraphicsBackend backend, out Sdl2Window window, out GraphicsDevice gd)
+        {
+            window = null;
+            gd = null;
+
+            try
+            {
+                VeldridStartup.CreateWindowAndGraphicsDevice(windowInfo, graphicsDeviceOptions, backend,
+                    out window, out gd);
+                Console.WriteLine($"[INFO] Created window with backend {backend}.");
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"[ERROR] Can't create window with backend {backend}: {e.Message}");
+                return false;
+            }
+
+            return true;
         }
 
         private bool UpdateFrame(CommandList cl)
@@ -151,8 +199,9 @@ namespace ImGui.Forms
             cl.ClearColorTarget(0, new RgbaFloat(SystemColors.Control.R, SystemColors.Control.G, SystemColors.Control.B, 1f));
             _executionContext.Renderer.Render(_executionContext.GraphicsDevice, cl);
             cl.End();
+
             _executionContext.GraphicsDevice.SubmitCommands(cl);
-            _executionContext.GraphicsDevice.SwapBuffers(_executionContext.GraphicsDevice.MainSwapchain);
+            _executionContext.GraphicsDevice.SwapBuffers();
 
             return true;
         }

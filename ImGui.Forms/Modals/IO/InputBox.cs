@@ -3,7 +3,10 @@ using System.Numerics;
 using System.Threading.Tasks;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Layouts;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
+using ImGui.Forms.Models.IO;
+using Veldrid;
 
 namespace ImGui.Forms.Modals.IO
 {
@@ -18,7 +21,7 @@ namespace ImGui.Forms.Modals.IO
 
         public string Input { get; private set; }
 
-        private InputBox(string caption, string text, string preset, string placeHolder, int maxCharacters = 0)
+        private InputBox(LocalizedString caption, LocalizedString text, string preset, LocalizedString? placeHolder, int maxCharacters)
         {
             #region Controls
 
@@ -26,7 +29,10 @@ namespace ImGui.Forms.Modals.IO
             var cancelButton = new Button { Text = Cancel_, Width = ButtonWidth_ };
 
             var label = new Label { Text = text };
-            _textBox = new TextBox { Placeholder = placeHolder };
+
+            _textBox = new TextBox();
+            if (placeHolder != null)
+                _textBox.Placeholder = placeHolder.Value;
             if (maxCharacters >= 0)
                 _textBox.MaxCharacters = (uint)maxCharacters;
 
@@ -38,6 +44,13 @@ namespace ImGui.Forms.Modals.IO
             cancelButton.Clicked += CancelButton_Clicked;
 
             _textBox.TextChanged += TextBox_TextChanged;
+
+            #endregion
+
+            #region Keys
+
+            OkAction = new KeyCommand(ModifierKeys.None, Key.Enter);
+            CancelAction = new KeyCommand(ModifierKeys.None, Key.Escape);
 
             #endregion
 
@@ -92,7 +105,7 @@ namespace ImGui.Forms.Modals.IO
             Close();
         }
 
-        public static async Task<string> ShowAsync(string caption, string text, string preset = "", string placeHolder = "", int maxCharacters = 0)
+        public static async Task<string> ShowAsync(LocalizedString caption, LocalizedString text, string preset = "", LocalizedString? placeHolder = null, int maxCharacters = -1)
         {
             var inputBox = new InputBox(caption, text, preset, placeHolder, maxCharacters);
             await inputBox.ShowAsync();

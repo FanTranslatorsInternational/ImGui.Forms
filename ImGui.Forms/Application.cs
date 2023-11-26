@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Numerics;
 using ImGui.Forms.Factories;
 using ImGui.Forms.Localization;
+using ImGui.Forms.Models;
 using ImGui.Forms.Models.IO;
 using ImGui.Forms.Support.Veldrid.ImGui;
 using Veldrid;
@@ -125,10 +126,7 @@ namespace ImGui.Forms
 
         private bool UpdateFrame(CommandList cl)
         {
-            _dragDropEvent = default;
-            _keyUpCommand = default;
-            _keyDownCommand = default;
-            _frameHandledDragDrop = false;
+            UpdateApplicationEvents();
 
             ImageFactory.FreeTextures();
             IdFactory.FreeIds();
@@ -157,6 +155,14 @@ namespace ImGui.Forms
             _executionContext.GraphicsDevice.SwapBuffers(_executionContext.GraphicsDevice.MainSwapchain);
 
             return true;
+        }
+
+        private void UpdateApplicationEvents()
+        {
+            _dragDropEvent = default;
+            _keyUpCommand = default;
+            _keyDownCommand = default;
+            _frameHandledDragDrop = false;
         }
 
         #region Window events
@@ -230,13 +236,6 @@ namespace ImGui.Forms
             UnhandledException?.Invoke(this, e.ExceptionObject as Exception);
         }
 
-        internal bool TryGetKeyUpCommand(out KeyCommand keyUp)
-        {
-            keyUp = _keyUpCommand;
-
-            return _keyUpCommand != default;
-        }
-
         internal bool TryGetKeyDownCommand(out KeyCommand keyDown)
         {
             keyDown = _keyDownCommand;
@@ -244,12 +243,19 @@ namespace ImGui.Forms
             return _keyDownCommand != default;
         }
 
+        internal bool TryGetKeyUpCommand(out KeyCommand keyUp)
+        {
+            keyUp = _keyUpCommand;
+
+            return _keyUpCommand != default;
+        }
+
         internal bool TryGetDragDrop(Veldrid.Rectangle controlRect, out DragDropEventEx obj)
         {
             obj = _dragDropEvent;
 
             // Try get drag drop event
-            if (_frameHandledDragDrop || _dragDropEvent.MousePosition == default)
+            if (_frameHandledDragDrop || _dragDropEvent.IsEmpty)
                 return false;
 
             // Check if control contains dropped element
@@ -277,10 +283,12 @@ namespace ImGui.Forms
         }
     }
 
-    struct DragDropEventEx
+    readonly struct DragDropEventEx
     {
         public DragDropEvent Event { get; }
         public Vector2 MousePosition { get; }
+
+        public bool IsEmpty => MousePosition == default && Event.File == null;
 
         public DragDropEventEx(DragDropEvent evt, Vector2 mousePos)
         {

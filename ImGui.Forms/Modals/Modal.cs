@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
+using ImGui.Forms.Models.IO;
 using ImGui.Forms.Resources;
 using ImGuiNET;
 using Veldrid;
@@ -22,6 +23,9 @@ namespace ImGui.Forms.Modals
         public Component Content { get; set; }
 
         public bool BlockFormClosing { get; private set; }
+
+        public KeyCommand OkAction { get; set; }
+        public KeyCommand CancelAction { get; set; }
 
         protected DialogResult Result { get; set; }
 
@@ -49,6 +53,11 @@ namespace ImGui.Forms.Modals
             {
                 // Create content of popup
                 Content?.Update(new Rectangle(contentRect.X, contentRect.Y, contentRect.Width, contentRect.Height));
+
+                if (IsKeyDown(OkAction))
+                    Close(DialogResult.Ok);
+                else if (IsKeyDown(CancelAction))
+                    Close(DialogResult.Cancel);
 
                 // Create content of child modal
                 DrawModal(ChildModal);

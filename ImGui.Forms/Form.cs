@@ -9,7 +9,6 @@ using ImGui.Forms.Controls.Menu;
 using ImGui.Forms.Extensions;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Modals;
-using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 using ImGuiNET;
 using Veldrid.Sdl2;
@@ -134,7 +133,7 @@ namespace ImGui.Forms
 
             // Handle Drag and Drop after rendering
             if (AllowDragDrop)
-                if (Application.Instance.TryGetDragDrop(contentRect, out var dragDrop))
+                if (Application.Instance.TryGetDragDrop(new Veldrid.Rectangle(0, 0, (int)Size.X, (int)Size.Y), out var dragDrop))
                     OnDragDrop(dragDrop.Event);
 
             // End window

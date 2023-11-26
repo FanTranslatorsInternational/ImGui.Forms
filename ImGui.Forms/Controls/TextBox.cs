@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Localization;
@@ -12,7 +13,7 @@ namespace ImGui.Forms.Controls
     public class TextBox : Component
     {
         private bool _activePreviousFrame;
-        private string _text=string.Empty;
+        private string _text = string.Empty;
 
         /// <summary>
         /// The text that was set or changed in this component.
@@ -89,9 +90,13 @@ namespace ImGui.Forms.Controls
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
+            bool isMasked = IsMasked;
+            bool isReadonly = IsReadOnly;
+            bool enabled = Enabled;
+
             var flags = ImGuiInputTextFlags.None;
-            if (IsMasked) flags |= ImGuiInputTextFlags.Password;
-            if (IsReadOnly) flags |= ImGuiInputTextFlags.ReadOnly;
+            if (isMasked) flags |= ImGuiInputTextFlags.Password;
+            if (isReadonly || !enabled) flags |= ImGuiInputTextFlags.ReadOnly;
 
             switch (AllowedCharacters)
             {
@@ -106,22 +111,32 @@ namespace ImGui.Forms.Controls
 
             ImGuiNET.ImGui.SetNextItemWidth(contentRect.Width);
 
+            if (isReadonly || !enabled)
+            {
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBg, 0xFF666666);
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, 0xFF666666);
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, 0xFF666666);
+            }
+
             if (!string.IsNullOrEmpty(Placeholder))
             {
                 if (ImGuiNET.ImGui.InputTextWithHint($"##{Id}", Placeholder, ref _text, MaxCharacters, flags))
                     OnTextChanged();
+            }
+            else
+            {
+                if (ImGuiNET.ImGui.InputText($"##{Id}", ref _text, MaxCharacters, flags))
+                    OnTextChanged();
 
-                return;
+                // Check if InputText is active and lost focus
+                if (!ImGuiNET.ImGui.IsItemActive() && _activePreviousFrame)
+                    OnFocusLost();
+
+                _activePreviousFrame = ImGuiNET.ImGui.IsItemActive();
             }
 
-            if (ImGuiNET.ImGui.InputText($"##{Id}", ref _text, MaxCharacters, flags))
-                OnTextChanged();
-
-            // Check if InputText is active and lost focus
-            if (!ImGuiNET.ImGui.IsItemActive() && _activePreviousFrame)
-                OnFocusLost();
-
-            _activePreviousFrame = ImGuiNET.ImGui.IsItemActive();
+            if (isReadonly || !enabled)
+                ImGuiNET.ImGui.PopStyleColor(3);
         }
 
         protected override void ApplyStyles()
@@ -142,12 +157,12 @@ namespace ImGui.Forms.Controls
 
         private void OnTextChanged()
         {
-            TextChanged?.Invoke(this, new EventArgs());
+            TextChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void OnFocusLost()
         {
-            FocusLost?.Invoke(this, new EventArgs());
+            FocusLost?.Invoke(this, EventArgs.Empty);
         }
     }
 

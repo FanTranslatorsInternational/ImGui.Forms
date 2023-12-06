@@ -55,7 +55,7 @@ namespace ImGui.Forms.Controls.Lists
         {
             ImageListItem selectedItem = null;
 
-            if (ImGuiNET.ImGui.BeginChild($"##{Id}_out", new Vector2(contentRect.Width, contentRect.Height), false))
+            if (ImGuiNET.ImGui.BeginChild($"##{Id}_out", new Vector2(contentRect.Width, contentRect.Height), ImGuiChildFlags.None))
             {
                 var textHeight = FontResource.GetCurrentLineHeight(Font);
 
@@ -66,7 +66,7 @@ namespace ImGui.Forms.Controls.Lists
 
                 var localItems = Items.ToArray();
 
-                if (ImGuiNET.ImGui.BeginChild($"##{Id}_in", new Vector2(contentRect.Width, Padding.Y * 2 + localItems.Length * (itemHeight + ItemPadding)), false, ImGuiWindowFlags.NoScrollbar))
+                if (ImGuiNET.ImGui.BeginChild($"##{Id}_in", new Vector2(contentRect.Width, Padding.Y * 2 + localItems.Length * (itemHeight + ItemPadding)), ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar))
                 {
                     for (var i = 0; i < localItems.Length; i++)
                     {

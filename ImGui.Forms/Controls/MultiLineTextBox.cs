@@ -1,6 +1,7 @@
 ﻿using System;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
+using ImGuiNET;
 using Veldrid;
 
 namespace ImGui.Forms.Controls
@@ -25,6 +26,11 @@ namespace ImGui.Forms.Controls
         }
 
         /// <summary>
+        /// Marks the input as read-only.
+        /// </summary>
+        public bool IsReadOnly { get; set; }
+
+        /// <summary>
         /// Get or set the max count of characters allowed in the text box.
         /// </summary>
         public uint MaxCharacters { get; set; } = 2048;
@@ -41,8 +47,24 @@ namespace ImGui.Forms.Controls
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            if (ImGuiNET.ImGui.InputTextMultiline($"##{Id}", ref _text, MaxCharacters, contentRect.Size))
+            var enabled = Enabled;
+            var isReadonly = IsReadOnly;
+
+            var flags = ImGuiInputTextFlags.None;
+            if (isReadonly || !enabled) flags |= ImGuiInputTextFlags.ReadOnly;
+
+            if (isReadonly || !enabled)
+            {
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBg, 0xFF666666);
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, 0xFF666666);
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, 0xFF666666);
+            }
+
+            if (ImGuiNET.ImGui.InputTextMultiline($"##{Id}", ref _text, MaxCharacters, contentRect.Size, flags))
                 OnTextChanged();
+
+            if (isReadonly || !enabled)
+                ImGuiNET.ImGui.PopStyleColor(3);
         }
 
         private void OnTextChanged()

@@ -59,7 +59,7 @@ namespace ImGui.Forms.Controls.Tree
                 return;
 
             var anyNodeHovered = false;
-            if (ImGuiNET.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height), false, ImGuiWindowFlags.HorizontalScrollbar))
+            if (ImGuiNET.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
             {
                 UpdateNodes(Nodes, ref anyNodeHovered);
             }

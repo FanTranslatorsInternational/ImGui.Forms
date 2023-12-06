@@ -50,7 +50,7 @@ namespace ImGui.Forms.Controls
 
             if ((IntPtr)Image != IntPtr.Zero)
             {
-                if ((ImGuiNET.ImGui.ImageButton((IntPtr)Image, GetImageSize()) || IsKeyDown(KeyAction)) && Enabled)
+                if ((ImGuiNET.ImGui.ImageButton($"##{Id}", (IntPtr)Image, GetImageSize()) || IsKeyDown(KeyAction)) && Enabled)
                     OnClicked();
             }
             else

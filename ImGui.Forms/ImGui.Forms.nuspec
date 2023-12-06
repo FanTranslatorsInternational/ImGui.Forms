@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Imgui.Forms</id>
-    <version>1.0.45</version>
+    <version>1.0.46</version>
     <description>A WinForms-inspired object-oriented framework around Dear ImGui (https://github.com/ocornut/imgui)</description>
 
     <authors>onepiecefreak</authors>
@@ -19,7 +19,7 @@
 
     <dependencies>
       <group targetFramework="netstandard2.1">
-        <dependency id="ImGui.NET-newest" version="1.82.0" />
+        <dependency id="ImGui.NET" version="1.90.0.1" />
         <dependency id="System.Drawing.Common" version="5.0.3" />
         <dependency id="Veldrid.StartupUtilities" version="4.9.0" />
       </group>

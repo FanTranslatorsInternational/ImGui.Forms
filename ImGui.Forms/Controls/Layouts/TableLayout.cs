@@ -86,13 +86,13 @@ namespace ImGui.Forms.Controls.Layouts
             if (contentRect.Height < totalHeight)
                 childFlags |= ImGuiWindowFlags.AlwaysVerticalScrollbar;
 
-            if (ImGuiNET.ImGui.BeginChild($"{Id}", contentRect.Size, false, childFlags))
+            if (ImGuiNET.ImGui.BeginChild($"{Id}", contentRect.Size, ImGuiChildFlags.None, childFlags))
             {
                 var (x, y) = GetInitPoint(localWidths, localHeights, contentRect);
                 ImGuiNET.ImGui.SetCursorPosX(x);
                 ImGuiNET.ImGui.SetCursorPosY(y);
 
-                if (ImGuiNET.ImGui.BeginChild($"{Id}-in", new Vector2(totalWidth, totalHeight), false, ImGuiWindowFlags.NoScrollbar))
+                if (ImGuiNET.ImGui.BeginChild($"{Id}-in", new Vector2(totalWidth, totalHeight), ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar))
                 {
                     (x, y) = (0, 0);
                     var origX = x;
@@ -155,13 +155,13 @@ namespace ImGui.Forms.Controls.Layouts
                                 ImGuiNET.ImGui.SetCursorPosX(x);
                                 ImGuiNET.ImGui.SetCursorPosY(y);
 
-                                if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}", new Vector2(cellWidth, cellHeight), false, ImGuiWindowFlags.NoScrollbar))
+                                if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}", new Vector2(cellWidth, cellHeight), ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar))
                                 {
                                     // Draw cell content container
                                     ImGuiNET.ImGui.SetCursorPosX(xAdjust);
                                     ImGuiNET.ImGui.SetCursorPosY(yAdjust);
 
-                                    if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}-content", new Vector2(cellInternalWidth, cellInternalHeight), false, ImGuiWindowFlags.NoScrollbar))
+                                    if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}-content", new Vector2(cellInternalWidth, cellInternalHeight), ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar))
                                     {
                                         // Draw component
                                         cell.Content?.Update(new Rectangle((int)(contentRect.X + x + xAdjust - sx), (int)(contentRect.Y + y + yAdjust - sy), cellInternalWidth, cellInternalHeight));

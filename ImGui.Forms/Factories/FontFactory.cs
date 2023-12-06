@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
+using System.Linq;
 using System.Reflection;
+using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 using ImGui.Forms.Support.Veldrid.ImGui;
 using ImGuiNET;
@@ -26,17 +29,17 @@ namespace ImGui.Forms.Factories
 
         #region Registration
 
-        public void RegisterFromFile(string ttfPath, int size)
+        public void RegisterFromFile(string ttfPath, int size, FontGlyphRange glyphRanges = FontGlyphRange.All)
         {
             if (IsInitialized)
                 throw new InvalidOperationException("Can not register new fonts after application started.");
 
             // If font not tracked, add it
             if (!_discCache.ContainsKey((ttfPath, size)))
-                _discCache[(ttfPath, size)] = new FontResource(ttfPath, size);
+                _discCache[(ttfPath, size)] = new FontResource(ttfPath, size, glyphRanges);
         }
 
-        public void RegisterFromResource(Assembly assembly, string resourceName, int size)
+        public void RegisterFromResource(Assembly assembly, string resourceName, int size, FontGlyphRange glyphRanges = FontGlyphRange.All)
         {
             if (IsInitialized)
                 throw new InvalidOperationException("Can not register new fonts after application started.");
@@ -62,7 +65,7 @@ namespace ImGui.Forms.Factories
                 return;
 
             // Otherwise add it to cache
-            _discCache[(fontPath, size)] = new FontResource(fontPath, size, true);
+            _discCache[(fontPath, size)] = new FontResource(fontPath, size, glyphRanges, true);
         }
 
         #endregion
@@ -93,16 +96,80 @@ namespace ImGui.Forms.Factories
 
         #region Initialization
 
-        internal void Initialize(ImGuiIOPtr io, ImGuiRenderer controller)
+        internal unsafe void Initialize(ImGuiIOPtr io, ImGuiRenderer controller)
         {
             _io = io;
             _controller = controller;
 
+            // Initialize default font
+            var defaultFont = InitializeDefaultFont();
+
             // Initialize fonts
+            var config = ImGuiNative.ImFontConfig_ImFontConfig();
+            config->MergeMode = 1;
+
             foreach (var discFont in _discCache)
-                discFont.Value.Initialize(_io.Fonts.AddFontFromFileTTF(discFont.Key.Item1, discFont.Key.Item2));
+            {
+                if (discFont.Value == defaultFont)
+                    continue;
+
+                var ranges = GetGlyphRanges(discFont.Value.GlyphRanges);
+
+                var loadedFont = _io.Fonts.AddFontFromFileTTF(discFont.Key.Item1, discFont.Key.Item2, config, ranges.Data);
+                discFont.Value.Initialize(loadedFont);
+            }
 
             _controller.RecreateFontDeviceTexture();
+        }
+
+        private unsafe FontResource InitializeDefaultFont()
+        {
+            _io.Fonts.Clear();
+
+            ImFontPtr defaultFontPtr;
+
+            var defaultFont = _discCache.Values.FirstOrDefault(f => f.GlyphRanges.HasFlag(FontGlyphRange.Default));
+            if (defaultFont == null)
+            {
+                defaultFontPtr = _io.Fonts.AddFontDefault().NativePtr;
+            }
+            else
+            {
+                defaultFontPtr = _io.Fonts.AddFontFromFileTTF(defaultFont.Path, defaultFont.Size, null, GetGlyphRanges(defaultFont.GlyphRanges).Data);
+                defaultFont.Initialize(defaultFontPtr);
+            }
+
+            var config = ImGuiNative.ImFontConfig_ImFontConfig();
+            config->DstFont = defaultFontPtr;
+
+            return defaultFont;
+        }
+
+        private unsafe ImVector GetGlyphRanges(FontGlyphRange rangeFlags)
+        {
+            var builder = new ImFontGlyphRangesBuilderPtr(ImGuiNative.ImFontGlyphRangesBuilder_ImFontGlyphRangesBuilder());
+            builder.Clear();
+
+            if (rangeFlags.HasFlag(FontGlyphRange.Default))
+                builder.AddRanges(_io.Fonts.GetGlyphRangesDefault());
+            if (rangeFlags.HasFlag(FontGlyphRange.Cyrillic))
+                builder.AddRanges(_io.Fonts.GetGlyphRangesCyrillic());
+            if (rangeFlags.HasFlag(FontGlyphRange.Chinese))
+                builder.AddRanges(_io.Fonts.GetGlyphRangesChineseFull());
+            if (rangeFlags.HasFlag(FontGlyphRange.Japanese))
+                builder.AddRanges(_io.Fonts.GetGlyphRangesJapanese());
+            if (rangeFlags.HasFlag(FontGlyphRange.Greek))
+                builder.AddRanges(_io.Fonts.GetGlyphRangesGreek());
+            if (rangeFlags.HasFlag(FontGlyphRange.Korean))
+                builder.AddRanges(_io.Fonts.GetGlyphRangesKorean());
+            if (rangeFlags.HasFlag(FontGlyphRange.Thai))
+                builder.AddRanges(_io.Fonts.GetGlyphRangesThai());
+            if (rangeFlags.HasFlag(FontGlyphRange.Vietnamese))
+                builder.AddRanges(_io.Fonts.GetGlyphRangesVietnamese());
+
+            builder.BuildRanges(out var ranges);
+
+            return ranges;
         }
 
         #endregion

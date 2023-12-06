@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Layouts;
+using ImGuiNET;
 using Veldrid;
 using Size = ImGui.Forms.Models.Size;
 
@@ -63,7 +64,7 @@ namespace ImGui.Forms.Controls.Lists
             var listDimension = localItems.Sum(i => GetDimension(i, contentRect)) + Math.Max(0, localItems.Length - 1) * ItemSpacing + (int)(GetPadding() * 2);
             var scrollableDimension = GetScrollableDimension(contentRect);
 
-            if (ImGuiNET.ImGui.BeginChild($"{Id}", contentRect.Size, false))
+            if (ImGuiNET.ImGui.BeginChild($"{Id}", contentRect.Size, ImGuiChildFlags.None))
             {
                 if (_scrollToLast)
                 {
@@ -136,7 +137,7 @@ namespace ImGui.Forms.Controls.Lists
         {
             scroll = Math.Max(0, scroll);
 
-            if(Alignment == Alignment.Vertical)
+            if (Alignment == Alignment.Vertical)
                 ImGuiNET.ImGui.SetScrollY(scroll);
             else
                 ImGuiNET.ImGui.SetScrollX(scroll);

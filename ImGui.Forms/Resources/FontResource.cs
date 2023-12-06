@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Numerics;
+using ImGui.Forms.Models;
 using ImGuiNET;
 
 namespace ImGui.Forms.Resources
@@ -12,20 +13,29 @@ namespace ImGui.Forms.Resources
     public class FontResource : IDisposable
     {
         private ImFontPtr _ptr;
-
-        private readonly string _path;
+        
         private readonly bool _temporary;
 
+        /// <summary>
+        /// Supported glyphs.
+        /// </summary>
+        public FontGlyphRange GlyphRanges { get; }
+
+        /// <summary>
+        /// The physical path to the font.
+        /// </summary>
+        public string Path { get; }
         /// <summary>
         /// The size of the font.
         /// </summary>
         public int Size { get; }
 
-        internal FontResource(string path, int size, bool temporary = false)
+        internal FontResource(string path, int size, FontGlyphRange glyphRanges, bool temporary = false)
         {
-            _path = path;
+            Path = path;
             Size = size;
             _temporary = temporary;
+            GlyphRanges = glyphRanges;
         }
 
         internal void Initialize(ImFontPtr ptr)
@@ -42,8 +52,8 @@ namespace ImGui.Forms.Resources
             if (!_temporary)
                 return;
 
-            if (File.Exists(_path))
-                File.Delete(_path);
+            if (File.Exists(Path))
+                File.Delete(Path);
         }
 
         /// <summary>

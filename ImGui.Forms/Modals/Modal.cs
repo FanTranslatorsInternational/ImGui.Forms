@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using ImGui.Forms.Controls.Base;
@@ -48,6 +49,8 @@ namespace ImGui.Forms.Modals
             var id = Caption.IsEmpty ? "##source" : (string)Caption;
             ImGuiNET.ImGui.OpenPopup(id);
 
+            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.PopupBg, ImGuiNET.ImGui.GetColorU32(ImGuiCol.WindowBg));
+
             var exists = true;
             if (ImGuiNET.ImGui.BeginPopupModal(id, ref exists, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize))
             {
@@ -67,6 +70,8 @@ namespace ImGui.Forms.Modals
                 if (_shouldClose)
                     await CloseCore();
             }
+
+            ImGuiNET.ImGui.PopStyleColor();
 
             if (!exists)
                 _shouldClose = !ShouldCancelClose();

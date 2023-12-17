@@ -1,12 +1,12 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 using ImGuiNET;
-using Veldrid;
+using Rectangle = Veldrid.Rectangle;
+using Size = ImGui.Forms.Models.Size;
 
 namespace ImGui.Forms.Controls
 {
@@ -113,9 +113,9 @@ namespace ImGui.Forms.Controls
 
             if (isReadonly || !enabled)
             {
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBg, 0xFF666666);
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, 0xFF666666);
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, 0xFF666666);
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
             }
 
             if (!string.IsNullOrEmpty(Placeholder))

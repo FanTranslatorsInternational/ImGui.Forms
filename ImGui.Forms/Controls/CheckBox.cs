@@ -54,10 +54,10 @@ namespace ImGui.Forms.Controls
         {
             if (!enabled)
             {
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.CheckMark, 0xFF999999);
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBg, 0xFF666666);
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, 0xFF666666);
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, 0xFF666666);
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.CheckMark, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text));
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
             }
         }
 

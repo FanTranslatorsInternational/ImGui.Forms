@@ -15,7 +15,7 @@ namespace ImGui.Forms.Controls.Tree
 
         public LocalizedString Text { get; set; } = string.Empty;
 
-        public Color TextColor { get; set; }
+        public Color TextColor { get; set; } = Color.Empty;
 
         public FontResource Font { get; set; }
 

@@ -10,6 +10,9 @@ namespace ImGui.Forms.Controls
 {
     public class ArrowButton : Component
     {
+        private const int ButtonSizeX_ = 11;
+        private const int ButtonSizeY_ = 13;
+
         public KeyCommand KeyAction { get; set; }
 
         public ImGuiDir Direction { get; set; } = ImGuiDir.None;
@@ -22,10 +25,9 @@ namespace ImGui.Forms.Controls
 
         public override Size GetSize()
         {
-            var height = FontResource.GetCurrentLineHeight();
             var padding = ImGuiNET.ImGui.GetStyle().FramePadding;
 
-            return new Size((int)Math.Ceiling(height + padding.X * 2), (int)Math.Ceiling(height + padding.Y * 2));
+            return new Size((int)Math.Ceiling(ButtonSizeX_ + padding.X * 2), (int)Math.Ceiling(ButtonSizeY_ + padding.Y * 2));
         }
 
         protected override void UpdateInternal(Rectangle contentRect)
@@ -34,9 +36,9 @@ namespace ImGui.Forms.Controls
 
             if (!enabled)
             {
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Button, 0xFF666666);
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0xFF666666);
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xFF666666);
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Button, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonHovered, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
             }
 
             if ((ImGuiNET.ImGui.ArrowButton($"##{Id}", Direction) || IsKeyDown(KeyAction)) && Enabled)
@@ -48,7 +50,7 @@ namespace ImGui.Forms.Controls
 
         private void OnClicked()
         {
-            Clicked?.Invoke(this, new EventArgs());
+            Clicked?.Invoke(this, EventArgs.Empty);
         }
     }
 }

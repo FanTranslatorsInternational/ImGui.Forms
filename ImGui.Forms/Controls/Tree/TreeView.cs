@@ -81,7 +81,7 @@ namespace ImGui.Forms.Controls.Tree
                 ImGuiNET.ImGui.PushID(nodeId);
                 ImGuiNET.ImGui.SetNextItemOpen(node.IsExpanded);
 
-                if (node.TextColor != Color.Empty)
+                if (node.TextColor.IsEmpty)
                     ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Text, node.TextColor.ToUInt32());
 
                 if (node.Font != null)
@@ -95,7 +95,7 @@ namespace ImGui.Forms.Controls.Tree
                 if (node.Font != null)
                     ImGuiNET.ImGui.PopFont();
 
-                if (node.TextColor != Color.Empty)
+                if (node.TextColor.IsEmpty)
                     ImGuiNET.ImGui.PopStyleColor();
 
                 ImGuiNET.ImGui.PopID();

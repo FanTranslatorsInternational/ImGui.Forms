@@ -73,9 +73,9 @@ namespace ImGui.Forms.Controls
         {
             if (!enabled)
             {
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Button, 0xFF666666);
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0xFF666666);
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xFF666666);
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Button, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonHovered, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
             }
 
             ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Padding);

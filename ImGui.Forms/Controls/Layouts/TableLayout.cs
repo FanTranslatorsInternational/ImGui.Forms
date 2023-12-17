@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
-using ImGui.Forms.Extensions;
 using ImGui.Forms.Models;
 using ImGuiNET;
 using Veldrid;
@@ -88,14 +87,19 @@ namespace ImGui.Forms.Controls.Layouts
 
             if (ImGuiNET.ImGui.BeginChild($"{Id}", contentRect.Size, ImGuiChildFlags.None, childFlags))
             {
-                var (x, y) = GetInitPoint(localWidths, localHeights, contentRect);
-                ImGuiNET.ImGui.SetCursorPosX(x);
-                ImGuiNET.ImGui.SetCursorPosY(y);
+                Vector2 cellPosition = GetInitPoint(localWidths, localHeights, contentRect);
+                ImGuiNET.ImGui.SetCursorPos(cellPosition);
+
+                float outerScrollX = ImGuiNET.ImGui.GetScrollX();
+                float outerScrollY = ImGuiNET.ImGui.GetScrollY();
 
                 if (ImGuiNET.ImGui.BeginChild($"{Id}-in", new Vector2(totalWidth, totalHeight), ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar))
                 {
-                    (x, y) = (0, 0);
-                    var origX = x;
+                    cellPosition = Vector2.Zero;
+                    float origX = cellPosition.X;
+
+                    float innerScrollX = ImGuiNET.ImGui.GetScrollX();
+                    float innerScrollY = ImGuiNET.ImGui.GetScrollY();
 
                     var localCells = Rows.Select(r => r.Cells).ToArray();
                     var localMaxColumns = GetMaxColumnCount();
@@ -114,28 +118,28 @@ namespace ImGui.Forms.Controls.Layouts
                             var cellInternalSize = cell?.Content?.GetSize() ?? Size.Parent;
                             var cellInternalWidth = cellInternalSize.Width.IsAbsolute ? cell?.Content?.GetWidth(cellWidth) ?? 0 : cellWidth;
                             var cellInternalHeight = cellInternalSize.Height.IsAbsolute ? cell?.Content?.GetHeight(cellHeight) ?? 0 : cellHeight;
-                            var xAdjust = 0f;
-                            var yAdjust = 0f;
+                            var cellXOffset = 0f;
+                            var cellYOffset = 0f;
 
                             switch (cell?.HorizontalAlignment ?? HorizontalAlignment.Left)
                             {
                                 case HorizontalAlignment.Center:
-                                    xAdjust = (cellWidth - cellInternalWidth) / 2f;
+                                    cellXOffset = (cellWidth - cellInternalWidth) / 2f;
                                     break;
 
                                 case HorizontalAlignment.Right:
-                                    xAdjust = cellWidth - cellInternalWidth;
+                                    cellXOffset = cellWidth - cellInternalWidth;
                                     break;
                             }
 
                             switch (cell?.VerticalAlignment ?? VerticalAlignment.Top)
                             {
                                 case VerticalAlignment.Center:
-                                    yAdjust = (cellHeight - cellInternalHeight) / 2f;
+                                    cellYOffset = (cellHeight - cellInternalHeight) / 2f;
                                     break;
 
                                 case VerticalAlignment.Bottom:
-                                    yAdjust = cellHeight - cellInternalHeight;
+                                    cellYOffset = cellHeight - cellInternalHeight;
                                     break;
                             }
 
@@ -145,26 +149,21 @@ namespace ImGui.Forms.Controls.Layouts
                             {
                                 // Draw cell border
                                 if (cell.ShowBorder)
-                                    ImGuiNET.ImGui.GetWindowDrawList().AddRect(new Vector2(x, y), new Vector2(x + cellWidth, y + cellHeight), Style.GetColor(ImGuiCol.Border).ToUInt32(), 0);
-
-                                // Determine scroll position
-                                var sx = ImGuiNET.ImGui.GetScrollX();
-                                var sy = ImGuiNET.ImGui.GetScrollY();
+                                    ImGuiNET.ImGui.GetWindowDrawList().AddRect(cellPosition, cellPosition + new Vector2(cellWidth, cellHeight), ImGuiNET.ImGui.GetColorU32(ImGuiCol.Border), 0);
 
                                 // Draw cell container
-                                ImGuiNET.ImGui.SetCursorPosX(x);
-                                ImGuiNET.ImGui.SetCursorPosY(y);
+                                ImGuiNET.ImGui.SetCursorPos(cellPosition);
 
                                 if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}", new Vector2(cellWidth, cellHeight), ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar))
                                 {
                                     // Draw cell content container
-                                    ImGuiNET.ImGui.SetCursorPosX(xAdjust);
-                                    ImGuiNET.ImGui.SetCursorPosY(yAdjust);
+                                    ImGuiNET.ImGui.SetCursorPosX(cellXOffset);
+                                    ImGuiNET.ImGui.SetCursorPosY(cellYOffset);
 
                                     if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}-content", new Vector2(cellInternalWidth, cellInternalHeight), ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar))
                                     {
                                         // Draw component
-                                        cell.Content?.Update(new Rectangle((int)(contentRect.X + x + xAdjust - sx), (int)(contentRect.Y + y + yAdjust - sy), cellInternalWidth, cellInternalHeight));
+                                        cell.Content?.Update(new Rectangle((int)(contentRect.X + cellPosition.X + cellXOffset - outerScrollX - innerScrollX), (int)(contentRect.Y + cellPosition.Y + cellYOffset - outerScrollY - innerScrollY), cellInternalWidth, cellInternalHeight));
                                     }
 
                                     ImGuiNET.ImGui.EndChild();
@@ -173,11 +172,11 @@ namespace ImGui.Forms.Controls.Layouts
                                 ImGuiNET.ImGui.EndChild();
                             }
 
-                            x += cellWidth + (cellWidth <= 0 ? 0 : Spacing.X);
+                            cellPosition += new Vector2(cellWidth + (cellWidth <= 0 ? 0 : Spacing.X), 0);
                         }
 
-                        x = origX;
-                        y += cellHeight + (cellHeight <= 0 ? 0 : Spacing.Y);
+                        cellPosition += new Vector2(0, cellHeight + (cellHeight <= 0 ? 0 : Spacing.Y));
+                        cellPosition.X = origX;
                     }
                 }
 
@@ -413,7 +412,7 @@ namespace ImGui.Forms.Controls.Layouts
 
         #region Support
 
-        private (float, float) GetInitPoint(int[] widths, int[] heights, Rectangle contentRect)
+        private Vector2 GetInitPoint(int[] widths, int[] heights, Rectangle contentRect)
         {
             var totalWidth = widths.Sum(x => x) + Math.Max(0, widths.Length - 1) * (int)Spacing.X;
             var totalHeight = heights.Sum(x => x) + Math.Max(0, heights.Length - 1) * (int)Spacing.Y;
@@ -442,10 +441,10 @@ namespace ImGui.Forms.Controls.Layouts
                     break;
             }
 
-            var x = ImGuiNET.ImGui.GetCursorPosX() + addX;
-            var y = ImGuiNET.ImGui.GetCursorPosY() + addY;
+            float x = ImGuiNET.ImGui.GetCursorPosX() + addX;
+            float y = ImGuiNET.ImGui.GetCursorPosY() + addY;
 
-            return (x, y);
+            return new Vector2(x, y);
         }
 
         private int GetMaxColumnCount()

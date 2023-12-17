@@ -9,17 +9,21 @@ namespace ImGui.Forms.Resources
     /// <summary>
     /// Represents a single font in ImGui.Forms.
     /// </summary>
-    /// <remarks>To load built-in fonts, see <see cref="FontResources"/>.</remarks>
     public class FontResource : IDisposable
     {
         private ImFontPtr _ptr;
-        
+
         private readonly bool _temporary;
 
         /// <summary>
         /// Supported glyphs.
         /// </summary>
         public FontGlyphRange GlyphRanges { get; }
+
+        /// <summary>
+        /// Additional characters to be represented by this font.
+        /// </summary>
+        public string AdditionalCharacters { get; }
 
         /// <summary>
         /// The physical path to the font.
@@ -30,12 +34,13 @@ namespace ImGui.Forms.Resources
         /// </summary>
         public int Size { get; }
 
-        internal FontResource(string path, int size, FontGlyphRange glyphRanges, bool temporary = false)
+        internal FontResource(string path, int size, FontGlyphRange glyphRanges, string additionalCharacters = "", bool temporary = false)
         {
             Path = path;
             Size = size;
             _temporary = temporary;
             GlyphRanges = glyphRanges;
+            AdditionalCharacters = additionalCharacters;
         }
 
         internal void Initialize(ImFontPtr ptr)

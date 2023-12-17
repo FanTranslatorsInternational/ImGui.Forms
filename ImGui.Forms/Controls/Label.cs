@@ -51,7 +51,7 @@ namespace ImGui.Forms.Controls
 
             var escapedText = EscapeText();
 
-            var pos = contentRect.Position + new Vector2(0, ImGuiNET.ImGui.GetScrollY());
+            var pos = contentRect.Position;
             foreach (var line in escapedText.Split(Environment.NewLine))
             {
                 ImGuiNET.ImGui.GetWindowDrawList().AddText(pos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), line);

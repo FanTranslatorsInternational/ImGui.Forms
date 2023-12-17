@@ -46,7 +46,7 @@ namespace ImGui.Forms.Controls
         {
             var wasManuallyChanged = _selectedPageTemp != null && _selectedTabPageCount-- > 0 && _selectedPageTemp != _selectedPage;
 
-            if (ImGuiNET.ImGui.BeginTabBar(Id.ToString(), ImGuiTabBarFlags.None))
+            if (ImGuiNET.ImGui.BeginTabBar($"{Id}", ImGuiTabBarFlags.None))
             {
                 var toRemovePages = new HashSet<TabPage>();
                 foreach (var page in Pages.ToArray())
@@ -74,10 +74,15 @@ namespace ImGui.Forms.Controls
                             toRemovePages.Add(page);
 
                         // Draw content of tab page
-                        var pageWidth = page.Content.GetWidth(contentRect.Width);
-                        var pageHeight = page.Content.GetHeight(contentRect.Height - (int)ImGuiNET.ImGui.GetCursorPosY());
+                        var yPos = (int)ImGuiNET.ImGui.GetCursorPosY();
 
-                        page.Content.Update(new Rectangle(contentRect.X, contentRect.Y + (int)ImGuiNET.ImGui.GetCursorPosY(), pageWidth, pageHeight));
+                        var pageWidth = page.Content.GetWidth(contentRect.Width);
+                        var pageHeight = page.Content.GetHeight(contentRect.Height - yPos);
+                        
+                        if (ImGuiNET.ImGui.BeginChild($"##{Id}-in", contentRect.Size, ImGuiChildFlags.None, ImGuiWindowFlags.None))
+                            page.Content.Update(new Rectangle(contentRect.X, contentRect.Y + yPos, pageWidth, pageHeight));
+
+                        ImGuiNET.ImGui.EndChild();
 
                         ImGuiNET.ImGui.EndTabItem();
                     }

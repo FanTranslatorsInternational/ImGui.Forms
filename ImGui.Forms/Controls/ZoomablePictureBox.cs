@@ -45,8 +45,8 @@ namespace ImGui.Forms.Controls
 
             ImGuiSupport.Dummy(Id, contentRect.Position, contentRect.Size);
 
-            var centerPosition = new Vector2(contentRect.X, contentRect.Y) + new Vector2((float)contentRect.Width / 2, (float)contentRect.Height / 2);
-            var imgCenterPoint = centerPosition + _transform.Translation;
+            var componentCenterPosition = new Vector2(contentRect.X, contentRect.Y) + new Vector2((float)contentRect.Width / 2, (float)contentRect.Height / 2);
+            var translatedComponentCenterPosition = componentCenterPosition + _transform.Translation;
 
             var io = ImGuiNET.ImGui.GetIO();
 
@@ -54,8 +54,8 @@ namespace ImGui.Forms.Controls
             if (io.MouseWheel != 0 && IsHovering(contentRect))
             {
                 var scale = Vector2.One + new Vector2(io.MouseWheel / 8);
-                var relativeMousePosition = io.MousePos - imgCenterPoint + _transform.Translation;
-                _transform *= Matrix3x2.CreateScale(scale, relativeMousePosition);
+                var translatedMousePosition = io.MousePos + _transform.Translation;
+                _transform *= Matrix3x2.CreateScale(scale, translatedMousePosition - translatedComponentCenterPosition);
 
                 OnMouseScrolled();
             }
@@ -83,13 +83,13 @@ namespace ImGui.Forms.Controls
                 _mouseDownPosition = ImGuiNET.ImGui.GetMousePos();
             }
 
-            var scaledSize = new Vector2(_baseImg.Width * _transform.M11, _baseImg.Height * _transform.M22);
-            var scaledCenter = scaledSize / new Vector2(2, 2);
+            var scaledContentSize = new Vector2(_baseImg.Width * _transform.M11, _baseImg.Height * _transform.M22);
+            var scaledContentCenterPosition = scaledContentSize / new Vector2(2, 2);
 
-            var location = centerPosition + _transform.Translation - scaledCenter;
-            var endLocation = location + scaledSize;
+            var absoluteContentPosition = componentCenterPosition + _transform.Translation - scaledContentCenterPosition;
+            var absoluteContentEndPosition = absoluteContentPosition + scaledContentSize;
 
-            ImGuiNET.ImGui.GetWindowDrawList().AddImage((IntPtr)_baseImg, location, endLocation);
+            ImGuiNET.ImGui.GetWindowDrawList().AddImage((IntPtr)_baseImg, absoluteContentPosition, absoluteContentEndPosition);
         }
 
         private bool IsHovering(Veldrid.Rectangle contentRect)
@@ -101,7 +101,7 @@ namespace ImGui.Forms.Controls
 
         private void OnMouseScrolled()
         {
-            MouseScrolled?.Invoke(this, new EventArgs());
+            MouseScrolled?.Invoke(this, EventArgs.Empty);
         }
     }
 }

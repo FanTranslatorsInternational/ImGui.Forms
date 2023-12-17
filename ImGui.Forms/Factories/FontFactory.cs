@@ -29,17 +29,17 @@ namespace ImGui.Forms.Factories
 
         #region Registration
 
-        public void RegisterFromFile(string ttfPath, int size, FontGlyphRange glyphRanges = FontGlyphRange.All)
+        public void RegisterFromFile(string ttfPath, int size, FontGlyphRange glyphRanges = FontGlyphRange.All, string additionalCharacters = "")
         {
             if (IsInitialized)
                 throw new InvalidOperationException("Can not register new fonts after application started.");
 
             // If font not tracked, add it
             if (!_discCache.ContainsKey((ttfPath, size)))
-                _discCache[(ttfPath, size)] = new FontResource(ttfPath, size, glyphRanges);
+                _discCache[(ttfPath, size)] = new FontResource(ttfPath, size, glyphRanges, additionalCharacters);
         }
 
-        public void RegisterFromResource(Assembly assembly, string resourceName, int size, FontGlyphRange glyphRanges = FontGlyphRange.All)
+        public void RegisterFromResource(Assembly assembly, string resourceName, int size, FontGlyphRange glyphRanges = FontGlyphRange.All, string additionalCharacters = "")
         {
             if (IsInitialized)
                 throw new InvalidOperationException("Can not register new fonts after application started.");
@@ -65,7 +65,7 @@ namespace ImGui.Forms.Factories
                 return;
 
             // Otherwise add it to cache
-            _discCache[(fontPath, size)] = new FontResource(fontPath, size, glyphRanges, true);
+            _discCache[(fontPath, size)] = new FontResource(fontPath, size, glyphRanges, additionalCharacters, true);
         }
 
         #endregion
@@ -113,7 +113,7 @@ namespace ImGui.Forms.Factories
                 if (discFont.Value == defaultFont)
                     continue;
 
-                var ranges = GetGlyphRanges(discFont.Value.GlyphRanges);
+                var ranges = GetGlyphRanges(discFont.Value.GlyphRanges, discFont.Value.AdditionalCharacters);
 
                 var loadedFont = _io.Fonts.AddFontFromFileTTF(discFont.Key.Item1, discFont.Key.Item2, config, ranges.Data);
                 discFont.Value.Initialize(loadedFont);
@@ -135,7 +135,7 @@ namespace ImGui.Forms.Factories
             }
             else
             {
-                defaultFontPtr = _io.Fonts.AddFontFromFileTTF(defaultFont.Path, defaultFont.Size, null, GetGlyphRanges(defaultFont.GlyphRanges).Data);
+                defaultFontPtr = _io.Fonts.AddFontFromFileTTF(defaultFont.Path, defaultFont.Size, null, GetGlyphRanges(defaultFont.GlyphRanges, defaultFont.AdditionalCharacters).Data);
                 defaultFont.Initialize(defaultFontPtr);
             }
 
@@ -145,7 +145,7 @@ namespace ImGui.Forms.Factories
             return defaultFont;
         }
 
-        private unsafe ImVector GetGlyphRanges(FontGlyphRange rangeFlags)
+        private unsafe ImVector GetGlyphRanges(FontGlyphRange rangeFlags, string additionalCharacters)
         {
             var builder = new ImFontGlyphRangesBuilderPtr(ImGuiNative.ImFontGlyphRangesBuilder_ImFontGlyphRangesBuilder());
             builder.Clear();
@@ -166,6 +166,9 @@ namespace ImGui.Forms.Factories
                 builder.AddRanges(_io.Fonts.GetGlyphRangesThai());
             if (rangeFlags.HasFlag(FontGlyphRange.Vietnamese))
                 builder.AddRanges(_io.Fonts.GetGlyphRangesVietnamese());
+
+            if (!string.IsNullOrEmpty(additionalCharacters))
+                builder.AddText(additionalCharacters);
 
             builder.BuildRanges(out var ranges);
 

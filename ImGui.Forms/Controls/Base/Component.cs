@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Drawing;
-using ImGui.Forms.Extensions;
 using ImGui.Forms.Models;
 using ImGui.Forms.Models.IO;
 using ImGuiNET;
@@ -62,7 +60,7 @@ namespace ImGui.Forms.Controls.Base
 
             // Draw border
             if (ShowBorder)
-                ImGuiNET.ImGui.GetWindowDrawList().AddRect(contentRect.Position, contentRect.Position + contentRect.Size, Style.GetColor(ImGuiCol.Border).ToUInt32(), 0);
+                ImGuiNET.ImGui.GetWindowDrawList().AddRect(contentRect.Position, contentRect.Position + contentRect.Size, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Border), 0);
 
             ApplyStyles();
             UpdateInternal(contentRect);

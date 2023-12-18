@@ -10,11 +10,21 @@ namespace ImGui.Forms.Controls
 {
     public class CheckBox : Component
     {
+        private bool _checked;
+
         public LocalizedString Text { get; set; }
 
         public LocalizedString Tooltip { get; set; }
 
-        public bool Checked { get; set; }
+        public bool Checked
+        {
+            get=> _checked;
+            set
+            {
+                _checked = value;
+                OnCheckChanged();
+            }
+        }
 
         #region Events
 
@@ -42,10 +52,7 @@ namespace ImGui.Forms.Controls
                 ImGuiNET.ImGui.SetTooltip(Tooltip);
 
             if (ImGuiNET.ImGui.Checkbox(Text, ref check) && Enabled)
-            {
                 Checked = check;
-                OnCheckChanged();
-            }
 
             RemoveStyles(enabled);
         }

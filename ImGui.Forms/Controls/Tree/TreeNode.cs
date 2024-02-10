@@ -8,8 +8,10 @@ namespace ImGui.Forms.Controls.Tree
 {
     public class TreeNode<TNodeData>
     {
-        private TreeView<TNodeData> _parentView;
         private readonly ObservableList<TreeNode<TNodeData>> _nodes;
+
+        private TreeView<TNodeData> _parentView;
+        private bool _isRoot;
 
         private bool _isExpanded;
 
@@ -31,6 +33,8 @@ namespace ImGui.Forms.Controls.Tree
                     OnExpandedChanged();
             }
         }
+
+        public bool IsRoot => Parent?._isRoot ?? true;
 
         public IList<TreeNode<TNodeData>> Nodes => _nodes;
 
@@ -54,7 +58,7 @@ namespace ImGui.Forms.Controls.Tree
 
         internal static TreeNode<TNodeData> Create(TreeView<TNodeData> parent)
         {
-            return new TreeNode<TNodeData> { _parentView = parent };
+            return new TreeNode<TNodeData> { _parentView = parent, _isRoot = true };
         }
 
         private void _nodes_ItemAdded(object sender, ItemEventArgs<TreeNode<TNodeData>> e)

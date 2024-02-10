@@ -38,6 +38,12 @@ namespace ImGui.Forms.Controls
             return Size.Parent;
         }
 
+        public void Zoom(float scale)
+        {
+            var scaleVector = Vector2.One + new Vector2(scale);
+            _transform *= Matrix3x2.CreateScale(scaleVector, Vector2.Zero);
+        }
+
         protected override void UpdateInternal(Veldrid.Rectangle contentRect)
         {
             if (Image == null || (IntPtr)_baseImg == IntPtr.Zero)
@@ -45,7 +51,7 @@ namespace ImGui.Forms.Controls
 
             ImGuiSupport.Dummy(Id, contentRect.Position, contentRect.Size);
 
-            var componentCenterPosition = new Vector2(contentRect.X, contentRect.Y) + new Vector2((float)contentRect.Width / 2, (float)contentRect.Height / 2);
+            var componentCenterPosition = contentRect.Position + contentRect.Size / 2;
             var translatedComponentCenterPosition = componentCenterPosition + _transform.Translation;
 
             var io = ImGuiNET.ImGui.GetIO();
@@ -94,9 +100,8 @@ namespace ImGui.Forms.Controls
 
         private bool IsHovering(Veldrid.Rectangle contentRect)
         {
-            return ImGuiNET.ImGui.IsItemHovered();
-            //ImGuiNET.ImGui.IsMouseHoveringRect(new Vector2(contentRect.X, contentRect.Y),
-            //    new Vector2(contentRect.X + contentRect.Width, contentRect.Y + contentRect.Height));
+            return ImGuiNET.ImGui.IsMouseHoveringRect(new Vector2(contentRect.X, contentRect.Y),
+                new Vector2(contentRect.X + contentRect.Width, contentRect.Y + contentRect.Height));
         }
 
         private void OnMouseScrolled()

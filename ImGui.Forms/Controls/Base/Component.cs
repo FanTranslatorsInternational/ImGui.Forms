@@ -164,7 +164,7 @@ namespace ImGui.Forms.Controls.Base
 
         protected bool IsKeyDown(KeyCommand keyDown)
         {
-            if (keyDown == default)
+            if (keyDown.IsEmpty)
                 return false;
 
             if (!Application.Instance.TryGetKeyDownCommand(out KeyCommand internalKeyDown))
@@ -175,10 +175,10 @@ namespace ImGui.Forms.Controls.Base
 
         protected bool IsKeyUp(KeyCommand keyUp)
         {
-            if (keyUp == default)
+            if (keyUp.IsEmpty)
                 return false;
 
-            if (!Application.Instance.TryGetKeyDownCommand(out KeyCommand internalKeyUp))
+            if (!Application.Instance.TryGetKeyUpCommand(out KeyCommand internalKeyUp))
                 return false;
 
             return keyUp == internalKeyUp;

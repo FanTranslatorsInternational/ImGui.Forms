@@ -289,14 +289,14 @@ namespace ImGui.Forms
         {
             keyDown = _keyDownCommand;
 
-            return _keyDownCommand != default;
+            return !_keyDownCommand.IsEmpty;
         }
 
         internal bool TryGetKeyUpCommand(out KeyCommand keyUp)
         {
             keyUp = _keyUpCommand;
 
-            return _keyUpCommand != default;
+            return !_keyUpCommand.IsEmpty;
         }
 
         internal bool TryGetDragDrop(Veldrid.Rectangle controlRect, out DragDropEventEx obj)

@@ -1,20 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
 using ImGui.Forms.Extensions;
+using ImGui.Forms.Models.IO;
 using ImGuiNET;
+using Veldrid;
 using Rectangle = Veldrid.Rectangle;
 
 namespace ImGui.Forms.Controls.Tree
 {
     public class TreeView<TNodeData> : Component
     {
+        private const int FirstArrowSelectionDelta_ = 30;
+        private const int ArrowSelectionFrameDelta_ = 5;
+
+        private static readonly KeyCommand PreviousNodeKey = new KeyCommand(Key.Up);
+        private static readonly KeyCommand NextNodeKey = new KeyCommand(Key.Down);
+
         private readonly TreeNode<TNodeData> _rootNode;
         private TreeNode<TNodeData> _selectedNode;
+
+        private bool _isAnyNodeFocused;
+
+        private KeyCommand _lastArrowKeyDown;
+        private int _framesArrowKeyCounter;
+        private bool _firstArrowSelection;
 
         public Models.Size Size { get; set; } = Models.Size.Parent;
 
@@ -61,14 +74,20 @@ namespace ImGui.Forms.Controls.Tree
             var anyNodeHovered = false;
             if (ImGuiNET.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
             {
-                UpdateNodes(Nodes, ref anyNodeHovered);
+                if (_isAnyNodeFocused)
+                    ChangeSelectedNodeOnArrowKey();
+
+                bool isAnyNodeFocused = UpdateNodes(Nodes, ref anyNodeHovered);
+
+                UpdateNodeFocusState(isAnyNodeFocused);
             }
 
             ImGuiNET.ImGui.EndChild();
         }
 
-        private void UpdateNodes(IList<TreeNode<TNodeData>> nodes, ref bool nodeHovered)
+        private bool UpdateNodes(IList<TreeNode<TNodeData>> nodes, ref bool nodeHovered)
         {
+            var isAnyNodeFocused = false;
             foreach (var node in nodes.ToArray())
             {
                 var flags = ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow;
@@ -76,7 +95,7 @@ namespace ImGui.Forms.Controls.Tree
                 if (SelectedNode == node) flags |= ImGuiTreeNodeFlags.Selected;
 
                 // Add node
-                var nodeId = Application.Instance.IdFactory.Get(node);
+                int nodeId = Application.Instance.IdFactory.Get(node);
 
                 ImGuiNET.ImGui.PushID(nodeId);
                 ImGuiNET.ImGui.SetNextItemOpen(node.IsExpanded);
@@ -87,8 +106,10 @@ namespace ImGui.Forms.Controls.Tree
                 if (node.Font != null)
                     ImGuiNET.ImGui.PushFont((ImFontPtr)node.Font);
 
-                var expanded = ImGuiNET.ImGui.TreeNodeEx(node.Text, flags);
-                var changedExpansion = expanded != node.IsExpanded;
+                bool expanded = ImGuiNET.ImGui.TreeNodeEx(node.Text, flags);
+                isAnyNodeFocused |= ImGuiNET.ImGui.IsItemFocused();
+
+                bool changedExpansion = expanded != node.IsExpanded;
                 if (changedExpansion)
                     node.IsExpanded = expanded;
 
@@ -116,10 +137,129 @@ namespace ImGui.Forms.Controls.Tree
                     continue;
 
                 if (node.Nodes.Count > 0)
-                    UpdateNodes(node.Nodes, ref nodeHovered);
+                    isAnyNodeFocused |= UpdateNodes(node.Nodes, ref nodeHovered);
 
                 ImGuiNET.ImGui.TreePop();
             }
+
+            return isAnyNodeFocused;
+        }
+
+        private void UpdateNodeFocusState(bool isAnyNodeFocused)
+        {
+            if (!_isAnyNodeFocused && !isAnyNodeFocused)
+                return;
+
+            if (!_isAnyNodeFocused && isAnyNodeFocused)
+                _isAnyNodeFocused = true;
+
+            if (_isAnyNodeFocused && !isAnyNodeFocused)
+                _isAnyNodeFocused = false;
+        }
+
+        private void ChangeSelectedNodeOnArrowKey()
+        {
+            UpdateArrowKeyState();
+            UpdateSelectedNodeOnArrowKey();
+        }
+
+        private readonly IList<KeyCommand> _pressedArrows = new List<KeyCommand>(2);
+        private void UpdateArrowKeyState()
+        {
+            if (IsKeyDown(PreviousNodeKey) && !_pressedArrows.Contains(PreviousNodeKey))
+                _pressedArrows.Add(PreviousNodeKey);
+            if (IsKeyDown(NextNodeKey) && !_pressedArrows.Contains(NextNodeKey))
+                _pressedArrows.Add(NextNodeKey);
+            if (IsKeyUp(PreviousNodeKey))
+                _pressedArrows.Remove(PreviousNodeKey);
+            if (IsKeyUp(NextNodeKey))
+                _pressedArrows.Remove(NextNodeKey);
+
+            KeyCommand currentArrowKeyDown = default;
+            if (_pressedArrows.Count > 0)
+                currentArrowKeyDown = _pressedArrows[^1];
+
+            if (_lastArrowKeyDown != currentArrowKeyDown)
+            {
+                _firstArrowSelection = true;
+                _framesArrowKeyCounter = 0;
+            }
+            else if (!_lastArrowKeyDown.IsEmpty)
+            {
+                if (_firstArrowSelection)
+                {
+                    _firstArrowSelection = false;
+                    _framesArrowKeyCounter = FirstArrowSelectionDelta_;
+                }
+
+                if (_framesArrowKeyCounter == 0)
+                    _framesArrowKeyCounter = ArrowSelectionFrameDelta_;
+                else
+                    _framesArrowKeyCounter--;
+            }
+
+            _lastArrowKeyDown = default;
+            if (_pressedArrows.Count > 0)
+                _lastArrowKeyDown = _pressedArrows[^1];
+        }
+
+        private void UpdateSelectedNodeOnArrowKey()
+        {
+            if (_lastArrowKeyDown.IsEmpty)
+                return;
+
+            if (_framesArrowKeyCounter != 0)
+                return;
+
+            if (_lastArrowKeyDown == PreviousNodeKey)
+                SelectedNode = GetPreviousData() ?? SelectedNode;
+            else if (_lastArrowKeyDown == NextNodeKey)
+                SelectedNode = GetNextNode() ?? SelectedNode;
+        }
+
+        private TreeNode<TNodeData> GetPreviousData()
+        {
+            IList<TreeNode<TNodeData>> nodeList = SelectedNode.Parent.Nodes;
+            int nodeIndex = nodeList.IndexOf(SelectedNode);
+
+            if (nodeIndex - 1 < 0)
+                return SelectedNode.IsRoot ? null : SelectedNode.Parent;
+
+            TreeNode<TNodeData> previousNode = nodeList[nodeIndex - 1];
+            while (previousNode.IsExpanded)
+            {
+                if (previousNode.Nodes.Count <= 0)
+                    break;
+
+                previousNode = previousNode.Nodes[^1];
+            }
+
+            return previousNode;
+        }
+
+        private TreeNode<TNodeData> GetNextNode()
+        {
+            if (SelectedNode.IsExpanded && SelectedNode.Nodes.Count > 0)
+                return SelectedNode.Nodes[0];
+
+            IList<TreeNode<TNodeData>> nodeList = SelectedNode.Parent.Nodes;
+            int nodeIndex = nodeList.IndexOf(SelectedNode);
+
+            if (nodeIndex + 1 < nodeList.Count)
+                return nodeList[nodeIndex + 1];
+
+            while (!nodeList[nodeIndex].IsRoot)
+            {
+                TreeNode<TNodeData> parentNode = nodeList[nodeIndex].Parent;
+
+                nodeList = parentNode.Parent.Nodes;
+                nodeIndex = nodeList.IndexOf(parentNode);
+
+                if (nodeIndex + 1 < nodeList.Count)
+                    return nodeList[nodeIndex + 1];
+            }
+
+            return null;
         }
 
         private bool IsTreeNodeClicked()
@@ -129,7 +269,7 @@ namespace ImGui.Forms.Controls.Tree
 
         private void OnSelectedNodeChanged()
         {
-            SelectedNodeChanged?.Invoke(this, new EventArgs());
+            SelectedNodeChanged?.Invoke(this, EventArgs.Empty);
         }
 
         internal void OnNodeExpanded(TreeNode<TNodeData> node)

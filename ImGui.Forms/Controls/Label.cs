@@ -83,7 +83,7 @@ namespace ImGui.Forms.Controls
 
         protected string EscapeText()
         {
-            return (Text.ToString()).Replace("\n", Environment.NewLine);
+            return Text.ToString().Replace("\n", Environment.NewLine);
         }
     }
 }

@@ -23,7 +23,7 @@ namespace ImGui.Forms.Controls
 
         public override Size GetSize()
         {
-            return new Size(_baseImg.Width, _baseImg.Height);
+            return new Size(_baseImg?.Width ?? 0, _baseImg?.Height ?? 0);
         }
 
         protected override void UpdateInternal(Rectangle contentRect)

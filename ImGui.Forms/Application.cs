@@ -16,7 +16,7 @@ namespace ImGui.Forms
         private bool _isClosing;
         private bool _shouldClose;
 
-        private GraphicsBackend? _backend = null;
+        private GraphicsBackend? _backend;
 
         private ExecutionContext _executionContext;
 
@@ -125,7 +125,7 @@ namespace ImGui.Forms
 
         private void CreateWindow(Form form, out Sdl2Window window, out GraphicsDevice gd)
         {
-            var windowInfo = new WindowCreateInfo(20, 20, form.Width, form.Height, WindowState.Normal, form.Title);
+            var windowInfo = new WindowCreateInfo(50, 70, form.Width, form.Height, WindowState.Normal, form.Title);
             var graphicsDeviceOptions = new GraphicsDeviceOptions(true, null, true, ResourceBindingModel.Improved, true, true);
 
             if (_backend.HasValue)
@@ -259,22 +259,16 @@ namespace ImGui.Forms
 
         private void Window_DragDrop(DragDropEvent obj)
         {
-            Console.WriteLine("[EVENT] DragDrop");
-
             _dragDropEvent = new DragDropEventEx(obj, ImGuiNET.ImGui.GetMousePos());
         }
 
         private void Window_KeyUp(KeyEvent obj)
         {
-            Console.WriteLine("[EVENT] KeyUp");
-
             _keyUpCommand = new KeyCommand(obj.Modifiers, obj.Key);
         }
 
         private void Window_KeyDown(KeyEvent obj)
         {
-            Console.WriteLine("[EVENT] KeyDown");
-
             _keyDownCommand = new KeyCommand(obj.Modifiers, obj.Key);
         }
 

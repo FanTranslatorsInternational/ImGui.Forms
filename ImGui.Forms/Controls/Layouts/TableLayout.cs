@@ -87,15 +87,15 @@ namespace ImGui.Forms.Controls.Layouts
 
             if (ImGuiNET.ImGui.BeginChild($"{Id}", contentRect.Size, ImGuiChildFlags.None, childFlags))
             {
-                Vector2 cellPosition = GetInitPoint(localWidths, localHeights, contentRect);
-                ImGuiNET.ImGui.SetCursorPos(cellPosition);
+                Vector2 initPosition = GetInitPoint(localWidths, localHeights, contentRect);
+                ImGuiNET.ImGui.SetCursorPos(initPosition);
 
                 float outerScrollX = ImGuiNET.ImGui.GetScrollX();
                 float outerScrollY = ImGuiNET.ImGui.GetScrollY();
 
                 if (ImGuiNET.ImGui.BeginChild($"{Id}-in", new Vector2(totalWidth, totalHeight), ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar))
                 {
-                    cellPosition = Vector2.Zero;
+                    var cellPosition = Vector2.Zero;
                     float origX = cellPosition.X;
 
                     float innerScrollX = ImGuiNET.ImGui.GetScrollX();
@@ -163,7 +163,7 @@ namespace ImGui.Forms.Controls.Layouts
                                     if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}-content", new Vector2(cellInternalWidth, cellInternalHeight), ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar))
                                     {
                                         // Draw component
-                                        cell.Content?.Update(new Rectangle((int)(contentRect.X + cellPosition.X + cellXOffset - outerScrollX - innerScrollX), (int)(contentRect.Y + cellPosition.Y + cellYOffset - outerScrollY - innerScrollY), cellInternalWidth, cellInternalHeight));
+                                        cell.Content?.Update(new Rectangle((int)(contentRect.X + initPosition.X + cellPosition.X + cellXOffset - outerScrollX - innerScrollX), (int)(contentRect.Y + initPosition.Y + cellPosition.Y + cellYOffset - outerScrollY - innerScrollY), cellInternalWidth, cellInternalHeight));
                                     }
 
                                     ImGuiNET.ImGui.EndChild();

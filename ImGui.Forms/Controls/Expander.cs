@@ -26,9 +26,7 @@ namespace ImGui.Forms.Controls
 
         public override Size GetSize()
         {
-            var size = FontResource.MeasureText(Caption);
-            var framePadding = ImGuiNET.ImGui.GetStyle().FramePadding;
-            return new Size(1f, (int)((int)Math.Ceiling(size.Y + framePadding.Y * 2) + (Expanded ? ImGuiNET.ImGui.GetStyle().ItemSpacing.X + ContentHeight : 0)));
+            return new Size(1f, (int)(GetHeaderHeight() + (Expanded ? ImGuiNET.ImGui.GetStyle().ItemSpacing.X + ContentHeight : 0)));
         }
 
         protected override void UpdateInternal(Rectangle contentRect)
@@ -38,7 +36,14 @@ namespace ImGui.Forms.Controls
 
             expanded = ImGuiNET.ImGui.CollapsingHeader(Caption, flags);
             if (expanded)
-                Content?.Update(new Rectangle(contentRect.X, contentRect.Y, contentRect.Width, contentRect.Height));
+            {
+                if (ImGuiNET.ImGui.BeginChild($"{Id}-in"))
+                {
+                    Content?.Update(new Rectangle(contentRect.X, contentRect.Y + GetContentPosY(), contentRect.Width, contentRect.Height - GetContentPosY()));
+
+                    ImGuiNET.ImGui.EndChild();
+                }
+            }
 
             if (Expanded != expanded)
             {
@@ -47,9 +52,30 @@ namespace ImGui.Forms.Controls
             }
         }
 
+        protected override void SetTabInactiveCore()
+        {
+            Content?.SetTabInactiveInternal();
+        }
+
         private void OnExpandedChanged()
         {
-            ExpandedChanged?.Invoke(this, new EventArgs());
+            ExpandedChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private int GetContentPosY()
+        {
+            int height = GetHeaderHeight();
+            if (Expanded)
+                height += (int)ImGuiNET.ImGui.GetStyle().ItemSpacing.X;
+
+            return height;
+        }
+
+        private int GetHeaderHeight()
+        {
+            var size = FontResource.MeasureText(Caption);
+            var framePadding = ImGuiNET.ImGui.GetStyle().FramePadding;
+            return (int)Math.Ceiling(size.Y + framePadding.Y * 2);
         }
     }
 }

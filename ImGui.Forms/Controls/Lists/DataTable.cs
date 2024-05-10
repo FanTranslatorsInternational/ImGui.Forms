@@ -93,7 +93,7 @@ namespace ImGui.Forms.Controls.Lists
                             ImGuiNET.ImGui.TableSetColumnIndex(c);
 
                             var rowColor = row.TextColor;
-                            if (rowColor != Color.Empty)
+                            if (!rowColor.IsEmpty)
                                 ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Text, row.TextColor.ToUInt32());
 
                             if (IsSelectable && row.CanSelect && c == 0)
@@ -124,7 +124,7 @@ namespace ImGui.Forms.Controls.Lists
                                 ImGuiNET.ImGui.Text(column.Get(row));
                             }
 
-                            if (rowColor != Color.Empty)
+                            if (!rowColor.IsEmpty)
                                 ImGuiNET.ImGui.PopStyleColor();
 
                             if (IsCellClicked())

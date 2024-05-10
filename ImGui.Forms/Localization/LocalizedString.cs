@@ -74,6 +74,27 @@ namespace ImGui.Forms.Localization
             return _localizedText = app.Localizer.Localize(_id, args);
         }
 
+        public override bool Equals(object obj)
+        {
+            if (!(obj is LocalizedString locStr))
+                return base.Equals(obj);
+
+            // Both need to have a fixed text set to be potentially equal
+            if (_fixedText != null)
+            {
+                if (locStr._fixedText != null)
+                    return _fixedText == locStr._fixedText;
+
+                return false;
+            }
+
+            // If one has fixed text and not the other, they can't be equal
+            if (locStr._fixedText != null)
+                return false;
+
+            return _id == locStr._id;
+        }
+
         public static implicit operator LocalizedString(string s) => new LocalizedString(null, s ?? string.Empty, Array.Empty<Func<object>>());
         public static implicit operator string(LocalizedString s) => s.ToString();
     }

@@ -83,6 +83,11 @@ namespace ImGui.Forms.Controls.Layouts
             _tableLayout.Update(contentRect);
         }
 
+        protected override void SetTabInactiveCore()
+        {
+            _tableLayout.SetTabInactiveInternal();
+        }
+
         private void AddItem(StackItem item)
         {
             switch (Alignment)

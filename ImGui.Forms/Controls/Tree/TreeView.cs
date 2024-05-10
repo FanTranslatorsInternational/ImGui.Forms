@@ -29,6 +29,8 @@ namespace ImGui.Forms.Controls.Tree
         private int _framesArrowKeyCounter;
         private bool _firstArrowSelection;
 
+        private float _scrollY;
+
         public Models.Size Size { get; set; } = Models.Size.Parent;
 
         public IList<TreeNode<TNodeData>> Nodes => _rootNode.Nodes;
@@ -74,6 +76,16 @@ namespace ImGui.Forms.Controls.Tree
             var anyNodeHovered = false;
             if (ImGuiNET.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
             {
+                float newScrollY = ImGuiNET.ImGui.GetScrollY();
+
+                if (_scrollY != newScrollY)
+                {
+                    if (IsTabInactiveCore())
+                        ImGuiNET.ImGui.SetScrollY(_scrollY);
+
+                    _scrollY = newScrollY;
+                }
+
                 if (_isAnyNodeFocused)
                     ChangeSelectedNodeOnArrowKey();
 
@@ -90,7 +102,7 @@ namespace ImGui.Forms.Controls.Tree
             var isAnyNodeFocused = false;
             foreach (var node in nodes.ToArray())
             {
-                var flags = ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow;
+                var flags = ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.SpanAvailWidth;
                 if (node.Nodes.Count <= 0) flags |= ImGuiTreeNodeFlags.Leaf;
                 if (SelectedNode == node) flags |= ImGuiTreeNodeFlags.Selected;
 
@@ -106,8 +118,13 @@ namespace ImGui.Forms.Controls.Tree
                 if (node.Font != null)
                     ImGuiNET.ImGui.PushFont((ImFontPtr)node.Font);
 
+                ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
+                ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0, 2));
+
                 bool expanded = ImGuiNET.ImGui.TreeNodeEx(node.Text, flags);
                 isAnyNodeFocused |= ImGuiNET.ImGui.IsItemFocused();
+
+                ImGuiNET.ImGui.PopStyleVar(2);
 
                 bool changedExpansion = expanded != node.IsExpanded;
                 if (changedExpansion)

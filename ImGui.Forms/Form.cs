@@ -58,7 +58,7 @@ namespace ImGui.Forms
 
         #region Events
 
-        public event EventHandler<DragDropEvent> DragDrop;
+        public event EventHandler<DragDropEvent[]> DragDrop;
         public event EventHandler Load;
         public event EventHandler Resized;
         public event Func<object, ClosingEventArgs, Task> Closing;
@@ -133,8 +133,8 @@ namespace ImGui.Forms
 
             // Handle Drag and Drop after rendering
             if (AllowDragDrop)
-                if (Application.Instance.TryGetDragDrop(new Veldrid.Rectangle(0, 0, (int)Size.X, (int)Size.Y), out var dragDrop))
-                    OnDragDrop(dragDrop.Event);
+                if (Application.Instance.TryGetDragDrop(new Veldrid.Rectangle(0, 0, (int)Size.X, (int)Size.Y), out DragDropEvent[] dragDrops))
+                    OnDragDrop(dragDrops);
 
             // End window
             ImGuiNET.ImGui.End();
@@ -168,7 +168,7 @@ namespace ImGui.Forms
             await Closing?.Invoke(this, e);
         }
 
-        private void OnDragDrop(DragDropEvent e)
+        private void OnDragDrop(DragDropEvent[] e)
         {
             DragDrop?.Invoke(this, e);
         }

@@ -12,13 +12,13 @@ namespace ImGui.Forms.Controls
 {
     public class ImageButton : Component
     {
-        private ImageResource _baseImg;
+        private ThemedImageResource _baseImg;
 
         public LocalizedString? Tooltip { get; set; }
 
         public KeyCommand KeyAction { get; set; }
 
-        public ImageResource Image
+        public ThemedImageResource Image
         {
             get => _baseImg;
             set

@@ -186,6 +186,13 @@ namespace ImGui.Forms.Controls.Layouts
             ImGuiNET.ImGui.EndChild();
         }
 
+        protected override void SetTabInactiveCore()
+        {
+            foreach (TableRow row in _rows)
+                foreach (TableCell cell in row.Cells)
+                    cell.Content?.SetTabInactiveInternal();
+        }
+
         #region Width calculation
 
         private int[] GetColumnWidths(int componentWidth, float layoutCorrection)

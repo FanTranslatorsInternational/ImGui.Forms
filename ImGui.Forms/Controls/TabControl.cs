@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Threading.Tasks;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
@@ -63,6 +64,9 @@ namespace ImGui.Forms.Controls
                         // Check selected page status
                         var wasChanged = _selectedPage != page;
 
+                        if (wasChanged)
+                            _selectedPage?.Content?.SetTabInactiveInternal();
+
                         _selectedPageTemp = null;
                         _selectedPage = page;
 
@@ -78,8 +82,8 @@ namespace ImGui.Forms.Controls
 
                         var pageWidth = page.Content.GetWidth(contentRect.Width);
                         var pageHeight = page.Content.GetHeight(contentRect.Height - yPos);
-                        
-                        if (ImGuiNET.ImGui.BeginChild($"##{Id}-in", contentRect.Size, ImGuiChildFlags.None, ImGuiWindowFlags.None))
+
+                        if (ImGuiNET.ImGui.BeginChild($"##{Id}-in", new Vector2(pageWidth, pageHeight), ImGuiChildFlags.None, ImGuiWindowFlags.None))
                             page.Content.Update(new Rectangle(contentRect.X, contentRect.Y + yPos, pageWidth, pageHeight));
 
                         ImGuiNET.ImGui.EndChild();

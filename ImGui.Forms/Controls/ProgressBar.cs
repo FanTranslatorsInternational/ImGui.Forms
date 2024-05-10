@@ -25,7 +25,7 @@ namespace ImGui.Forms.Controls
 
         public FontResource Font { get; set; }
 
-        public Color ProgressColor { get; set; } = Color.FromArgb(0x27, 0xBB, 0x65);
+        public ThemedColor ProgressColor { get; set; } = Color.FromArgb(0x27, 0xBB, 0x65);
 
         public override Size GetSize()
         {

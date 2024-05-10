@@ -184,4 +184,61 @@ namespace ImGui.Forms
             _hasChanges = false;
         }
     }
+
+    public readonly struct ThemedColor
+    {
+        private readonly bool _hasColors;
+
+        private readonly ImGuiCol _colIndex;
+
+        private readonly Color _lightColor;
+        private readonly Color _darkColor;
+
+        public ThemedColor(Color lightColor, Color darkColor)
+        {
+            _colIndex = (ImGuiCol)(-1);
+
+            _lightColor = lightColor;
+            _darkColor = darkColor;
+
+            _hasColors = true;
+        }
+
+        public ThemedColor(ImGuiCol colIndex)
+        {
+            _colIndex = colIndex;
+
+            _lightColor = _darkColor = Color.Empty;
+
+            _hasColors = true;
+        }
+
+        public bool IsEmpty => _hasColors && GetColor() == Color.Empty;
+
+        public uint ToUInt32()
+        {
+            return GetColor().ToUInt32();
+        }
+
+        private Color GetColor()
+        {
+            if (_colIndex >= 0)
+                return Style.GetColor(_colIndex);
+
+            switch (Style.Theme)
+            {
+                case Theme.Light:
+                    return _lightColor;
+
+                case Theme.Dark:
+                    return _darkColor;
+
+                default:
+                    return Color.Empty;
+            }
+        }
+
+        public static implicit operator ThemedColor(Color c) => new ThemedColor(c, c);
+        public static implicit operator ThemedColor(ImGuiCol c) => new ThemedColor(c);
+    }
 }

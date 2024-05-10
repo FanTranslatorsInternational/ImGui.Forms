@@ -5,9 +5,9 @@ namespace ImGui.Forms.Controls.Lists
 {
     public class ImageListItem
     {
-        private ImageResource _baseImg;
+        private ThemedImageResource _baseImg;
 
-        public ImageResource Image
+        public ThemedImageResource Image
         {
             get => _baseImg;
             set

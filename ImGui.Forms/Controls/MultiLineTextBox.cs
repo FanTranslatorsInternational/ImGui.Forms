@@ -69,7 +69,7 @@ namespace ImGui.Forms.Controls
 
         private void OnTextChanged()
         {
-            TextChanged?.Invoke(this, new EventArgs());
+            TextChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

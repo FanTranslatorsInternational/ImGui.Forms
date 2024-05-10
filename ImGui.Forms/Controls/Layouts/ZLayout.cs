@@ -67,5 +67,11 @@ namespace ImGui.Forms.Controls.Layouts
 
             ImGuiNET.ImGui.EndChild();
         }
+
+        protected override void SetTabInactiveCore()
+        {
+            foreach (Component item in Items)
+                item?.SetTabInactiveInternal();
+        }
     }
 }

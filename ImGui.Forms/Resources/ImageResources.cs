@@ -10,12 +10,12 @@ namespace ImGui.Forms.Resources
     {
         private const string ErrorPath_ = "error.png";
 
-        private static readonly Lazy<ImageResource> ErrorLazy = new Lazy<ImageResource>(() => ImageResource.FromResource(typeof(ImageResources).Assembly, ErrorPath_));
+        private static readonly Lazy<ThemedImageResource> ErrorLazy = new Lazy<ThemedImageResource>(() => ImageResource.FromResource(typeof(ImageResources).Assembly, ErrorPath_));
 
         /// <summary>
-        /// Creates a new <see cref="ImageResource"/> for an "Error" symbol.
+        /// Creates a new <see cref="ThemedImageResource"/> for an "Error" symbol.
         /// </summary>
-        /// <returns>An <see cref="ImageResource"/> representing an "Error" symbol.</returns>
-        public static ImageResource Error => ErrorLazy.Value;
+        /// <returns>An <see cref="ThemedImageResource"/> representing an "Error" symbol.</returns>
+        public static ThemedImageResource Error => ErrorLazy.Value;
     }
 }

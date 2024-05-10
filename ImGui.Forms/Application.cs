@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Drawing;
+using System.Linq;
 using System.Numerics;
 using ImGui.Forms.Factories;
 using ImGui.Forms.Localization;
@@ -20,10 +21,11 @@ namespace ImGui.Forms
 
         private ExecutionContext _executionContext;
 
-        private DragDropEventEx _dragDropEvent;
+        private DragDropEventEx[] _dragDropEvents;
+        private bool[] _frameHandledDragDrops;
+
         private KeyCommand _keyUpCommand;
         private KeyCommand _keyDownCommand;
-        private bool _frameHandledDragDrop;
 
         #region Static properties
 
@@ -208,10 +210,10 @@ namespace ImGui.Forms
 
         private void UpdateApplicationEvents()
         {
-            _dragDropEvent = default;
+            _dragDropEvents = Array.Empty<DragDropEventEx>();
             _keyUpCommand = default;
             _keyDownCommand = default;
-            _frameHandledDragDrop = false;
+            _frameHandledDragDrops = Array.Empty<bool>();
         }
 
         #region Window events
@@ -259,7 +261,11 @@ namespace ImGui.Forms
 
         private void Window_DragDrop(DragDropEvent obj)
         {
-            _dragDropEvent = new DragDropEventEx(obj, ImGuiNET.ImGui.GetMousePos());
+            Array.Resize(ref _frameHandledDragDrops, _frameHandledDragDrops.Length + 1);
+            _frameHandledDragDrops[^1] = false;
+
+            Array.Resize(ref _dragDropEvents, _dragDropEvents.Length + 1);
+            _dragDropEvents[^1] = new DragDropEventEx(obj, ImGuiNET.ImGui.GetMousePos());
         }
 
         private void Window_KeyUp(KeyEvent obj)
@@ -293,16 +299,25 @@ namespace ImGui.Forms
             return !_keyUpCommand.IsEmpty;
         }
 
-        internal bool TryGetDragDrop(Veldrid.Rectangle controlRect, out DragDropEventEx obj)
+        internal bool TryGetDragDrop(Veldrid.Rectangle controlRect, out DragDropEvent[] events)
         {
-            obj = _dragDropEvent;
+            events = new DragDropEvent[_dragDropEvents.Length];
+            var index = 0;
 
-            // Try get drag drop event
-            if (_frameHandledDragDrop || _dragDropEvent.IsEmpty)
-                return false;
+            for (var i = 0; i < _frameHandledDragDrops.Length; i++)
+            {
+                if (_frameHandledDragDrops[i] || _dragDropEvents[i].IsEmpty)
+                    continue;
 
-            // Check if control contains dropped element
-            return _frameHandledDragDrop = controlRect.Contains(new Veldrid.Point((int)obj.MousePosition.X, (int)obj.MousePosition.Y));
+                if (!controlRect.Contains(new Veldrid.Point((int)_dragDropEvents[i].MousePosition.X, (int)_dragDropEvents[i].MousePosition.Y)))
+                    continue;
+
+                events[index++] = _dragDropEvents[i].Event;
+                _frameHandledDragDrops[i] = true;
+            }
+
+            Array.Resize(ref events, index);
+            return events.Length > 0;
         }
     }
 

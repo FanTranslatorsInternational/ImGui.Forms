@@ -103,6 +103,12 @@ namespace ImGui.Forms.Controls.Lists
             ImGuiNET.ImGui.EndChild();
         }
 
+        protected override void SetTabInactiveCore()
+        {
+            foreach (TItem item in Items)
+                item?.SetTabInactiveInternal();
+        }
+
         #region Selection methods
 
         private int GetDimension(Component component, Rectangle contentRect)

@@ -15,9 +15,9 @@ namespace ImGui.Forms.Controls
         private bool _mouseDown;
         private Vector2 _mouseDownPosition;
 
-        private ImageResource _baseImg;
+        private ThemedImageResource _baseImg;
 
-        public ImageResource Image
+        public ThemedImageResource Image
         {
             get => _baseImg;
             set

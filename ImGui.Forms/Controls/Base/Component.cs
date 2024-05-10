@@ -11,6 +11,8 @@ namespace ImGui.Forms.Controls.Base
     // TODO: Due to executive inconsistency, remove ApplyStyles/RemoveStyles methods and apply styles in Update/Size methods directly
     public abstract class Component
     {
+        private bool _tabInactive;
+
         /// <summary>
         /// The Id for this component.
         /// </summary>
@@ -42,7 +44,7 @@ namespace ImGui.Forms.Controls.Base
         /// <summary>
         /// The event to intercept DragDrop actions.
         /// </summary>
-        public event EventHandler<DragDropEvent> DragDrop;
+        public event EventHandler<DragDropEvent[]> DragDrop;
 
         #endregion
 
@@ -53,7 +55,10 @@ namespace ImGui.Forms.Controls.Base
         {
             // Handle visibility
             if (!Visible)
+            {
+                _tabInactive = false;
                 return;
+            }
 
             // Handle drawing of component
             ImGuiNET.ImGui.PushID(Id);
@@ -71,10 +76,15 @@ namespace ImGui.Forms.Controls.Base
             // Handle Drag and Drop after rendering, so drag drop events go from most nested to least nested control
             // HINT: Don't handle Drag and Drop if the component either doesn't allow it or the component is marked as disabled.
             if (!AllowDragDrop || !Enabled)
+            {
+                _tabInactive = false;
                 return;
+            }
 
-            if (Application.Instance.TryGetDragDrop(contentRect, out var dragDrop))
-                OnDragDrop(dragDrop.Event);
+            if (Application.Instance.TryGetDragDrop(contentRect, out DragDropEvent[] dragDrops))
+                OnDragDrop(dragDrops);
+
+            _tabInactive = false;
         }
 
         /// <summary>
@@ -93,6 +103,15 @@ namespace ImGui.Forms.Controls.Base
         protected bool IsActiveCore()
         {
             return ImGuiNET.ImGui.IsItemActive() && ImGuiNET.ImGui.IsItemHovered();
+        }
+
+        /// <summary>
+        /// Determines if the current component is on an inactive <see cref="TabPage"/>.
+        /// </summary>
+        /// <returns>If the current component is on an inactive <see cref="TabPage"/>.</returns>
+        protected bool IsTabInactiveCore()
+        {
+            return _tabInactive;
         }
 
         /// <summary>
@@ -185,12 +204,35 @@ namespace ImGui.Forms.Controls.Base
         }
 
         /// <summary>
+        /// Used by <see cref="TabControl"/> to mark components as inactive,
+        /// due to them not being selected as the active page.
+        /// </summary>
+        internal void SetTabInactiveInternal()
+        {
+            SetTabInactive();
+        }
+
+        /// <summary>
+        /// Used by 3rd-party components to propagate <see cref="TabPage"/> inactivity to child components.
+        /// </summary>
+        public void SetTabInactive()
+        {
+            _tabInactive = true;
+            SetTabInactiveCore();
+        }
+
+        /// <summary>
+        /// Propagate the inactivity state from a <see cref="TabControl"/>
+        /// </summary>
+        protected virtual void SetTabInactiveCore() { }
+
+        /// <summary>
         /// Invoke the DragDrop event of this component.
         /// </summary>
-        /// <param name="obj">The drag drop object received.</param>
-        private void OnDragDrop(DragDropEvent obj)
+        /// <param name="events">The drag drop objects received.</param>
+        private void OnDragDrop(DragDropEvent[] events)
         {
-            DragDrop?.Invoke(this, obj);
+            DragDrop?.Invoke(this, events);
         }
 
         /// <summary>

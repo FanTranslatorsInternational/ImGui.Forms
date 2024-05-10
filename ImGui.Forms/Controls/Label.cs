@@ -20,7 +20,7 @@ namespace ImGui.Forms.Controls
 
         public float LineDistance { get; set; }
 
-        public Color TextColor { get; set; } = Color.Empty;
+        public ThemedColor TextColor { get; set; }
 
         public SizeValue Width { get; set; } = SizeValue.Content;
 
@@ -65,7 +65,7 @@ namespace ImGui.Forms.Controls
 
         protected override void ApplyStyles()
         {
-            if (TextColor != Color.Empty)
+            if (!TextColor.IsEmpty)
                 ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Text, TextColor.ToUInt32());
 
             if (Font != null)
@@ -77,7 +77,7 @@ namespace ImGui.Forms.Controls
             if (Font != null)
                 ImGuiNET.ImGui.PopFont();
 
-            if (TextColor != Color.Empty)
+            if (!TextColor.IsEmpty)
                 ImGuiNET.ImGui.PopStyleColor();
         }
 

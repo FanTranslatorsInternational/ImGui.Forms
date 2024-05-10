@@ -19,5 +19,10 @@ namespace ImGui.Forms.Controls
         {
             Content?.Update(contentRect);
         }
+
+        protected override void SetTabInactiveCore()
+        {
+            Content?.SetTabInactiveInternal();
+        }
     }
 }

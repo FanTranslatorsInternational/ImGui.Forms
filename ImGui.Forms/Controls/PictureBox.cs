@@ -9,9 +9,9 @@ namespace ImGui.Forms.Controls
 {
     public class PictureBox : Component
     {
-        private ImageResource _baseImg;
+        private ThemedImageResource _baseImg;
 
-        public ImageResource Image
+        public ThemedImageResource Image
         {
             get => _baseImg;
             set

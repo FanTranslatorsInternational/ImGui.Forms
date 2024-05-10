@@ -102,7 +102,7 @@ namespace ImGui.Forms.Modals
 
         private Component GetTypeImage(MessageBoxType type)
         {
-            ImageResource image;
+            ThemedImageResource image;
             switch (type)
             {
                 case MessageBoxType.Information:

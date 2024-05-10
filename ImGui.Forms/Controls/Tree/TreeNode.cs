@@ -1,23 +1,17 @@
 ﻿using System.Collections.Generic;
-using System.Drawing;
 using ImGui.Forms.Controls.Layouts;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Resources;
 
 namespace ImGui.Forms.Controls.Tree
 {
-    public class TreeNode<TNodeData>
+    public abstract class TreeNode
     {
-        private readonly ObservableList<TreeNode<TNodeData>> _nodes;
-
-        private TreeView<TNodeData> _parentView;
-        private bool _isRoot;
-
         private bool _isExpanded;
 
         public LocalizedString Text { get; set; } = string.Empty;
 
-        public Color TextColor { get; set; } = Color.Empty;
+        public ThemedColor TextColor { get; set; }
 
         public FontResource Font { get; set; }
 
@@ -26,7 +20,7 @@ namespace ImGui.Forms.Controls.Tree
             get => _isExpanded;
             set
             {
-                var hasChanged = _isExpanded != value;
+                bool hasChanged = _isExpanded != value;
                 _isExpanded = value;
 
                 if (hasChanged)
@@ -34,9 +28,21 @@ namespace ImGui.Forms.Controls.Tree
             }
         }
 
+        public abstract IEnumerable<TreeNode> EnumerateNodes();
+
+        protected abstract void OnExpandedChanged();
+    }
+
+    public class TreeNode<TNodeData> : TreeNode
+    {
+        private readonly ObservableList<TreeNode<TNodeData>> _nodes;
+
+        private TreeView<TNodeData> _parentView;
+        private bool _isRoot;
+
         public bool IsRoot => Parent?._isRoot ?? true;
 
-        public IList<TreeNode<TNodeData>> Nodes => _nodes;
+        public new IList<TreeNode<TNodeData>> Nodes => _nodes;
 
         public TreeNode<TNodeData> Parent { get; private set; }
 
@@ -101,9 +107,14 @@ namespace ImGui.Forms.Controls.Tree
             }
         }
 
-        private void OnExpandedChanged()
+        public override IEnumerable<TreeNode> EnumerateNodes()
         {
-            if (_isExpanded)
+            return _nodes;
+        }
+
+        protected override void OnExpandedChanged()
+        {
+            if (IsExpanded)
                 _parentView?.OnNodeExpanded(this);
             else
                 _parentView?.OnNodeCollapsed(this);

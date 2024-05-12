@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using ImGui.Forms.Models;
+using ImGui.Forms.Providers;
 using ImGui.Forms.Resources;
 using ImGui.Forms.Support.Veldrid.ImGui;
 using ImGuiNET;
@@ -151,26 +151,24 @@ namespace ImGui.Forms.Factories
             builder.Clear();
 
             if (rangeFlags.HasFlag(FontGlyphRange.Default))
-                builder.AddRanges(_io.Fonts.GetGlyphRangesDefault());
+                builder.AddText(GlyphRangeProvider.GetLatinRange());
             if (rangeFlags.HasFlag(FontGlyphRange.Cyrillic))
-                builder.AddRanges(_io.Fonts.GetGlyphRangesCyrillic());
-            if (rangeFlags.HasFlag(FontGlyphRange.Chinese))
-                builder.AddRanges(_io.Fonts.GetGlyphRangesChineseFull());
-            if (rangeFlags.HasFlag(FontGlyphRange.Japanese))
-                builder.AddRanges(_io.Fonts.GetGlyphRangesJapanese());
+                builder.AddText(GlyphRangeProvider.GetCyrillicRange());
+            if (rangeFlags.HasFlag(FontGlyphRange.ChineseJapaneseKorean))
+                builder.AddText(GlyphRangeProvider.GetCjkRange());
             if (rangeFlags.HasFlag(FontGlyphRange.Greek))
-                builder.AddRanges(_io.Fonts.GetGlyphRangesGreek());
-            if (rangeFlags.HasFlag(FontGlyphRange.Korean))
-                builder.AddRanges(_io.Fonts.GetGlyphRangesKorean());
+                builder.AddText(GlyphRangeProvider.GetGreekRange());
             if (rangeFlags.HasFlag(FontGlyphRange.Thai))
-                builder.AddRanges(_io.Fonts.GetGlyphRangesThai());
+                builder.AddText(GlyphRangeProvider.GetThaiRange());
             if (rangeFlags.HasFlag(FontGlyphRange.Vietnamese))
                 builder.AddRanges(_io.Fonts.GetGlyphRangesVietnamese());
+            if (rangeFlags.HasFlag(FontGlyphRange.Symbols))
+                builder.AddText(GlyphRangeProvider.GetSymbolRange());
 
             if (!string.IsNullOrEmpty(additionalCharacters))
                 builder.AddText(additionalCharacters);
 
-            builder.BuildRanges(out var ranges);
+            builder.BuildRanges(out ImVector ranges);
 
             return ranges;
         }

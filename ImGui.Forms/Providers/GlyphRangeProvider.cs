@@ -8,7 +8,7 @@ namespace ImGui.Forms.Providers
 
         private static readonly int[] _latinRange = new[]
         {
-            0x0000,0x024f
+            0x0020,0x024f
         };
 
         private static readonly int[] _cyrillicRange = new[]

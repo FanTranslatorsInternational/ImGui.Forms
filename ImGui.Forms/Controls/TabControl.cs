@@ -25,6 +25,9 @@ namespace ImGui.Forms.Controls
             get => _selectedPageTemp ?? _selectedPage;
             set
             {
+                if (!Enabled)
+                    return;
+
                 _selectedTabPageCount = 2;
                 _selectedPageTemp = value;
             }
@@ -50,57 +53,68 @@ namespace ImGui.Forms.Controls
             if (ImGuiNET.ImGui.BeginTabBar($"{Id}", ImGuiTabBarFlags.None))
             {
                 var toRemovePages = new HashSet<TabPage>();
-                foreach (var page in Pages.ToArray())
+                foreach (TabPage page in Pages.ToArray())
                 {
                     var pageFlags = ImGuiTabItemFlags.None;
                     if (page.HasChanges) pageFlags |= ImGuiTabItemFlags.UnsavedDocument;
                     if (wasManuallyChanged && _selectedPageTemp == page) pageFlags |= ImGuiTabItemFlags.SetSelected;
+                    if (!Enabled && _selectedPage == page) pageFlags |= ImGuiTabItemFlags.SetSelected;
 
                     ImGuiNET.ImGui.PushID(Application.Instance.IdFactory.Get(page));
 
                     var stillOpen = true;
-                    if (ImGuiNET.ImGui.BeginTabItem(page.Title, ref stillOpen, pageFlags) && !wasManuallyChanged)
+                    if (ImGuiNET.ImGui.BeginTabItem(page.Title, ref stillOpen, pageFlags))
                     {
-                        // Check selected page status
-                        var wasChanged = _selectedPage != page;
+                        if (!wasManuallyChanged)
+                        {
+                            // Check selected page status
+                            var wasChanged = _selectedPage != page;
 
-                        if (wasChanged)
-                            _selectedPage?.Content?.SetTabInactiveInternal();
+                            if (wasChanged && Enabled)
+                            {
+                                _selectedPage?.Content?.SetTabInactiveInternal();
+                                _selectedPage = page;
+                            }
 
-                        _selectedPageTemp = null;
-                        _selectedPage = page;
+                            _selectedPageTemp = null;
 
-                        if (wasChanged)
-                            OnSelectedPageChanged();
+                            if (wasChanged && Enabled)
+                                OnSelectedPageChanged();
 
-                        // Remove tab page on middle mouse click
-                        if (ImGuiNET.ImGui.IsItemHovered() && ImGuiNET.ImGui.IsMouseClicked(ImGuiMouseButton.Middle))
-                            toRemovePages.Add(page);
+                            // Remove tab page on middle mouse click
+                            if (ImGuiNET.ImGui.IsItemHovered() && ImGuiNET.ImGui.IsMouseClicked(ImGuiMouseButton.Middle) && Enabled)
+                                toRemovePages.Add(page);
 
-                        // Draw content of tab page
-                        var yPos = (int)ImGuiNET.ImGui.GetCursorPosY();
+                            // Draw content of tab page
+                            var yPos = (int)ImGuiNET.ImGui.GetCursorPosY();
 
-                        var pageWidth = page.Content.GetWidth(contentRect.Width);
-                        var pageHeight = page.Content.GetHeight(contentRect.Height - yPos);
+                            var pageWidth = page.Content.GetWidth(contentRect.Width);
+                            var pageHeight = page.Content.GetHeight(contentRect.Height - yPos);
 
-                        if (ImGuiNET.ImGui.BeginChild($"##{Id}-in", new Vector2(pageWidth, pageHeight), ImGuiChildFlags.None, ImGuiWindowFlags.None))
-                            page.Content.Update(new Rectangle(contentRect.X, contentRect.Y + yPos, pageWidth, pageHeight));
+                            if (ImGuiNET.ImGui.BeginChild($"##{Id}-in", new Vector2(pageWidth, pageHeight), ImGuiChildFlags.None, ImGuiWindowFlags.None))
+                                page.Content.Update(new Rectangle(contentRect.X, contentRect.Y + yPos, pageWidth, pageHeight));
 
-                        ImGuiNET.ImGui.EndChild();
+                            ImGuiNET.ImGui.EndChild();
 
-                        ImGuiNET.ImGui.EndTabItem();
+                            ImGuiNET.ImGui.EndTabItem();
+                        }
+                    }
+                    else
+                    {
+                        // If tab could not be rendered by ImGui, but it should still be shown, set it to inactive
+                        page.Content?.SetTabInactiveInternal();
                     }
 
                     ImGuiNET.ImGui.PopID();
 
-                    if (!stillOpen)
+                    if (!stillOpen && Enabled)
                         toRemovePages.Add(page);
                 }
 
                 ImGuiNET.ImGui.EndTabBar();
 
                 // Handle pages to remove asynchronously
-                foreach (var toRemove in toRemovePages)
+                foreach (TabPage toRemove in toRemovePages)
                     await RemovePageInternal(toRemove);
             }
         }
@@ -111,6 +125,9 @@ namespace ImGui.Forms.Controls
         /// <param name="page">the <see cref="TabPage"/> to add.</param>
         public void AddPage(TabPage page)
         {
+            if (!Enabled)
+                return;
+
             _pages.Add(page);
         }
 
@@ -121,6 +138,9 @@ namespace ImGui.Forms.Controls
         /// <remarks>Does not invoke <see cref="PageRemoving"/> and <see cref="PageRemoved"/>.</remarks>
         public void RemovePage(TabPage page)
         {
+            if (!Enabled)
+                return;
+
             if (_selectedPage == page)
                 _selectedPage = null;
 
@@ -143,7 +163,7 @@ namespace ImGui.Forms.Controls
 
         private void OnSelectedPageChanged()
         {
-            SelectedPageChanged?.Invoke(this, new EventArgs());
+            SelectedPageChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private async Task<bool> OnPageRemoving(TabPage page)

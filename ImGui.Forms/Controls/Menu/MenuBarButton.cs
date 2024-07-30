@@ -7,8 +7,6 @@ namespace ImGui.Forms.Controls.Menu
 {
     public class MenuBarButton : MenuBarItem
     {
-        public bool Enabled { get; set; } = true;
-
         public LocalizedString Text { get; set; } = string.Empty;
 
         public KeyCommand KeyAction { get; set; }

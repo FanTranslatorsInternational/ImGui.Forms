@@ -21,6 +21,12 @@ namespace ImGui.Forms.Controls.Menu
 
         public MenuBarCheckBox SelectedItem { get; private set; }
 
+        public override bool Enabled
+        {
+            get => _radioMenu.Enabled;
+            set => _radioMenu.Enabled = value;
+        }
+
         #region Events
 
         public event EventHandler SelectedItemChanged;

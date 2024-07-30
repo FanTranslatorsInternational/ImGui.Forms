@@ -2,12 +2,12 @@
 <package >
   <metadata>
     <id>Imgui.Forms</id>
-    <version>1.0.58</version>
+    <version>1.0.59</version>
     <description>A WinForms-inspired object-oriented framework around Dear ImGui (https://github.com/ocornut/imgui)</description>
 
     <authors>onepiecefreak</authors>
     <owners>onepiecefreak</owners>
-    <copyright>Copyright (c) 2021 onepiecefreak</copyright>
+    <copyright>Copyright (c) 2021-2024 onepiecefreak</copyright>
 
     <projectUrl>https://github.com/FanTranslatorsInternational/ImGui.Forms</projectUrl>
     <tags>ImGui;Forms;ImGui.NET;GUI</tags>

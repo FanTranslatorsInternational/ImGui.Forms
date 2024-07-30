@@ -4,7 +4,6 @@ using System.Linq;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
-using ImGui.Forms.Extensions;
 using ImGui.Forms.Models.IO;
 using ImGuiNET;
 using Veldrid;
@@ -102,7 +101,8 @@ namespace ImGui.Forms.Controls.Tree
             var isAnyNodeFocused = false;
             foreach (var node in nodes.ToArray())
             {
-                var flags = ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow | ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.SpanAvailWidth;
+                ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags.FramePadding | ImGuiTreeNodeFlags.SpanAvailWidth;
+                if (Enabled) flags |= ImGuiTreeNodeFlags.OpenOnDoubleClick | ImGuiTreeNodeFlags.OpenOnArrow;
                 if (node.Nodes.Count <= 0) flags |= ImGuiTreeNodeFlags.Leaf;
                 if (SelectedNode == node) flags |= ImGuiTreeNodeFlags.Selected;
 
@@ -127,7 +127,7 @@ namespace ImGui.Forms.Controls.Tree
                 ImGuiNET.ImGui.PopStyleVar(2);
 
                 bool changedExpansion = expanded != node.IsExpanded;
-                if (changedExpansion)
+                if (changedExpansion && Enabled)
                     node.IsExpanded = expanded;
 
                 if (node.Font != null)
@@ -142,7 +142,7 @@ namespace ImGui.Forms.Controls.Tree
                 nodeHovered |= ImGuiNET.ImGui.IsItemHovered();
 
                 // Change selected node, if expansion of node did not change, and mouse is over node
-                if (!changedExpansion && IsTreeNodeClicked() && SelectedNode != node)
+                if (!changedExpansion && IsTreeNodeClicked() && SelectedNode != node && Enabled)
                     SelectedNode = node;
 
                 // Add context, only if mouse is over a tree node
@@ -150,13 +150,11 @@ namespace ImGui.Forms.Controls.Tree
                     ContextMenu?.Update();
 
                 // Add children nodes, if parent is expanded
-                if (!node.IsExpanded)
-                    continue;
-
-                if (node.Nodes.Count > 0)
+                if (node.IsExpanded && node.Nodes.Count > 0)
                     isAnyNodeFocused |= UpdateNodes(node.Nodes, ref nodeHovered);
 
-                ImGuiNET.ImGui.TreePop();
+                if (expanded)
+                    ImGuiNET.ImGui.TreePop();
             }
 
             return isAnyNodeFocused;
@@ -183,9 +181,9 @@ namespace ImGui.Forms.Controls.Tree
         private readonly IList<KeyCommand> _pressedArrows = new List<KeyCommand>(2);
         private void UpdateArrowKeyState()
         {
-            if (IsKeyDown(PreviousNodeKey) && !_pressedArrows.Contains(PreviousNodeKey))
+            if (IsKeyDown(PreviousNodeKey) && !_pressedArrows.Contains(PreviousNodeKey) && Enabled)
                 _pressedArrows.Add(PreviousNodeKey);
-            if (IsKeyDown(NextNodeKey) && !_pressedArrows.Contains(NextNodeKey))
+            if (IsKeyDown(NextNodeKey) && !_pressedArrows.Contains(NextNodeKey) && Enabled)
                 _pressedArrows.Add(NextNodeKey);
             if (IsKeyUp(PreviousNodeKey))
                 _pressedArrows.Remove(PreviousNodeKey);

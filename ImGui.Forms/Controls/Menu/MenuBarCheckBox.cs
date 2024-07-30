@@ -8,8 +8,6 @@ namespace ImGui.Forms.Controls.Menu
     {
         private bool _checked;
 
-        public bool Enabled { get; set; } = true;
-
         public LocalizedString Text { get; set; } = string.Empty;
 
         public override int Height => GetHeight();

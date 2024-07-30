@@ -8,8 +8,8 @@ namespace ImGui.Forms.Controls
         public LocalizedString Title { get; set; }
 
         public Component Content { get; }
-
-        public bool HasChanges { get; set; } = false;
+        
+        public bool HasChanges { get; set; }
 
         public TabPage(Component content)
         {

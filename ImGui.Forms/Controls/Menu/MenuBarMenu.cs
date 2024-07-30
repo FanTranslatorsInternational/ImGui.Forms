@@ -8,8 +8,6 @@ namespace ImGui.Forms.Controls.Menu
 {
     public class MenuBarMenu : MenuBarItem
     {
-        public bool Enabled { get; set; } = true;
-
         public LocalizedString Text { get; set; } = string.Empty;
 
         public Vector2 Padding { get; set; } = new Vector2(8, 8);

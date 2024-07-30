@@ -15,6 +15,11 @@ namespace ImGui.Forms.Controls.Menu
         public abstract int Height { get; }
 
         /// <summary>
+        /// Determines, if the menu item is enabled.
+        /// </summary>
+        public virtual bool Enabled { get; set; } = true;
+
+        /// <summary>
         /// Updates the menu bar component to ImGui.
         /// </summary>
         public void Update()

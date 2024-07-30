@@ -10,7 +10,7 @@ namespace ImGui.Forms.Controls.Menu
     {
         public LocalizedString Text { get; set; } = string.Empty;
 
-        public Vector2 Padding { get; set; } = new Vector2(8, 8);
+        public Vector2 Padding { get; set; } = new(8, 8);
 
         public IList<MenuBarItem> Items { get; } = new List<MenuBarItem>();
 

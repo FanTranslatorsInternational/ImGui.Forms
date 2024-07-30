@@ -10,7 +10,7 @@ namespace ImGui.Forms.Support.Sdl2
     {
 
         public uint format;
-        public IntPtr palette;
+        public nint palette;
         public byte BitsPerPixel;
         public byte BytesPerPixel;
         public byte padding_1;
@@ -28,7 +28,7 @@ namespace ImGui.Forms.Support.Sdl2
         public byte Bshift;
         public byte Ashift;
         public int refcount;
-        public IntPtr next;
+        public nint next;
 
     }
 }

@@ -95,7 +95,7 @@ namespace ImGui.Forms.Localization
             return _id == locStr._id;
         }
 
-        public static implicit operator LocalizedString(string s) => new LocalizedString(null, s ?? string.Empty, Array.Empty<Func<object>>());
+        public static implicit operator LocalizedString(string s) => new(null, s ?? string.Empty, Array.Empty<Func<object>>());
         public static implicit operator string(LocalizedString s) => s.ToString();
     }
 }

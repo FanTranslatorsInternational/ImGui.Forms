@@ -31,7 +31,7 @@ namespace ImGui.Forms
 
         public static Application Instance { get; private set; }
 
-        public static FontFactory FontFactory { get; } = new FontFactory();
+        public static FontFactory FontFactory { get; } = new();
 
         #endregion
 

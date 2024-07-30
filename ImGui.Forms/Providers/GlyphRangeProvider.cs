@@ -4,7 +4,7 @@ namespace ImGui.Forms.Providers
 {
     internal class GlyphRangeProvider
     {
-        private static StringBuilder _sb = new StringBuilder();
+        private static StringBuilder _sb = new();
 
         private static readonly int[] _latinRange = new[]
         {

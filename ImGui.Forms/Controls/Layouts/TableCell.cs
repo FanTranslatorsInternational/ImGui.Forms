@@ -63,6 +63,6 @@ namespace ImGui.Forms.Controls.Layouts
             return Component.GetDimension(Size.Height, parentHeight, layoutCorrection);
         }
 
-        public static implicit operator TableCell(Component c) => new TableCell(c);
+        public static implicit operator TableCell(Component c) => new(c);
     }
 }

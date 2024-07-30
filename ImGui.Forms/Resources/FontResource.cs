@@ -52,7 +52,7 @@ namespace ImGui.Forms.Resources
 
         protected virtual void Dispose(bool disposing)
         {
-            _ptr = IntPtr.Zero;
+            _ptr = nint.Zero;
 
             if (!_temporary)
                 return;

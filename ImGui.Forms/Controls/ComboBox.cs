@@ -75,6 +75,6 @@ namespace ImGui.Forms.Controls
             Name = name.IsEmpty ? (LocalizedString)content.ToString() : name;
         }
 
-        public static implicit operator ComboBoxItem<TItem>(TItem o) => new ComboBoxItem<TItem>(o);
+        public static implicit operator ComboBoxItem<TItem>(TItem o) => new(o);
     }
 }

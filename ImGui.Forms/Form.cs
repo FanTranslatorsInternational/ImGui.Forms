@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -11,6 +10,8 @@ using ImGui.Forms.Localization;
 using ImGui.Forms.Modals;
 using ImGui.Forms.Resources;
 using ImGuiNET;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using Veldrid.Sdl2;
 
 namespace ImGui.Forms
@@ -20,13 +21,13 @@ namespace ImGui.Forms
     {
         private readonly IList<Modal> _modals = new List<Modal>();
 
-        private Image _icon;
+        private Image<Rgba32> _icon;
         private bool _setIcon;
 
         #region Properties
 
         public LocalizedString Title { get; set; } = string.Empty;
-        public Vector2 Size { get; set; } = new Vector2(700, 400);
+        public Vector2 Size { get; set; } = new(700, 400);
         public int Width => (int)Size.X;
         public int Height => (int)Size.Y;
 
@@ -36,7 +37,7 @@ namespace ImGui.Forms
         /// Sets the applications icon.
         /// </summary>
         /// <remarks>The icons dimensions need to be a power of 2 (eg. 32, 64, 128, etc)</remarks>
-        public Image Icon
+        public Image<Rgba32> Icon
         {
             get => _icon;
             protected set
@@ -89,7 +90,7 @@ namespace ImGui.Forms
             // Set icon
             if (_setIcon)
             {
-                Sdl2NativeExtensions.SetWindowIcon(Application.Instance.Window.SdlWindowHandle, (Bitmap)Icon);
+                Sdl2NativeExtensions.SetWindowIcon(Application.Instance.Window.SdlWindowHandle, Icon);
                 _setIcon = false;
             }
 

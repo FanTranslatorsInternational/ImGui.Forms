@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
 using ImGui.Forms.Support.Veldrid.ImGui;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 using Veldrid;
 
 namespace ImGui.Forms.Factories
@@ -12,27 +12,27 @@ namespace ImGui.Forms.Factories
         private readonly GraphicsDevice _gd;
         private readonly ImGuiRenderer _controller;
 
-        private readonly IDictionary<Bitmap, IntPtr> _inputPointers;
-        private readonly IDictionary<IntPtr, Bitmap> _inputPointersReverse;
-        private readonly IDictionary<IntPtr, Texture> _ptrTextures;
-        private readonly IDictionary<IntPtr, int> _ptrTexturesRefCount;
+        private readonly IDictionary<Image<Rgba32>, nint> _inputPointers;
+        private readonly IDictionary<nint, Image<Rgba32>> _inputPointersReverse;
+        private readonly IDictionary<nint, Texture> _ptrTextures;
+        private readonly IDictionary<nint, int> _ptrTexturesRefCount;
 
-        private readonly IList<IntPtr> _unloadQueue;
+        private readonly IList<nint> _unloadQueue;
 
         public ImageFactory(GraphicsDevice gd, ImGuiRenderer controller)
         {
             _gd = gd;
             _controller = controller;
-            _inputPointers = new Dictionary<Bitmap, IntPtr>();
-            _inputPointersReverse = new Dictionary<IntPtr, Bitmap>();
-            _ptrTextures = new Dictionary<IntPtr, Texture>();
-            _ptrTexturesRefCount = new Dictionary<IntPtr, int>();
-            _unloadQueue = new List<IntPtr>();
+            _inputPointers = new Dictionary<Image<Rgba32>, nint>();
+            _inputPointersReverse = new Dictionary<nint, Image<Rgba32>>();
+            _ptrTextures = new Dictionary<nint, Texture>();
+            _ptrTexturesRefCount = new Dictionary<nint, int>();
+            _unloadQueue = new List<nint>();
         }
 
-        public IntPtr LoadImage(Bitmap img)
+        public nint LoadImage(Image<Rgba32> img)
         {
-            IntPtr ptr;
+            nint ptr;
 
             if (_inputPointers.ContainsKey(img))
             {
@@ -53,7 +53,7 @@ namespace ImGui.Forms.Factories
             return ptr;
         }
 
-        public void UpdateImage(IntPtr ptr)
+        public void UpdateImage(nint ptr)
         {
             if (!_ptrTextures.ContainsKey(ptr) || !_inputPointersReverse.ContainsKey(ptr))
                 return;
@@ -61,7 +61,7 @@ namespace ImGui.Forms.Factories
             CopyImageData(_ptrTextures[ptr], _inputPointersReverse[ptr]);
         }
 
-        public void UnloadImage(IntPtr ptr)
+        public void UnloadImage(nint ptr)
         {
             if (!_ptrTextures.ContainsKey(ptr))
                 return;
@@ -70,10 +70,10 @@ namespace ImGui.Forms.Factories
             _unloadQueue.Add(ptr);
         }
 
-        private IntPtr LoadImageInternal(Bitmap image)
+        private nint LoadImageInternal(Image<Rgba32> image)
         {
             var texture = _gd.ResourceFactory.CreateTexture(TextureDescription.Texture2D(
-                (uint)image.Width, (uint)image.Height, 1, 1, Veldrid.PixelFormat.B8_G8_R8_A8_UNorm, TextureUsage.Sampled));
+                (uint)image.Width, (uint)image.Height, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
 
             CopyImageData(texture, image);
 
@@ -84,15 +84,15 @@ namespace ImGui.Forms.Factories
             return imgPtr;
         }
 
-        private void CopyImageData(Texture texture, Bitmap image)
+        private unsafe void CopyImageData(Texture texture, Image<Rgba32> image)
         {
-            var data = image.LockBits(new System.Drawing.Rectangle(0, 0, image.Width, image.Height),
-                ImageLockMode.ReadWrite, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+            if (!image.DangerousTryGetSinglePixelMemory(out Memory<Rgba32> data))
+                return;
 
-            _gd.UpdateTexture(texture, data.Scan0, (uint)(4 * image.Width * image.Height),
-                0, 0, 0, (uint)image.Width, (uint)image.Height, 1, 0, 0);
+            int size = image.Width * image.Height * 4;
 
-            image.UnlockBits(data);
+            fixed (Rgba32* imgData = data.Span)
+                _gd.UpdateTexture(texture, (nint)imgData, (uint)size, 0, 0, 0, (uint)image.Width, (uint)image.Height, 1, 0, 0);
         }
 
         internal void FreeTextures()

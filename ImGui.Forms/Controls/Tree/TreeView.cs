@@ -16,8 +16,8 @@ namespace ImGui.Forms.Controls.Tree
         private const int FirstArrowSelectionDelta_ = 30;
         private const int ArrowSelectionFrameDelta_ = 5;
 
-        private static readonly KeyCommand PreviousNodeKey = new KeyCommand(Key.Up);
-        private static readonly KeyCommand NextNodeKey = new KeyCommand(Key.Down);
+        private static readonly KeyCommand PreviousNodeKey = new(Key.Up);
+        private static readonly KeyCommand NextNodeKey = new(Key.Down);
 
         private readonly TreeNode<TNodeData> _rootNode;
         private TreeNode<TNodeData> _selectedNode;

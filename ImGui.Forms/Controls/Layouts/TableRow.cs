@@ -6,7 +6,7 @@ namespace ImGui.Forms.Controls.Layouts
     {
         internal TableLayout _parent;
 
-        private readonly ObservableList<TableCell> _cells = new ObservableList<TableCell>();
+        private readonly ObservableList<TableCell> _cells = new();
 
         public IList<TableCell> Cells => _cells;
 

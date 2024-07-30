@@ -1,5 +1,5 @@
-﻿using System;
-using System.Drawing;
+﻿using SixLabors.ImageSharp.PixelFormats;
+using SixLabors.ImageSharp;
 using System.IO;
 using System.Numerics;
 using System.Reflection;
@@ -12,13 +12,13 @@ namespace ImGui.Forms.Resources
     /// <remarks>To load built-in images, see <see cref="ImageResource"/>.</remarks>
     public class ImageResource
     {
-        private readonly Bitmap _img;
-        private IntPtr _ptr;
+        private readonly Image<Rgba32> _img;
+        private nint _ptr;
 
         /// <summary>
         /// The size of the <see cref="ImageResource"/> as a <see cref="Vector2"/>.
         /// </summary>
-        public Vector2 Size => new Vector2(_img.Width, _img.Height);
+        public Vector2 Size => new(_img.Width, _img.Height);
 
         /// <summary>
         /// The width of the <see cref="ImageResource"/>.
@@ -34,7 +34,7 @@ namespace ImGui.Forms.Resources
         /// Creates a new <see cref="ImageResource"/>.
         /// </summary>
         /// <param name="image">The image to load in this <see cref="ImageResource"/>.</param>
-        private ImageResource(Bitmap image)
+        private ImageResource(Image<Rgba32> image)
         {
             _img = image;
         }
@@ -49,7 +49,7 @@ namespace ImGui.Forms.Resources
         /// <remarks>To load built-in images, see <see cref="ImageResources"/>.</remarks>
         public static ImageResource FromFile(string path)
         {
-            return FromBitmap((Bitmap)Image.FromFile(path));
+            return FromImage(Image.Load<Rgba32>(path));
         }
 
         /// <summary>
@@ -72,16 +72,16 @@ namespace ImGui.Forms.Resources
         /// <remarks>To load built-in images, see <see cref="ImageResources"/>.</remarks>
         public static ImageResource FromStream(Stream stream)
         {
-            return FromBitmap((Bitmap)Image.FromStream(stream));
+            return FromImage(Image.Load<Rgba32>(stream));
         }
 
         /// <summary>
         /// Creates a new <see cref="ImageResource"/> from <paramref name="image"/>.
         /// </summary>
-        /// <param name="image">The <see cref="Bitmap"/> to load.</param>
+        /// <param name="image">The <see cref="Image{TPixel}"/> to load.</param>
         /// <returns>An <see cref="ImageResource"/> representing <paramref name="image"/>.</returns>
         /// <remarks>To load built-in images, see <see cref="ImageResources"/>.</remarks>
-        public static ImageResource FromBitmap(Bitmap image)
+        public static ImageResource FromImage(Image<Rgba32> image)
         {
             return new ImageResource(image);
         }
@@ -90,20 +90,20 @@ namespace ImGui.Forms.Resources
 
         public void Destroy()
         {
-            if (_ptr != IntPtr.Zero)
+            if (_ptr != nint.Zero)
                 Application.Instance?.ImageFactory.UnloadImage(_ptr);
 
-            _ptr = IntPtr.Zero;
+            _ptr = nint.Zero;
         }
 
-        public static explicit operator IntPtr(ImageResource ir) => ir.GetPointer();
+        public static explicit operator nint(ImageResource ir) => ir.GetPointer();
 
-        private IntPtr GetPointer()
+        private nint GetPointer()
         {
-            if (_ptr != IntPtr.Zero)
+            if (_ptr != nint.Zero)
                 return _ptr;
 
-            return _ptr = Application.Instance?.ImageFactory.LoadImage(_img) ?? IntPtr.Zero;
+            return _ptr = Application.Instance?.ImageFactory.LoadImage(_img) ?? nint.Zero;
         }
     }
 }

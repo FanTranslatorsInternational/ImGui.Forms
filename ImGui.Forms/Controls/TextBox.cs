@@ -36,7 +36,7 @@ namespace ImGui.Forms.Controls
         /// <summary>
         /// The distance between the border of the component and the text.
         /// </summary>
-        public Vector2 Padding { get; set; } = new Vector2(2, 2);
+        public Vector2 Padding { get; set; } = new(2, 2);
 
         /// <summary>
         /// The font to use for the text. Uses the default font, if not set explicitly.

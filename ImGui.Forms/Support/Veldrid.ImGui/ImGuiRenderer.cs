@@ -31,21 +31,19 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
         private Pipeline _pipeline;
         private ResourceSet _mainResourceSet;
         private ResourceSet _fontTextureResourceSet;
-        private IntPtr _fontAtlasID = (IntPtr)1;
+        private nint _fontAtlasID = (nint)1;
 
         private int _windowWidth;
         private int _windowHeight;
         private Vector2 _scaleFactor = Vector2.One;
 
         // Image trackers
-        private readonly Dictionary<TextureView, ResourceSetInfo> _setsByView
-            = new Dictionary<TextureView, ResourceSetInfo>();
+        private readonly Dictionary<TextureView, ResourceSetInfo> _setsByView = new();
 
-        private readonly Dictionary<Texture, TextureView> _autoViewsByTexture
-            = new Dictionary<Texture, TextureView>();
+        private readonly Dictionary<Texture, TextureView> _autoViewsByTexture = new();
 
-        private readonly Dictionary<IntPtr, ResourceSetInfo> _viewsById = new Dictionary<IntPtr, ResourceSetInfo>();
-        private readonly List<IDisposable> _ownedResources = new List<IDisposable>();
+        private readonly Dictionary<nint, ResourceSetInfo> _viewsById = new();
+        private readonly List<IDisposable> _ownedResources = new();
         private int _lastAssignedID = 100;
         private bool _frameBegun;
 
@@ -78,7 +76,7 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
             _windowWidth = width;
             _windowHeight = height;
 
-            IntPtr context = ImGuiNET.ImGui.CreateContext();
+            nint context = ImGuiNET.ImGui.CreateContext();
             ImGuiNET.ImGui.SetCurrentContext(context);
 
             //ImGuiNET.ImGui.GetIO().Fonts.AddFontDefault();
@@ -136,7 +134,7 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
 
             VertexLayoutDescription[] vertexLayouts = new VertexLayoutDescription[]
             {
-                new VertexLayoutDescription(
+                new(
                     new VertexElementDescription("in_position", VertexElementSemantic.Position,
                         VertexElementFormat.Float2),
                     new VertexElementDescription("in_texCoord", VertexElementSemantic.TextureCoordinate,
@@ -187,7 +185,7 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
         /// Gets or creates a handle for a texture to be drawn with ImGui.
         /// Pass the returned handle to Image() or ImageButton().
         /// </summary>
-        public IntPtr GetOrCreateImGuiBinding(ResourceFactory factory, TextureView textureView)
+        public nint GetOrCreateImGuiBinding(ResourceFactory factory, TextureView textureView)
         {
             if (!_setsByView.TryGetValue(textureView, out ResourceSetInfo rsi))
             {
@@ -215,17 +213,17 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
             }
         }
 
-        private IntPtr GetNextImGuiBindingID()
+        private nint GetNextImGuiBindingID()
         {
             int newID = _lastAssignedID++;
-            return (IntPtr)newID;
+            return (nint)newID;
         }
 
         /// <summary>
         /// Gets or creates a handle for a texture to be drawn with ImGui.
         /// Pass the returned handle to Image() or ImageButton().
         /// </summary>
-        public IntPtr GetOrCreateImGuiBinding(ResourceFactory factory, Texture texture)
+        public nint GetOrCreateImGuiBinding(ResourceFactory factory, Texture texture)
         {
             if (!_autoViewsByTexture.TryGetValue(texture, out TextureView textureView))
             {
@@ -252,7 +250,7 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
         /// <summary>
         /// Retrieves the shader texture binding for the given helper handle.
         /// </summary>
-        public ResourceSet GetImageResourceSet(IntPtr imGuiBinding)
+        public ResourceSet GetImageResourceSet(nint imGuiBinding)
         {
             if (!_viewsById.TryGetValue(imGuiBinding, out ResourceSetInfo rsi))
             {
@@ -375,7 +373,7 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
             _fontTexture.Name = "ImGui.NET Font Texture";
             gd.UpdateTexture(
                 _fontTexture,
-                (IntPtr)pixels,
+                (nint)pixels,
                 (uint)(bytesPerPixel * width * height),
                 0,
                 0,
@@ -728,13 +726,13 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
                 for (int cmd_i = 0; cmd_i < cmd_list.CmdBuffer.Size; cmd_i++)
                 {
                     ImDrawCmdPtr pcmd = cmd_list.CmdBuffer[cmd_i];
-                    if (pcmd.UserCallback != IntPtr.Zero)
+                    if (pcmd.UserCallback != nint.Zero)
                     {
                         throw new NotImplementedException();
                     }
                     else
                     {
-                        if (pcmd.TextureId != IntPtr.Zero)
+                        if (pcmd.TextureId != nint.Zero)
                         {
                             if (pcmd.TextureId == _fontAtlasID)
                             {
@@ -788,10 +786,10 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
 
         private struct ResourceSetInfo
         {
-            public readonly IntPtr ImGuiBinding;
+            public readonly nint ImGuiBinding;
             public readonly ResourceSet ResourceSet;
 
-            public ResourceSetInfo(IntPtr imGuiBinding, ResourceSet resourceSet)
+            public ResourceSetInfo(nint imGuiBinding, ResourceSet resourceSet)
             {
                 ImGuiBinding = imGuiBinding;
                 ResourceSet = resourceSet;

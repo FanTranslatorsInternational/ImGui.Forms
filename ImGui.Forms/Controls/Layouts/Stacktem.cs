@@ -7,7 +7,7 @@ namespace ImGui.Forms.Controls.Layouts
     {
         public StackItem(Component component) : base(component) { }
 
-        public static implicit operator StackItem(Component c) => new StackItem(c);
+        public static implicit operator StackItem(Component c) => new(c);
     }
 
     public enum VerticalAlignment

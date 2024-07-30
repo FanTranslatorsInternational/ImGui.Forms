@@ -10,7 +10,7 @@ namespace ImGui.Forms.Controls
 {
     public class ZoomablePictureBox : Component
     {
-        private Matrix3x2 _transform = new Matrix3x2(1, 0, 0, 1, 0, 0);
+        private Matrix3x2 _transform = new(1, 0, 0, 1, 0, 0);
 
         private bool _mouseDown;
         private Vector2 _mouseDownPosition;
@@ -46,7 +46,7 @@ namespace ImGui.Forms.Controls
 
         protected override void UpdateInternal(Veldrid.Rectangle contentRect)
         {
-            if (Image == null || (IntPtr)_baseImg == IntPtr.Zero)
+            if (Image == null || (nint)_baseImg == nint.Zero)
                 return;
 
             ImGuiSupport.Dummy(Id, contentRect.Position, contentRect.Size);
@@ -95,7 +95,7 @@ namespace ImGui.Forms.Controls
             var absoluteContentPosition = componentCenterPosition + _transform.Translation - scaledContentCenterPosition;
             var absoluteContentEndPosition = absoluteContentPosition + scaledContentSize;
 
-            ImGuiNET.ImGui.GetWindowDrawList().AddImage((IntPtr)_baseImg, absoluteContentPosition, absoluteContentEndPosition);
+            ImGuiNET.ImGui.GetWindowDrawList().AddImage((nint)_baseImg, absoluteContentPosition, absoluteContentEndPosition);
         }
 
         private bool IsHovering(Veldrid.Rectangle contentRect)

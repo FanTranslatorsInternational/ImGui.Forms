@@ -19,7 +19,7 @@ namespace ImGui.Forms.Controls
 
         public KeyCommand KeyAction { get; set; }
 
-        public Vector2 Padding { get; set; } = new Vector2(2, 2);
+        public Vector2 Padding { get; set; } = new(2, 2);
 
         public SizeValue Width { get; set; } = SizeValue.Content;
 

@@ -28,10 +28,10 @@ namespace ImGui.Forms.Controls
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            if (_baseImg == null || (IntPtr)_baseImg == IntPtr.Zero)
+            if (_baseImg == null || (nint)_baseImg == nint.Zero)
                 return;
 
-            ImGuiNET.ImGui.Image((IntPtr)Image, new Vector2(_baseImg.Width, _baseImg.Height));
+            ImGuiNET.ImGui.Image((nint)Image, new Vector2(_baseImg.Width, _baseImg.Height));
         }
     }
 }

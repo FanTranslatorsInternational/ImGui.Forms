@@ -238,7 +238,7 @@ namespace ImGui.Forms
             }
         }
 
-        public static implicit operator ThemedColor(Color c) => new ThemedColor(c, c);
-        public static implicit operator ThemedColor(ImGuiCol c) => new ThemedColor(c);
+        public static implicit operator ThemedColor(Color c) => new(c, c);
+        public static implicit operator ThemedColor(ImGuiCol c) => new(c);
     }
 }

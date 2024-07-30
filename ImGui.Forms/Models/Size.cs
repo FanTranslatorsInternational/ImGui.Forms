@@ -7,27 +7,27 @@ namespace ImGui.Forms.Models
         /// <summary>
         /// An empty size with width and height 0.
         /// </summary>
-        public static readonly Size Empty = new Size(0, 0);
+        public static readonly Size Empty = new(0, 0);
 
         /// <summary>
         /// A size adjusting to fill the parent container.
         /// </summary>
-        public static readonly Size Parent = new Size(SizeValue.Parent, SizeValue.Parent);
+        public static readonly Size Parent = new(SizeValue.Parent, SizeValue.Parent);
 
         /// <summary>
         /// A size adjusting to the contents of this component.
         /// </summary>
-        public static readonly Size Content = new Size(SizeValue.Content, SizeValue.Content);
+        public static readonly Size Content = new(SizeValue.Content, SizeValue.Content);
 
         /// <summary>
         /// A size where width adjusts to fill the parent container and height adjusts to this component.
         /// </summary>
-        public static readonly Size WidthAlign = new Size(SizeValue.Parent, SizeValue.Content);
+        public static readonly Size WidthAlign = new(SizeValue.Parent, SizeValue.Content);
 
         /// <summary>
         /// A size where height adjusts to fill the parent container and width adjusts to this component.
         /// </summary>
-        public static readonly Size HeightAlign = new Size(SizeValue.Content, SizeValue.Parent);
+        public static readonly Size HeightAlign = new(SizeValue.Content, SizeValue.Parent);
 
         /// <summary>
         /// The width of this instance.

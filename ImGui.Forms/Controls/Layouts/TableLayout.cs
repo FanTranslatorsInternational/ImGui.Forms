@@ -11,7 +11,7 @@ namespace ImGui.Forms.Controls.Layouts
 {
     public class TableLayout : Component
     {
-        private readonly ObservableList<TableRow> _rows = new ObservableList<TableRow>();
+        private readonly ObservableList<TableRow> _rows = new();
 
         #region Properties
 

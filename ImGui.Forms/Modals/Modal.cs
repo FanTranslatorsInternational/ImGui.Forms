@@ -30,7 +30,7 @@ namespace ImGui.Forms.Modals
 
         protected DialogResult Result { get; set; }
 
-        public Vector2 Size { get; set; } = new Vector2(200, 80);
+        public Vector2 Size { get; set; } = new(200, 80);
         public int Width => (int)Size.X;
         public int Height => (int)Size.Y;
 

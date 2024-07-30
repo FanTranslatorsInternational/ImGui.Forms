@@ -22,7 +22,7 @@ namespace ImGui.Forms.Controls.Lists
         public IList<ImageListItem> Items { get; }
         public ImageListItem SelectedItem { get; set; }
 
-        public Vector2 ThumbnailSize { get; set; } = new Vector2(30, 30);
+        public Vector2 ThumbnailSize { get; set; } = new(30, 30);
         public bool ShowThumbnailBorder { get; set; }
 
         public FontResource Font { get; set; }
@@ -125,7 +125,7 @@ namespace ImGui.Forms.Controls.Lists
                                 thumbnailRect = new Vector2(retainedWidth, retainedHeight);
                             }
 
-                            ImGuiNET.ImGui.GetWindowDrawList().AddImage((IntPtr)item.Image, imgPos, imgPos + thumbnailRect);
+                            ImGuiNET.ImGui.GetWindowDrawList().AddImage((nint)item.Image, imgPos, imgPos + thumbnailRect);
 
                             if (ShowThumbnailBorder)
                                 ImGuiNET.ImGui.GetWindowDrawList().AddRect(contentScrollPos, contentScrollPos + new Vector2(ThumbnailSize.X, ThumbnailSize.Y), Style.GetColor(ImGuiCol.Border).ToUInt32(), 0);

@@ -29,7 +29,7 @@ namespace ImGui.Forms.Controls
         }
         public Vector2 ImageSize { get; set; } = Vector2.Zero;
 
-        public Vector2 Padding { get; set; } = new Vector2(2, 2);
+        public Vector2 Padding { get; set; } = new(2, 2);
 
         #region Events
 
@@ -48,9 +48,9 @@ namespace ImGui.Forms.Controls
             var enabled = Enabled;
             ApplyStyles(enabled);
 
-            if ((IntPtr)Image != IntPtr.Zero)
+            if ((nint)Image != nint.Zero)
             {
-                if ((ImGuiNET.ImGui.ImageButton($"##{Id}", (IntPtr)Image, GetImageSize()) || IsKeyDown(KeyAction)) && Enabled)
+                if ((ImGuiNET.ImGui.ImageButton($"##{Id}", (nint)Image, GetImageSize()) || IsKeyDown(KeyAction)) && Enabled)
                     OnClicked();
             }
             else

@@ -8,7 +8,7 @@ namespace ImGui.Forms.Support.Sdl2
     {
         SDL_Surface* dst;
         int identity;
-        IntPtr blit;
+        nint blit;
         void* data;
         SDL_BlitInfo info;
 

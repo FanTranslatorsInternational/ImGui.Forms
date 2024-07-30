@@ -16,7 +16,7 @@ namespace ImGui.Forms.Controls
         private TabPage _selectedPageTemp;
         private TabPage _selectedPage;
 
-        private readonly List<TabPage> _pages = new List<TabPage>();
+        private readonly List<TabPage> _pages = new();
 
         public IReadOnlyList<TabPage> Pages => _pages;
 

@@ -12,7 +12,7 @@ namespace ImGui.Forms.Resources
         /// <summary>
         /// The size of the <see cref="ThemedImageResource"/> as a <see cref="Vector2"/>.
         /// </summary>
-        public Vector2 Size => new Vector2(GetImage().Width, GetImage().Height);
+        public Vector2 Size => new(GetImage().Width, GetImage().Height);
 
         /// <summary>
         /// The width of the <see cref="ThemedImageResource"/>.
@@ -36,9 +36,9 @@ namespace ImGui.Forms.Resources
             _darkImage.Destroy();
         }
 
-        public static explicit operator IntPtr(ThemedImageResource ir) => (IntPtr)ir.GetImage();
+        public static explicit operator nint(ThemedImageResource ir) => (nint)ir.GetImage();
 
-        public static implicit operator ThemedImageResource(ImageResource ir) => new ThemedImageResource(ir, ir);
+        public static implicit operator ThemedImageResource(ImageResource ir) => new(ir, ir);
 
         private ImageResource GetImage()
         {

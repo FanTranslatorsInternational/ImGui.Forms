@@ -34,7 +34,7 @@ namespace ImGui.Forms.Controls
         public uint MaxShowItems { get; set; } = 10;
 
         #region Events
-        
+
         public event EventHandler SelectedItemChanged;
 
         #endregion
@@ -92,7 +92,7 @@ namespace ImGui.Forms.Controls
                 ImGuiNET.ImGui.Separator();
                 foreach (ComboBoxItem<TItem> item in Items)
                 {
-                    if (!ImGuiNET.ImGui.Selectable(item.Name)) 
+                    if (!ImGuiNET.ImGui.Selectable(item.Name))
                         continue;
 
                     _input = item.Name;
@@ -115,10 +115,89 @@ namespace ImGui.Forms.Controls
             SelectedItemChanged?.Invoke(this, EventArgs.Empty);
         }
 
-        private bool Identical(string buf, string item)
+        private string? _prevBuffer;
+        private string? _prevMatch;
+
+        private unsafe int Propose(ImGuiInputTextCallbackData* data)
         {
-            //Check if the item length is shorter or equal --> exclude
-            if (buf.Length >= item.Length)
+            var dataPtr = new ImGuiInputTextCallbackDataPtr(data);
+            string bufferString = Marshal.PtrToStringUTF8(dataPtr.Buf);
+            if (bufferString == null)
+                return 0;
+
+            if (dataPtr.SelectionEnd != dataPtr.SelectionStart && bufferString[..dataPtr.SelectionStart] == _prevBuffer)
+                return 0;
+
+            // We don't want to "preselect" anything
+            if (dataPtr.BufTextLen == 0)
+                return 0;
+
+            // We need to give the user a chance to remove wrong input
+            if (ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Backspace))
+            {
+                // We delete the last char automatically, since it is what the user wants to delete, but only if there is something (selected/marked/hovered)
+                // FIXME: This worked fine, when not used as helper function
+                if (_prevBuffer != bufferString)
+                    return 0;
+
+                if (dataPtr.BufTextLen <= 0)
+                    return 0; //...and the buffer isn't empty
+
+                if (dataPtr.CursorPos > 0) //...and the cursor not at pos 0
+                    dataPtr.DeleteChars(dataPtr.CursorPos - 1, 1);
+
+                return 0;
+            }
+
+            if (ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Delete))
+                return 0;
+
+            int prevDiff = -1;
+            string? itemName = null;
+
+            foreach (ComboBoxItem<TItem> item in Items)
+            {
+                if (!Identical(bufferString, item.Name, out int diff))
+                    continue;
+
+                if (prevDiff < 0 || diff < prevDiff)
+                {
+                    prevDiff = diff;
+                    itemName = item.Name;
+                }
+
+                if (prevDiff == 0)
+                    break;
+            }
+
+            _prevBuffer = bufferString;
+            _prevMatch = itemName;
+
+            if (itemName == null)
+                return 0;
+
+            int cursor = dataPtr.CursorPos;
+
+            // Insert the first match
+            dataPtr.DeleteChars(0, dataPtr.BufTextLen);
+            dataPtr.InsertChars(0, itemName);
+
+            // Reset the cursor position
+            dataPtr.CursorPos = cursor;
+
+            // Select the text, so the user can simply go on writing
+            dataPtr.SelectionStart = cursor;
+            dataPtr.SelectionEnd = dataPtr.BufTextLen;
+
+            return 0;
+        }
+
+        private bool Identical(string buf, string item, out int diff)
+        {
+            diff = 0;
+
+            // Check if the item length is shorter or equal --> exclude
+            if (buf.Length > item.Length)
                 return false;
 
             for (var i = 0; i < buf.Length; ++i)
@@ -128,60 +207,8 @@ namespace ImGui.Forms.Controls
 
             // Complete match
             // and the item size is greater --> include
+            diff = item.Length - buf.Length;
             return true;
-        }
-
-        private unsafe int Propose(ImGuiInputTextCallbackData* data)
-        {
-            var dataPtr = new ImGuiInputTextCallbackDataPtr(data);
-
-            // We don't want to "preselect" anything
-            if (dataPtr.BufTextLen == 0)
-                return 0;
-
-            // We need to give the user a chance to remove wrong input
-            if (dataPtr.EventKey == ImGuiKey.Backspace)
-            {
-                // We delete the last char automatically, since it is what the user wants to delete, but only if there is something (selected/marked/hovered)
-                // FIXME: This worked fine, when not used as helper function
-                if (data->SelectionEnd == data->SelectionStart)
-                    return 0;
-
-                if (data->BufTextLen <= 0)
-                    return 0; //...and the buffer isn't empty
-
-                if (data->CursorPos > 0) //...and the cursor not at pos 0
-                    dataPtr.DeleteChars(data->CursorPos - 1, 1);
-
-                return 0;
-            }
-
-            if (dataPtr.EventKey == ImGuiKey.Delete)
-                return 0;
-
-            string bufferString = Marshal.PtrToStringUTF8(dataPtr.Buf);
-            foreach (ComboBoxItem<TItem> item in Items)
-            {
-                if (!Identical(bufferString, item.Name))
-                    continue;
-
-                int cursor = data->CursorPos;
-
-                //Insert the first match
-                dataPtr.DeleteChars(0, data->BufTextLen);
-                dataPtr.InsertChars(0, item.Name);
-
-                //Reset the cursor position
-                data->CursorPos = cursor;
-
-                //Select the text, so the user can simply go on writing
-                data->SelectionStart = cursor;
-                data->SelectionEnd = data->BufTextLen;
-
-                break;
-            }
-
-            return 0;
         }
     }
 }

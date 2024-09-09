@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Drawing;
-using System.Linq;
 using System.Numerics;
 using ImGui.Forms.Factories;
 using ImGui.Forms.Localization;
@@ -108,6 +107,17 @@ namespace ImGui.Forms
                 throw new InvalidOperationException("There is no application running.");
 
             Instance.Window.Close();
+        }
+
+        public void SetSize(Vector2 size)
+        {
+            if (Instance == null)
+                throw new InvalidOperationException("There is no application running.");
+
+            Instance.Window.Width = (int)size.X;
+            Instance.Window.Height = (int)size.Y;
+
+            Instance.MainForm.Size = size;
         }
 
         private void CreateApplication(Form form)

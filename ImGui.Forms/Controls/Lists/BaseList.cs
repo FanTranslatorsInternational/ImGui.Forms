@@ -39,7 +39,7 @@ namespace ImGui.Forms.Controls.Lists
 
         protected override int GetContentWidth(int parentWidth, float layoutCorrection = 1)
         {
-            var widths = Items.Select(x => x.GetWidth(parentWidth, layoutCorrection)).DefaultIfEmpty(Size.Width.IsParentAligned ? parentWidth : 0);
+            var widths = Items.Select(x => x.GetWidth(parentWidth, layoutCorrection)).DefaultIfEmpty(Size.Width.IsParentAligned ? parentWidth : 0).ToArray();
 
             var totalWidth = Alignment == Alignment.Horizontal ?
                 widths.Sum() + Math.Max(0, Items.Count - 1) * ItemSpacing :
@@ -49,7 +49,7 @@ namespace ImGui.Forms.Controls.Lists
 
         protected override int GetContentHeight(int parentHeight, float layoutCorrection = 1)
         {
-            var heights = Items.Select(x => x.GetHeight(parentHeight, layoutCorrection)).DefaultIfEmpty(Size.Height.IsParentAligned ? parentHeight : 0);
+            var heights = Items.Select(x => x.GetHeight(parentHeight, layoutCorrection)).DefaultIfEmpty(Size.Height.IsParentAligned ? parentHeight : 0).ToArray();
 
             var totalHeight = Alignment == Alignment.Vertical ?
                 heights.Sum() + Math.Max(0, Items.Count - 1) * ItemSpacing :

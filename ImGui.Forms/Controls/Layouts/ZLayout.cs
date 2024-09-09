@@ -12,9 +12,11 @@ namespace ImGui.Forms.Controls.Layouts
 
         public Vector2 ItemSpacing { get; set; }
 
+        public Size Size { get; set; } = Size.Parent;
+
         public override Size GetSize()
         {
-            return Size.Parent;
+            return Size;
         }
 
         protected override void UpdateInternal(Rectangle contentRect)

@@ -85,6 +85,11 @@ namespace ImGui.Forms
                 _modals.Last().ChildModal = null;
         }
 
+        public bool HasOpenModals()
+        {
+            return _modals.Count > 0;
+        }
+
         public void Update()
         {
             // Set icon

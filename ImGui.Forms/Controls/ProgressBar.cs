@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Drawing;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
-using ImGui.Forms.Extensions;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Resources;
 using ImGuiNET;
+using SixLabors.ImageSharp;
 using Rectangle = Veldrid.Rectangle;
 using Size = ImGui.Forms.Models.Size;
 
@@ -25,7 +24,7 @@ namespace ImGui.Forms.Controls
 
         public FontResource Font { get; set; }
 
-        public ThemedColor ProgressColor { get; set; } = Color.FromArgb(0x27, 0xBB, 0x65);
+        public ThemedColor ProgressColor { get; set; } = Color.FromRgba(0x27, 0xBB, 0x65, 0xFF);
 
         public override Size GetSize()
         {

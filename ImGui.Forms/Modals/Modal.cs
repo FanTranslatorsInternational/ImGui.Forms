@@ -74,7 +74,7 @@ namespace ImGui.Forms.Modals
             ImGuiNET.ImGui.PopStyleColor();
 
             if (!exists)
-                _shouldClose = !ShouldCancelClose();
+                Close();
         }
 
         public async Task<DialogResult> ShowAsync(bool blockFormClosing = false)
@@ -111,9 +111,9 @@ namespace ImGui.Forms.Modals
             Close();
         }
 
-        public void Close()
+        public async void Close()
         {
-            _shouldClose = !ShouldCancelClose();
+            _shouldClose = !await ShouldCancelClose();
         }
 
         // HINT: Only gets executed if _shouldClose is set to true
@@ -134,7 +134,7 @@ namespace ImGui.Forms.Modals
         // HINT: Only gets executed if _shouldClose is set to true
         protected virtual Task CloseInternal() => Task.CompletedTask;
 
-        protected virtual bool ShouldCancelClose() => false;
+        protected virtual Task<bool> ShouldCancelClose() => Task.FromResult(false);
 
         #region Helper
 

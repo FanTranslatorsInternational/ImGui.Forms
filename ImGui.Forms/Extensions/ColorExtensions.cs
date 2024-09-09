@@ -1,5 +1,6 @@
-﻿using System.Drawing;
-using System.Numerics;
+﻿using System.Numerics;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace ImGui.Forms.Extensions
 {
@@ -7,22 +8,24 @@ namespace ImGui.Forms.Extensions
     {
         public static uint ToUInt32(this Color c)
         {
-            return (uint)((c.A << 24) | (c.B << 16) | (c.G << 8) | c.R);
+            var pixel = c.ToPixel<Rgba32>();
+            return (uint)((pixel.A << 24) | (pixel.B << 16) | (pixel.G << 8) | pixel.R);
         }
 
         public static Color ToColor(this uint value)
         {
-            return Color.FromArgb((byte)(value >> 24), (byte)value, (byte)(value >> 8), (byte)(value >> 16));
+            return Color.FromRgba((byte)value, (byte)(value >> 8), (byte)(value >> 16), (byte)(value >> 24));
         }
 
         public static Vector4 ToVector4(this Color c)
         {
-            return new Vector4(c.R / 255f, c.G / 255f, c.B / 255f, c.A / 255f);
+            var pixel = c.ToPixel<Rgba32>();
+            return new Vector4(pixel.R / 255f, pixel.G / 255f, pixel.B / 255f, pixel.A / 255f);
         }
 
         public static Color ToColor(this Vector4 value)
         {
-            return Color.FromArgb((int)(value.W * 255), (int)(value.X * 255), (int)(value.Y * 255), (int)(value.Z * 255));
+            return Color.FromRgba((byte)(value.X * 255), (byte)(value.Y * 255), (byte)(value.Z * 255), (byte)(value.W * 255));
         }
     }
 }

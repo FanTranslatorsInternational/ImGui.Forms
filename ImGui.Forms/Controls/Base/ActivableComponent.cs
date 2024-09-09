@@ -35,7 +35,7 @@ namespace ImGui.Forms.Controls.Base
 
         private void OnActivated()
         {
-            Activated?.Invoke(this, new EventArgs());
+            Activated?.Invoke(this, EventArgs.Empty);
         }
     }
 }

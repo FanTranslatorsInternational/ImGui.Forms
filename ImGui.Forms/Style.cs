@@ -1,9 +1,9 @@
 ﻿using System.Collections.Generic;
-using System.Drawing;
 using System.Numerics;
 using ImGui.Forms.Extensions;
 using ImGui.Forms.Models;
 using ImGuiNET;
+using SixLabors.ImageSharp;
 
 namespace ImGui.Forms
 {
@@ -208,12 +208,12 @@ namespace ImGui.Forms
         {
             _colIndex = colIndex;
 
-            _lightColor = _darkColor = Color.Empty;
+            _lightColor = _darkColor = Color.Transparent;
 
             _hasColors = true;
         }
 
-        public bool IsEmpty => _hasColors && GetColor() == Color.Empty;
+        public bool IsEmpty => _hasColors && GetColor() == Color.Transparent;
 
         public uint ToUInt32()
         {
@@ -234,7 +234,7 @@ namespace ImGui.Forms
                     return _darkColor;
 
                 default:
-                    return Color.Empty;
+                    return Color.Transparent;
             }
         }
 

@@ -106,7 +106,7 @@ namespace ImGui.Forms.Factories
 
             // Initialize fonts
             var config = ImGuiNative.ImFontConfig_ImFontConfig();
-            config->MergeMode = 1;
+            config->MergeMode = 0;
 
             foreach (var discFont in _discCache)
             {

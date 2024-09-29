@@ -11,11 +11,15 @@ namespace ImGui.Forms.Controls
 {
     public class DropDownBox<TItem> : Component
     {
+        #region Properties
+
         public IList<ComboBoxItem<TItem>> Items { get; } = new List<ComboBoxItem<TItem>>();
 
         public ComboBoxItem<TItem> SelectedItem { get; set; }
 
         public SizeValue Width { get; set; } = SizeValue.Content;
+
+        #endregion
 
         #region Events
 
@@ -25,11 +29,11 @@ namespace ImGui.Forms.Controls
 
         public override Size GetSize()
         {
-            var maxWidth = Items.Select(x => FontResource.GetCurrentLineWidth(x.Name)).DefaultIfEmpty(0).Max() + (int)ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.X * 2;
+            var maxWidth = Items.Select(x => TextMeasurer.GetCurrentLineWidth(x.Name)).DefaultIfEmpty(0).Max() + (int)ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.X * 2;
             var arrowWidth = 20;
 
             SizeValue width = Width.IsContentAligned ? maxWidth + arrowWidth : Width;
-            var height = FontResource.GetCurrentLineHeight() + (int)ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.Y * 2;
+            var height = TextMeasurer.GetCurrentLineHeight() + (int)ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.Y * 2;
 
             return new Size(width, height);
         }

@@ -1,17 +1,19 @@
-﻿using System.Text;
+﻿using System;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace ImGui.Forms.Providers
 {
     internal class GlyphRangeProvider
     {
-        private static StringBuilder _sb = new();
+        private static readonly StringBuilder _sb = new();
 
-        private static readonly int[] _latinRange = new[]
+        private static readonly ushort[] _latinRange = new ushort[]
         {
             0x0020,0x024f
         };
 
-        private static readonly int[] _cyrillicRange = new[]
+        private static readonly ushort[] _cyrillicRange = new ushort[]
         {
             0x0400,0x04ff,
             0x0500,0x052f,
@@ -21,10 +23,10 @@ namespace ImGui.Forms.Providers
             0x2de0,0x2dff,
             0xa640,0xa69f,
             0xfe2e,0xfe2f,
-            0x1e030,0x1e08f
+            //0x1e030,0x1e08f
         };
 
-        private static readonly int[] _cjkRange = new[]
+        private static readonly ushort[] _cjkRange = new ushort[]
         {
             0x2e80,0x2fd5,
             0x3000,0x303f,
@@ -39,7 +41,7 @@ namespace ImGui.Forms.Providers
             0xff01,0xff9f
         };
 
-        private static readonly int[] _greekRange = new[]
+        private static readonly ushort[] _greekRange = new ushort[]
         {
             0x0370,0x03ff,
             0x1d26,0x1d2a,
@@ -49,62 +51,77 @@ namespace ImGui.Forms.Providers
             0x1f00,0x1fff,
             0x2126,0x2126,
             0xab65,0xab65,
-            0x10140,0x1018f,
-            0x101a0,0x101a0,
-            0x1d200,0x1d245
+            //0x10140,0x1018f,
+            //0x101a0,0x101a0,
+            //0x1d200,0x1d245
         };
 
-        private static readonly int[] _thaiRange = new[]
+        private static readonly ushort[] _thaiRange = new ushort[]
         {
             0x0e00,0x0e7f
         };
 
-        private static readonly int[] _symbolRange = new[]
+        private static readonly ushort[] _vietnameseRange = new ushort[]
+        {
+            0x0020, 0x00FF,
+            0x0102, 0x0103,
+            0x0110, 0x0111,
+            0x0128, 0x0129,
+            0x0168, 0x0169,
+            0x01A0, 0x01A1,
+            0x01AF, 0x01B0,
+            0x1EA0, 0x1EF9
+        };
+
+        private static readonly ushort[] _symbolRange = new ushort[]
         {
             0x2000,0x206f,
             0x2150,0x218f,
             0x2600,0x26ff
         };
 
-        public static string GetLatinRange()
+        public static nint GetLatinRange()
         {
-            return GetRangeText(_latinRange);
+            return GetPointer(_latinRange);
         }
 
-        public static string GetCyrillicRange()
+        public static nint GetCyrillicRange()
         {
-            return GetRangeText(_cyrillicRange);
+            return GetPointer(_cyrillicRange);
         }
 
-        public static string GetCjkRange()
+        public static nint GetCjkRange()
         {
-            return GetRangeText(_cjkRange);
+            return GetPointer(_cjkRange);
         }
 
-        public static string GetGreekRange()
+        public static nint GetGreekRange()
         {
-            return GetRangeText(_greekRange);
+            return GetPointer(_greekRange);
         }
 
-        public static string GetThaiRange()
+        public static nint GetThaiRange()
         {
-            return GetRangeText(_thaiRange);
+            return GetPointer(_thaiRange);
         }
 
-        public static string GetSymbolRange()
+        public static nint GetVietnameseRange()
         {
-            return GetRangeText(_symbolRange);
+            return GetPointer(_vietnameseRange);
         }
 
-        private static string GetRangeText(int[] range)
+        public static nint GetSymbolRange()
         {
-            _sb.Clear();
+            return GetPointer(_symbolRange);
+        }
 
-            for (var i = 0; i < range.Length; i += 2)
-                for (var j = range[i]; j <= range[i + 1]; j++)
-                    _sb.Append((char)j);
+        private static nint GetPointer(ushort[] ranges)
+        {
+            var newRanges = new ushort[ranges.Length + 1];
+            Array.Copy(ranges, newRanges, ranges.Length);
 
-            return _sb.ToString();
+            var handle = GCHandle.Alloc(newRanges, GCHandleType.Pinned);
+            return handle.AddrOfPinnedObject();
         }
     }
 }

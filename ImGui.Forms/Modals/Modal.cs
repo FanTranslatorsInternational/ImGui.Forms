@@ -41,7 +41,7 @@ namespace ImGui.Forms.Modals
 
         public int GetHeaderHeight()
         {
-            return FontResource.GetCurrentLineHeight(withDescent: true) + 6;
+            return TextMeasurer.GetCurrentLineHeight(withDescent: true) + 6;
         }
 
         protected override async void UpdateInternal(Rectangle contentRect)

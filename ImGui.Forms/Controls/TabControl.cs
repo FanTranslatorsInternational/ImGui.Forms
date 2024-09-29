@@ -18,6 +18,8 @@ namespace ImGui.Forms.Controls
 
         private readonly List<TabPage> _pages = new();
 
+        #region Properties
+
         public IReadOnlyList<TabPage> Pages => _pages;
 
         public TabPage SelectedPage
@@ -32,6 +34,8 @@ namespace ImGui.Forms.Controls
                 _selectedPageTemp = value;
             }
         }
+
+        #endregion
 
         #region Events
 

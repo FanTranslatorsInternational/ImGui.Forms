@@ -8,7 +8,9 @@ namespace ImGui.Forms.Controls.Menu
     {
         private bool _checked;
 
-        public LocalizedString Text { get; set; } = string.Empty;
+        #region Properties
+
+        public LocalizedString Text { get; set; }
 
         public override int Height => GetHeight();
 
@@ -22,11 +24,18 @@ namespace ImGui.Forms.Controls.Menu
             }
         }
 
+        #endregion
+
         #region Events
 
         public event EventHandler CheckChanged;
 
         #endregion
+
+        public MenuBarCheckBox(LocalizedString text)
+        {
+            Text = text;
+        }
 
         protected override void UpdateInternal()
         {
@@ -44,7 +53,7 @@ namespace ImGui.Forms.Controls.Menu
         {
             ApplyStyles();
 
-            var textSize = FontResource.MeasureText(Text);
+            var textSize = TextMeasurer.MeasureText(Text);
             var height = (int)(textSize.Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y);
 
             RemoveStyles();

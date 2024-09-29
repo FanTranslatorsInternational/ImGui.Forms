@@ -12,6 +12,8 @@ namespace ImGui.Forms.Controls
     {
         private bool _checked;
 
+        #region Properties
+
         public LocalizedString Text { get; set; }
 
         public LocalizedString Tooltip { get; set; }
@@ -26,15 +28,22 @@ namespace ImGui.Forms.Controls
             }
         }
 
+        #endregion
+
         #region Events
 
         public event EventHandler CheckChanged;
 
         #endregion
 
+        public CheckBox(LocalizedString text = default)
+        {
+            Text = text;
+        }
+
         public override Size GetSize()
         {
-            var size = FontResource.MeasureText(Text);
+            var size = TextMeasurer.MeasureText(Text);
             return new Size((int)(Math.Ceiling(size.X) + 21 + ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.X), (int)Math.Max(Math.Ceiling(size.Y), 21));
         }
 

@@ -8,9 +8,18 @@ namespace ImGui.Forms.Controls
 {
     public class Splitter : Component
     {
-        public Alignment Alignment { get; set; } = Alignment.Vertical;
+        #region Properties
+
+        public Alignment Alignment { get; set; }
 
         public SizeValue Length { get; set; }
+
+        #endregion
+
+        public Splitter(Alignment alignment = default)
+        {
+            Alignment = alignment;
+        }
 
         public override Size GetSize() => Alignment == Alignment.Horizontal ? new Size(Length, 1) : new Size(1, Length);
 

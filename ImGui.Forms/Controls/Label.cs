@@ -2,7 +2,6 @@
 using System.Drawing;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
-using ImGui.Forms.Extensions;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
@@ -14,6 +13,8 @@ namespace ImGui.Forms.Controls
 {
     public class Label : Component
     {
+        #region Properties
+
         public LocalizedString Text { get; set; }
 
         public FontResource Font { get; set; }
@@ -23,6 +24,13 @@ namespace ImGui.Forms.Controls
         public ThemedColor TextColor { get; set; }
 
         public SizeValue Width { get; set; } = SizeValue.Content;
+
+        #endregion
+
+        public Label(LocalizedString text = default)
+        {
+            Text = text;
+        }
 
         public override Size GetSize()
         {
@@ -34,7 +42,7 @@ namespace ImGui.Forms.Controls
             var textSize = Vector2.Zero;
             foreach (var line in lines)
             {
-                var lineSize = FontResource.MeasureText(line, true);
+                var lineSize = TextMeasurer.MeasureText(line, true);
                 textSize = new Vector2(Math.Max(textSize.X, lineSize.X), textSize.Y + lineSize.Y);
             }
             SizeValue width = Width.IsContentAligned ? (int)Math.Ceiling(textSize.X) : Width;
@@ -56,7 +64,7 @@ namespace ImGui.Forms.Controls
             {
                 ImGuiNET.ImGui.GetWindowDrawList().AddText(pos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), line);
 
-                var lineSize = FontResource.MeasureText(line, true);
+                var lineSize = TextMeasurer.MeasureText(line, true);
                 pos += new Vector2(0, lineSize.Y + LineDistance);
             }
 
@@ -68,13 +76,15 @@ namespace ImGui.Forms.Controls
             if (!TextColor.IsEmpty)
                 ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Text, TextColor.ToUInt32());
 
-            if (Font != null)
-                ImGuiNET.ImGui.PushFont((ImFontPtr)Font);
+            ImFontPtr? fontPtr = Font?.GetPointer();
+            if (fontPtr != null)
+                ImGuiNET.ImGui.PushFont(fontPtr.Value);
         }
 
         protected override void RemoveStyles()
         {
-            if (Font != null)
+            ImFontPtr? fontPtr = Font?.GetPointer();
+            if (fontPtr != null)
                 ImGuiNET.ImGui.PopFont();
 
             if (!TextColor.IsEmpty)

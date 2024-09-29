@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using ImGui.Forms.Factories;
 using ImGuiNET;
 using Veldrid;
 
@@ -78,9 +80,6 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
 
             nint context = ImGuiNET.ImGui.CreateContext();
             ImGuiNET.ImGui.SetCurrentContext(context);
-
-            //ImGuiNET.ImGui.GetIO().Fonts.AddFontDefault();
-            //ImGuiNET.ImGui.GetIO().Fonts.Flags |= ImFontAtlasFlags.NoBakedLines;
 
             CreateDeviceResources(gd, outputDescription);
 
@@ -356,6 +355,7 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
         public unsafe void RecreateFontDeviceTexture(GraphicsDevice gd)
         {
             ImGuiIOPtr io = ImGuiNET.ImGui.GetIO();
+
             // Build
             io.Fonts.GetTexDataAsRGBA32(out byte* pixels, out int width, out int height, out int bytesPerPixel);
 

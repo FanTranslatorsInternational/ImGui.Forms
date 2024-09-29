@@ -10,6 +10,8 @@ namespace ImGui.Forms.Controls
 {
     public class Expander : Component
     {
+        #region Properties
+
         public LocalizedString Caption { get; set; }
 
         public Component Content { get; set; }
@@ -18,11 +20,19 @@ namespace ImGui.Forms.Controls
 
         public bool Expanded { get; set; }
 
+        #endregion
+
         #region Events
 
         public event EventHandler ExpandedChanged;
 
         #endregion
+
+        public Expander(Component content, LocalizedString caption = default)
+        {
+            Content = content;
+            Caption = caption;
+        }
 
         public override Size GetSize()
         {
@@ -73,7 +83,7 @@ namespace ImGui.Forms.Controls
 
         private int GetHeaderHeight()
         {
-            var size = FontResource.MeasureText(Caption);
+            var size = TextMeasurer.MeasureText(Caption);
             var framePadding = ImGuiNET.ImGui.GetStyle().FramePadding;
             return (int)Math.Ceiling(size.Y + framePadding.Y * 2);
         }

@@ -30,8 +30,6 @@ namespace ImGui.Forms
 
         public static Application Instance { get; private set; }
 
-        public static FontFactory FontFactory { get; } = new();
-
         #endregion
 
         #region Properties
@@ -190,6 +188,8 @@ namespace ImGui.Forms
 
             ImageFactory.FreeTextures();
             IdFactory.FreeIds();
+
+            //FontFactory.InitializeFonts(ImGuiNET.ImGui.GetIO(), _executionContext.Renderer);
 
             // Snapshot current machine state
             var snapshot = _executionContext.Window.PumpEvents();

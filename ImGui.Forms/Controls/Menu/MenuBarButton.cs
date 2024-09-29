@@ -7,17 +7,26 @@ namespace ImGui.Forms.Controls.Menu
 {
     public class MenuBarButton : MenuBarItem
     {
-        public LocalizedString Text { get; set; } = string.Empty;
+        #region Properties
+
+        public LocalizedString Text { get; set; }
 
         public KeyCommand KeyAction { get; set; }
 
         public override int Height => GetHeight();
+
+        #endregion
 
         #region Events
 
         public event EventHandler Clicked;
 
         #endregion
+
+        public MenuBarButton(LocalizedString text)
+        {
+            Text = text;
+        }
 
         protected override void UpdateInternal()
         {
@@ -39,7 +48,7 @@ namespace ImGui.Forms.Controls.Menu
         {
             ApplyStyles();
 
-            var textSize = FontResource.MeasureText(Text);
+            var textSize = TextMeasurer.MeasureText(Text);
             var height = (int)(textSize.Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y);
 
             RemoveStyles();

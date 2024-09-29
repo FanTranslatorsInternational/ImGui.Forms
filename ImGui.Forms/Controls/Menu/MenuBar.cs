@@ -2,6 +2,7 @@
 using System.Linq;
 using ImGui.Forms.Resources;
 using ImGuiNET;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ImGui.Forms.Controls.Menu
 {
@@ -26,8 +27,9 @@ namespace ImGui.Forms.Controls.Menu
 
         public void Update()
         {
-            if (Font != null)
-                ImGuiNET.ImGui.PushFont((ImFontPtr)Font);
+            ImFontPtr? fontPtr = Font?.GetPointer();
+            if (fontPtr != null)
+                ImGuiNET.ImGui.PushFont(fontPtr.Value);
 
             // Begin menu bar
             bool isMenuOpen = _isMain ? 
@@ -47,20 +49,21 @@ namespace ImGui.Forms.Controls.Menu
                 foreach (var child in Items)
                     child.UpdateEvents();
             }
-
-            if (Font != null)
+            
+            if (fontPtr != null)
                 ImGuiNET.ImGui.PopFont();
         }
 
         private int GetHeight()
         {
-            if (Font != null)
-                ImGuiNET.ImGui.PushFont((ImFontPtr)Font);
+            ImFontPtr? fontPtr = Font?.GetPointer();
+            if (fontPtr != null)
+                ImGuiNET.ImGui.PushFont(fontPtr.Value);
 
             // HINT: It's currently unknown where those 3 pixels come from, but they have to be added to get the correct size of the menu
             var height = Items.Max(x => x.Height) + 3;
-
-            if (Font != null)
+            
+            if (fontPtr != null)
                 ImGuiNET.ImGui.PopFont();
 
             return height;

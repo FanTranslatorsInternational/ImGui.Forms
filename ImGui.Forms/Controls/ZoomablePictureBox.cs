@@ -17,6 +17,8 @@ namespace ImGui.Forms.Controls
 
         private ThemedImageResource _baseImg;
 
+        #region Properties
+
         public ThemedImageResource Image
         {
             get => _baseImg;
@@ -27,11 +29,18 @@ namespace ImGui.Forms.Controls
             }
         }
 
+        #endregion
+
         #region Events
 
         public event EventHandler MouseScrolled;
 
         #endregion
+
+        public ZoomablePictureBox(ThemedImageResource image = default)
+        {
+            Image = image;
+        }
 
         public override Size GetSize()
         {

@@ -13,6 +13,7 @@ using ImGuiNET;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Veldrid.Sdl2;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace ImGui.Forms
 {
@@ -115,8 +116,9 @@ namespace ImGui.Forms
             Style.ApplyStyle();
 
             // Push font to default to
-            if (DefaultFont != null)
-                ImGuiNET.ImGui.PushFont((ImFontPtr)DefaultFont);
+            ImFontPtr? fontPtr = DefaultFont?.GetPointer();
+            if (fontPtr != null)
+                ImGuiNET.ImGui.PushFont(fontPtr.Value);
 
             // Add menu bar
             MainMenuBar?.Update();

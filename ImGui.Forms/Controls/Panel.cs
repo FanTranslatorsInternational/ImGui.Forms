@@ -6,9 +6,18 @@ namespace ImGui.Forms.Controls
 {
     public class Panel : Component
     {
-        public Size Size { get; set; } = Size.Parent;
+        #region Properties
 
         public Component Content { get; set; }
+
+        public Size Size { get; set; } = Size.Parent;
+
+        #endregion
+
+        public Panel(Component content = default)
+        {
+            Content = content;
+        }
 
         public override Size GetSize()
         {

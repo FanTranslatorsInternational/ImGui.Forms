@@ -8,13 +8,22 @@ namespace ImGui.Forms.Controls.Menu
 {
     public class MenuBarMenu : MenuBarItem
     {
-        public LocalizedString Text { get; set; } = string.Empty;
+        #region Properties
+
+        public LocalizedString Text { get; set; }
 
         public Vector2 Padding { get; set; } = new(8, 8);
 
         public IList<MenuBarItem> Items { get; } = new List<MenuBarItem>();
 
         public override int Height => GetHeight();
+
+        #endregion
+
+        public MenuBarMenu(LocalizedString text)
+        {
+            Text = text;
+        }
 
         protected override void UpdateInternal()
         {
@@ -45,7 +54,7 @@ namespace ImGui.Forms.Controls.Menu
         {
             ApplyStyles();
 
-            var textSize = FontResource.MeasureText(Text);
+            var textSize = TextMeasurer.MeasureText(Text);
             var height = (int)(textSize.Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y);
 
             RemoveStyles();

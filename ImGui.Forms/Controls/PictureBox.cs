@@ -1,5 +1,4 @@
-﻿using System;
-using System.Numerics;
+﻿using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
@@ -11,6 +10,8 @@ namespace ImGui.Forms.Controls
     {
         private ThemedImageResource _baseImg;
 
+        #region Properties
+
         public ThemedImageResource Image
         {
             get => _baseImg;
@@ -19,6 +20,13 @@ namespace ImGui.Forms.Controls
                 _baseImg?.Destroy();
                 _baseImg = value;
             }
+        }
+
+        #endregion
+
+        public PictureBox(ThemedImageResource image = default)
+        {
+            Image = image;
         }
 
         public override Size GetSize()

@@ -15,6 +15,8 @@ namespace ImGui.Forms.Controls
         private bool _activePreviousFrame;
         private string _text = string.Empty;
 
+        #region Properties
+
         /// <summary>
         /// The text that was set or changed in this component.
         /// </summary>
@@ -68,6 +70,8 @@ namespace ImGui.Forms.Controls
         /// </summary>
         public LocalizedString Placeholder { get; set; }
 
+        #endregion
+
         #region Events
 
         public event EventHandler TextChanged;
@@ -79,7 +83,7 @@ namespace ImGui.Forms.Controls
         {
             ApplyStyles();
 
-            var textSize = FontResource.MeasureText(_text);
+            var textSize = TextMeasurer.MeasureText(_text);
             SizeValue width = Width.IsContentAligned ? (int)Math.Ceiling(textSize.X) + (int)Padding.X * 2 : Width;
             var height = (int)Padding.Y * 2 + (int)Math.Ceiling(textSize.Y);
 
@@ -141,8 +145,9 @@ namespace ImGui.Forms.Controls
 
         protected override void ApplyStyles()
         {
-            if (Font != null)
-                ImGuiNET.ImGui.PushFont((ImFontPtr)Font);
+            ImFontPtr? fontPtr = Font?.GetPointer();
+            if (fontPtr != null)
+                ImGuiNET.ImGui.PushFont(fontPtr.Value);
 
             ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Padding);
         }
@@ -151,7 +156,8 @@ namespace ImGui.Forms.Controls
         {
             ImGuiNET.ImGui.PopStyleVar();
 
-            if (Font != null)
+            ImFontPtr? fontPtr = Font?.GetPointer();
+            if (fontPtr != null)
                 ImGuiNET.ImGui.PopFont();
         }
 

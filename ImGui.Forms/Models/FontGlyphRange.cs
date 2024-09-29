@@ -5,7 +5,7 @@ namespace ImGui.Forms.Models
     [Flags]
     public enum FontGlyphRange
     {
-        Default = 1 << 0,
+        Latin = 1 << 0,
         Cyrillic = 1 << 1,
         ChineseJapaneseKorean = 1 << 2,
         Greek = 1 << 3,

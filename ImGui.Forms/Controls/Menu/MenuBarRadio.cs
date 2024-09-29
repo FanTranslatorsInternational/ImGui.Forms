@@ -11,6 +11,8 @@ namespace ImGui.Forms.Controls.Menu
     {
         private readonly MenuBarMenu _radioMenu;
 
+        #region Properties
+
         public LocalizedString Text
         {
             get => _radioMenu.Text;
@@ -27,13 +29,15 @@ namespace ImGui.Forms.Controls.Menu
             set => _radioMenu.Enabled = value;
         }
 
+        #endregion
+
         #region Events
 
         public event EventHandler SelectedItemChanged;
 
         #endregion
 
-        public MenuBarRadio()
+        public MenuBarRadio(LocalizedString text)
         {
             var checkItems = new ObservableList<MenuBarCheckBox>();
             checkItems.ItemAdded += CheckItems_ItemAdded;
@@ -41,7 +45,7 @@ namespace ImGui.Forms.Controls.Menu
             checkItems.ItemSet += CheckItems_ItemSet;
             checkItems.ItemInserted += CheckItems_ItemInserted;
 
-            _radioMenu = new MenuBarMenu();
+            _radioMenu = new MenuBarMenu(text);
             CheckItems = checkItems;
         }
 
@@ -61,7 +65,7 @@ namespace ImGui.Forms.Controls.Menu
         {
             ApplyStyles();
 
-            var textSize = FontResource.MeasureText(Text);
+            var textSize = TextMeasurer.MeasureText(Text);
             var height = (int)(textSize.Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y);
 
             RemoveStyles();

@@ -30,6 +30,8 @@ namespace ImGui.Forms.Controls.Tree
 
         private float _scrollY;
 
+        #region Properties
+
         public Models.Size Size { get; set; } = Models.Size.Parent;
 
         public IList<TreeNode<TNodeData>> Nodes => _rootNode.Nodes;
@@ -48,6 +50,8 @@ namespace ImGui.Forms.Controls.Tree
         }
 
         public ContextMenu ContextMenu { get; set; }
+
+        #endregion
 
         #region Events
 
@@ -115,8 +119,9 @@ namespace ImGui.Forms.Controls.Tree
                 if (!node.TextColor.IsEmpty)
                     ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Text, node.TextColor.ToUInt32());
 
-                if (node.Font != null)
-                    ImGuiNET.ImGui.PushFont((ImFontPtr)node.Font);
+                ImFontPtr? nodeFontPtr = node.Font?.GetPointer();
+                if (nodeFontPtr != null)
+                    ImGuiNET.ImGui.PushFont(nodeFontPtr.Value);
 
                 ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
                 ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0, 2));
@@ -130,7 +135,7 @@ namespace ImGui.Forms.Controls.Tree
                 if (changedExpansion && Enabled)
                     node.IsExpanded = expanded;
 
-                if (node.Font != null)
+                if (nodeFontPtr != null)
                     ImGuiNET.ImGui.PopFont();
 
                 if (!node.TextColor.IsEmpty)

@@ -12,19 +12,23 @@ namespace ImGui.Forms.Controls
 {
     public class ProgressBar : Component
     {
+        #region Properties
+
+        public LocalizedString Text { get; set; }
+
+        public FontResource Font { get; set; }
+
+        public Size Size { get; set; } = Size.Parent;
+
+        public ThemedColor ProgressColor { get; set; } = Color.FromRgba(0x27, 0xBB, 0x65, 0xFF);
+
         public int Minimum { get; set; }
 
         public int Maximum { get; set; } = 100;
 
         public int Value { get; set; }
 
-        public LocalizedString Text { get; set; }
-
-        public Size Size { get; set; } = Size.Parent;
-
-        public FontResource Font { get; set; }
-
-        public ThemedColor ProgressColor { get; set; } = Color.FromRgba(0x27, 0xBB, 0x65, 0xFF);
+        #endregion
 
         public override Size GetSize()
         {
@@ -41,24 +45,27 @@ namespace ImGui.Forms.Controls
             ImGuiNET.ImGui.GetWindowDrawList().AddRect(new Vector2(contentRect.X, contentRect.Y), new Vector2(contentRect.X + contentRect.Width, contentRect.Y + contentRect.Height), ImGuiNET.ImGui.GetColorU32(ImGuiCol.Border));
 
             // Draw text
-            var textSize = FontResource.MeasureText(Text);
+            var textSize = TextMeasurer.MeasureText(Text);
             var textPos = new Vector2(contentRect.X + (contentRect.Width - textSize.X) / 2, contentRect.Y + (contentRect.Height - textSize.Y) / 2);
 
-            if (Font == null)
-                ImGuiNET.ImGui.GetWindowDrawList().AddText(textPos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), Text);
+            ImFontPtr? fontPtr = Font?.GetPointer();
+            if (fontPtr != null)
+                ImGuiNET.ImGui.GetWindowDrawList().AddText(fontPtr.Value, Font.Data.Size, textPos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), Text);
             else
-                ImGuiNET.ImGui.GetWindowDrawList().AddText((ImFontPtr)Font, Font.Size, textPos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), Text);
+                ImGuiNET.ImGui.GetWindowDrawList().AddText(textPos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), Text);
         }
 
         protected override void ApplyStyles()
         {
-            if (Font != null)
-                ImGuiNET.ImGui.PushFont((ImFontPtr)Font);
+            ImFontPtr? fontPtr = Font?.GetPointer();
+            if (fontPtr != null)
+                ImGuiNET.ImGui.PushFont(fontPtr.Value);
         }
 
         protected override void RemoveStyles()
         {
-            if (Font != null)
+            ImFontPtr? fontPtr = Font?.GetPointer();
+            if (fontPtr != null)
                 ImGuiNET.ImGui.PopFont();
         }
     }

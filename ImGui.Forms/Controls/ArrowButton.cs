@@ -2,7 +2,6 @@
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
 using ImGui.Forms.Models.IO;
-using ImGui.Forms.Resources;
 using ImGuiNET;
 using Veldrid;
 
@@ -13,15 +12,24 @@ namespace ImGui.Forms.Controls
         private const int ButtonSizeX_ = 11;
         private const int ButtonSizeY_ = 13;
 
+        #region Properties
+
         public KeyCommand KeyAction { get; set; }
 
-        public ImGuiDir Direction { get; set; } = ImGuiDir.None;
+        public ImGuiDir Direction { get; set; }
+
+        #endregion
 
         #region Events
 
         public event EventHandler Clicked;
 
         #endregion
+
+        public ArrowButton(ImGuiDir direction = ImGuiDir.None)
+        {
+            Direction = direction;
+        }
 
         public override Size GetSize()
         {

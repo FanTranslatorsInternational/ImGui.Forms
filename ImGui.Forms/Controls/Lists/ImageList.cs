@@ -57,7 +57,7 @@ namespace ImGui.Forms.Controls.Lists
 
             if (ImGuiNET.ImGui.BeginChild($"##{Id}_out", new Vector2(contentRect.Width, contentRect.Height), ImGuiChildFlags.None))
             {
-                var textHeight = FontResource.GetCurrentLineHeight(Font);
+                var textHeight = TextMeasurer.GetCurrentLineHeight(Font);
 
                 var itemHeight = Math.Max((int)ThumbnailSize.Y, textHeight);
                 var itemDimensions = new Vector2(contentRect.Width - Padding.X * 2, itemHeight);
@@ -134,8 +134,9 @@ namespace ImGui.Forms.Controls.Lists
                         // Add text
                         var textPos = contentScrollPos + new Vector2(ThumbnailSize.X + 2, (itemHeight - textHeight) / 2f);
 
-                        if (Font != null)
-                            ImGuiNET.ImGui.GetWindowDrawList().AddText((ImFontPtr)Font, Font.Size, textPos, 0xFFFFFFFF, item.Text);
+                        ImFontPtr? fontPtr = Font?.GetPointer();
+                        if (fontPtr != null)
+                            ImGuiNET.ImGui.GetWindowDrawList().AddText(fontPtr.Value, Font.Data.Size, textPos, 0xFFFFFFFF, item.Text);
                         else
                             ImGuiNET.ImGui.GetWindowDrawList().AddText(textPos, 0xFFFFFFFF, item.Text);
                     }

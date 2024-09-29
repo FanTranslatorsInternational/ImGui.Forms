@@ -13,6 +13,8 @@ namespace ImGui.Forms.Controls.Layouts
         private readonly TableLayout _tableLayout;
         private Size _size = Size.Parent;
 
+        #region Properties
+
         public IList<StackItem> Items { get; }
 
         public Alignment Alignment { get; set; } = Alignment.Vertical;
@@ -54,6 +56,8 @@ namespace ImGui.Forms.Controls.Layouts
             }
         }
 
+        #endregion
+
         public StackLayout()
         {
             var itemList = new ObservableList<StackItem>();
@@ -63,6 +67,7 @@ namespace ImGui.Forms.Controls.Layouts
             itemList.ItemInserted += (s, e) => InsertItem(e.Item, e.Index);
 
             Items = itemList;
+
             _tableLayout = new TableLayout();
         }
 

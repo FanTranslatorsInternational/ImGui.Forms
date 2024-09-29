@@ -1,5 +1,4 @@
-﻿using System;
-using ImGui.Forms.Controls.Base;
+﻿using ImGui.Forms.Controls.Base;
 
 namespace ImGui.Forms.Controls.Layouts
 {

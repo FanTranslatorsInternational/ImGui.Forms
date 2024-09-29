@@ -8,11 +8,15 @@ namespace ImGui.Forms.Controls.Layouts
 {
     public class ZLayout : Component
     {
+        #region Properties
+
         public IList<Component> Items { get; } = new List<Component>();
 
         public Vector2 ItemSpacing { get; set; }
 
         public Size Size { get; set; } = Size.Parent;
+
+        #endregion
 
         public override Size GetSize()
         {

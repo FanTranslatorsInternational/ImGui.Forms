@@ -14,6 +14,8 @@ namespace ImGui.Forms.Controls
     {
         private ThemedImageResource _baseImg;
 
+        #region Properties
+
         public LocalizedString? Tooltip { get; set; }
 
         public KeyCommand KeyAction { get; set; }
@@ -27,15 +29,23 @@ namespace ImGui.Forms.Controls
                 _baseImg = value;
             }
         }
+
         public Vector2 ImageSize { get; set; } = Vector2.Zero;
 
         public Vector2 Padding { get; set; } = new(2, 2);
+
+        #endregion
 
         #region Events
 
         public event EventHandler Clicked;
 
         #endregion
+
+        public ImageButton(ThemedImageResource image = default)
+        {
+            Image = image;
+        }
 
         public override Size GetSize()
         {

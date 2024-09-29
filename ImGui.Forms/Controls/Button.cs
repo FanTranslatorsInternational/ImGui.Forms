@@ -33,11 +33,16 @@ namespace ImGui.Forms.Controls
 
         #endregion
 
+        public Button(LocalizedString text = default)
+        {
+            Text = text;
+        }
+
         public override Size GetSize()
         {
             ApplyStyles(Enabled, Font);
 
-            var textSize = FontResource.MeasureText(EscapeText());
+            var textSize = TextMeasurer.MeasureText(EscapeText());
             SizeValue width = Width.IsContentAligned ? (int)Math.Ceiling(textSize.X) + (int)Padding.X * 2 : Width;
             var height = (int)Math.Ceiling(textSize.Y) + (int)Padding.Y * 2;
 
@@ -75,8 +80,9 @@ namespace ImGui.Forms.Controls
                 ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
             }
 
-            if (font != null)
-                ImGuiNET.ImGui.PushFont((ImFontPtr)Font);
+            ImFontPtr? fontPtr = font?.GetPointer();
+            if (fontPtr != null)
+                ImGuiNET.ImGui.PushFont(fontPtr.Value);
 
             ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Padding);
         }
@@ -85,7 +91,8 @@ namespace ImGui.Forms.Controls
         {
             ImGuiNET.ImGui.PopStyleVar();
 
-            if (font != null)
+            ImFontPtr? fontPtr = font?.GetPointer();
+            if (fontPtr != null)
                 ImGuiNET.ImGui.PopFont();
 
             if (!enabled)

@@ -18,10 +18,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Resources\Fonts\ProggyClean.ttf" />
     <None Remove="Resources\Images\error.png" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\Fonts\ProggyClean.ttf">
+      <LogicalName>ProggyClean.ttf</LogicalName>
+    </EmbeddedResource>
     <EmbeddedResource Include="Resources\Images\error.png">
       <LogicalName>error.png</LogicalName>
     </EmbeddedResource>

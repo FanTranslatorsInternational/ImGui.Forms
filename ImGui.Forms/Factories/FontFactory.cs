@@ -10,14 +10,20 @@ using System.Reflection;
 
 namespace ImGui.Forms.Factories
 {
-    public class FontFactory
+    public static class FontFactory
     {
+        private const string DefaultFontName_ = "ProggyClean";
+        private const string DefaultFontResourceName_ = "ProggyClean.ttf";
+
         private static readonly Dictionary<string, FontMetaData> _fontCache = new();
         private static readonly Dictionary<FontData, ImFontPtr> _fontPointers = new();
 
         private static readonly Queue<FontData> _fontRegistrationQueue = new();
 
-        private FontFactory() { }
+        static FontFactory()
+        {
+            RegisterFromResource(DefaultFontName_, Assembly.GetExecutingAssembly(), DefaultFontResourceName_, FontGlyphRange.Latin);
+        }
 
         #region Registration
 
@@ -59,6 +65,16 @@ namespace ImGui.Forms.Factories
         #endregion
 
         #region Get fonts
+
+        public static FontResource GetDefault(int size, FontResource fallbackFont)
+        {
+            return Get(DefaultFontName_, size, fallbackFont);
+        }
+
+        public static FontResource GetDefault(int size)
+        {
+            return Get(DefaultFontName_, size);
+        }
 
         public static FontResource Get(string name, int size, FontResource fallbackFont)
         {

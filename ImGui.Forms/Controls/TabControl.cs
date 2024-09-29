@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Factories;
 using ImGui.Forms.Models;
 using ImGuiNET;
 using Veldrid;
@@ -64,7 +65,7 @@ namespace ImGui.Forms.Controls
                     if (wasManuallyChanged && _selectedPageTemp == page) pageFlags |= ImGuiTabItemFlags.SetSelected;
                     if (!Enabled && _selectedPage == page) pageFlags |= ImGuiTabItemFlags.SetSelected;
 
-                    ImGuiNET.ImGui.PushID(Application.Instance.IdFactory.Get(page));
+                    ImGuiNET.ImGui.PushID(IdFactory.Get(page));
 
                     var stillOpen = true;
                     if (ImGuiNET.ImGui.BeginTabItem(page.Title, ref stillOpen, pageFlags))

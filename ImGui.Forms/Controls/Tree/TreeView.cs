@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
+using ImGui.Forms.Factories;
 using ImGui.Forms.Models.IO;
 using ImGuiNET;
 using Veldrid;
@@ -111,7 +112,7 @@ namespace ImGui.Forms.Controls.Tree
                 if (SelectedNode == node) flags |= ImGuiTreeNodeFlags.Selected;
 
                 // Add node
-                int nodeId = Application.Instance.IdFactory.Get(node);
+                int nodeId = IdFactory.Get(node);
 
                 ImGuiNET.ImGui.PushID(nodeId);
                 ImGuiNET.ImGui.SetNextItemOpen(node.IsExpanded);

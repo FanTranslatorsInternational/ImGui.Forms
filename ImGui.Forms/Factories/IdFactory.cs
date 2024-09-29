@@ -3,20 +3,29 @@ using System.Collections.Generic;
 
 namespace ImGui.Forms.Factories
 {
-    public class IdFactory
+    public static class IdFactory
     {
-        private readonly Random _random;
-        private readonly HashSet<int> _ids;
-        private readonly IDictionary<object, (int, bool)> _idDictionary;
+        private static readonly Random _random = new();
+        private static readonly HashSet<int> _ids = new();
+        private static readonly Dictionary<object, (int, bool)> _idDictionary = new();
 
-        internal IdFactory()
+        public static int Get(object item)
         {
-            _random = new Random();
-            _ids = new HashSet<int>();
-            _idDictionary = new Dictionary<object, (int, bool)>();
+            if (_idDictionary.ContainsKey(item))
+            {
+                _idDictionary[item] = (_idDictionary[item].Item1, true);
+                return _idDictionary[item].Item1;
+            }
+
+            int id = Create();
+
+            _ids.Add(id);
+            _idDictionary[item] = (id, true);
+
+            return id;
         }
 
-        internal void FreeIds()
+        internal static void FreeIds()
         {
             // Remove unused Id's
             var objToDelete = new List<object>();
@@ -37,23 +46,7 @@ namespace ImGui.Forms.Factories
                 _idDictionary.Remove(obj);
         }
 
-        public int Get(object item)
-        {
-            if (_idDictionary.ContainsKey(item))
-            {
-                _idDictionary[item] = (_idDictionary[item].Item1, true);
-                return _idDictionary[item].Item1;
-            }
-
-            var id = Create();
-
-            _ids.Add(id);
-            _idDictionary[item] = (id, true);
-
-            return id;
-        }
-
-        private int Create()
+        private static int Create()
         {
             var id = _random.Next(int.MaxValue);
             while (_ids.Contains(id))

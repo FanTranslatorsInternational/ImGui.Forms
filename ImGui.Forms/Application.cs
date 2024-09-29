@@ -34,19 +34,13 @@ namespace ImGui.Forms
 
         #region Properties
 
-        #region Factories
-
-        public IdFactory IdFactory { get; private set; }
-
-        internal ImageFactory ImageFactory { get; private set; }
-
-        #endregion
-
         public Form MainForm => _executionContext.MainForm;
 
         internal Sdl2Window Window => _executionContext.Window;
 
-        public ILocalizer Localizer { get; }
+        internal ILocalizer Localizer { get; }
+
+        internal ImageFactory ImageFactory { get; private set; }
 
         #endregion
 
@@ -124,8 +118,7 @@ namespace ImGui.Forms
             CreateWindow(form, out var window, out var gd);
 
             _executionContext = new ExecutionContext(form, gd, window);
-
-            IdFactory = new IdFactory();
+            
             ImageFactory = new ImageFactory(gd, _executionContext.Renderer);
 
             FontFactory.Initialize(ImGuiNET.ImGui.GetIO(), _executionContext.Renderer);

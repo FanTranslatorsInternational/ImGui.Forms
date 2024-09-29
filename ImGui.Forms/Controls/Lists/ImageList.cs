@@ -5,6 +5,7 @@ using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Layouts;
 using ImGui.Forms.Extensions;
+using ImGui.Forms.Factories;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 using ImGui.Forms.Support;
@@ -71,7 +72,7 @@ namespace ImGui.Forms.Controls.Lists
                     for (var i = 0; i < localItems.Length; i++)
                     {
                         var item = localItems[i];
-                        var itemId = Application.Instance.IdFactory.Get(item);
+                        var itemId = IdFactory.Get(item);
 
                         var itemPos = new Vector2(Padding.X, i * itemHeight + Padding.Y + i * ItemPadding);
                         var contentItemPos = contentPos + itemPos;

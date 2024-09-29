@@ -1,4 +1,5 @@
 ﻿using System;
+using ImGui.Forms.Factories;
 using ImGui.Forms.Models;
 using ImGui.Forms.Models.IO;
 using ImGuiNET;
@@ -16,7 +17,7 @@ namespace ImGui.Forms.Controls.Base
         /// <summary>
         /// The Id for this component.
         /// </summary>
-        public int Id => Application.Instance.IdFactory.Get(this);
+        public int Id => IdFactory.Get(this);
 
         /// <summary>
         /// Declares if a component is visible and should be drawn with its content.

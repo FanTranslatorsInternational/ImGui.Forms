@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using ImGui.Forms.Factories;
 using ImGuiNET;
 
 namespace ImGui.Forms.Controls.Menu
@@ -11,7 +12,7 @@ namespace ImGui.Forms.Controls.Menu
         /// <summary>
         /// The Id for this component.
         /// </summary>
-        public int Id => Application.Instance.IdFactory.Get(this);
+        public int Id => IdFactory.Get(this);
 
         public IList<MenuBarItem> Items { get; } = new List<MenuBarItem>();
 

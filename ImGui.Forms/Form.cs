@@ -13,7 +13,6 @@ using ImGuiNET;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using Veldrid.Sdl2;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ImGui.Forms
 {
@@ -35,9 +34,9 @@ namespace ImGui.Forms
         public bool AllowDragDrop { get; set; }
 
         /// <summary>
-        /// Sets the applications icon.
+        /// Gets and sets the applications icon.
         /// </summary>
-        /// <remarks>The icons dimensions need to be a power of 2 (eg. 32, 64, 128, etc)</remarks>
+        /// <remarks>The icon dimensions need to be a power of 2 (eg. 32, 64, 128, etc)</remarks>
         public Image<Rgba32> Icon
         {
             get => _icon;
@@ -48,11 +47,15 @@ namespace ImGui.Forms
             }
         }
 
-        public MainMenuBar MainMenuBar { get; protected set; }
+        public MainMenuBar MenuBar { get; protected set; }
 
         public Component Content { get; protected set; }
 
-        public Vector2 Padding => Style.GetStyleVector2(ImGuiStyleVar.WindowPadding);
+        public Vector2 Padding
+        {
+            get => Style.GetStyleVector2(ImGuiStyleVar.WindowPadding);
+            set => Style.SetStyle(ImGuiStyleVar.WindowPadding, value);
+        }
 
         public FontResource DefaultFont { get; set; }
 
@@ -67,7 +70,7 @@ namespace ImGui.Forms
 
         #endregion
 
-        public void PushModal(Modal modal)
+        internal void PushModal(Modal modal)
         {
             if (_modals.Count > 0)
                 _modals.Last().ChildModal = modal;
@@ -75,7 +78,7 @@ namespace ImGui.Forms
             _modals.Add(modal);
         }
 
-        public void PopModal()
+        internal void PopModal()
         {
             if (_modals.Count <= 0)
                 return;
@@ -91,7 +94,7 @@ namespace ImGui.Forms
             return _modals.Count > 0;
         }
 
-        public void Update()
+        internal void Update()
         {
             // Set icon
             if (_setIcon)
@@ -121,8 +124,8 @@ namespace ImGui.Forms
                 ImGuiNET.ImGui.PushFont(fontPtr.Value);
 
             // Add menu bar
-            MainMenuBar?.Update();
-            var menuHeight = MainMenuBar?.Height ?? 0;
+            MenuBar?.Update();
+            var menuHeight = MenuBar?.Height ?? 0;
 
             // Add form controls
             ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Padding);
@@ -162,17 +165,19 @@ namespace ImGui.Forms
 
         internal void OnResized()
         {
-            Resized?.Invoke(this, new EventArgs());
+            Resized?.Invoke(this, EventArgs.Empty);
         }
 
         internal void OnLoad()
         {
-            Load?.Invoke(this, new EventArgs());
+            Load?.Invoke(this, EventArgs.Empty);
         }
 
         internal async Task OnClosing(ClosingEventArgs e)
         {
-            if (Closing == null) return;
+            if (Closing == null) 
+                return;
+
             await Closing?.Invoke(this, e);
         }
 

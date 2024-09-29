@@ -1,4 +1,5 @@
-﻿using ImGui.Forms.Models.IO;
+﻿using ImGui.Forms.Factories;
+using ImGui.Forms.Models.IO;
 
 namespace ImGui.Forms.Controls.Menu
 {
@@ -7,7 +8,7 @@ namespace ImGui.Forms.Controls.Menu
         /// <summary>
         /// The Id for this component.
         /// </summary>
-        protected int Id => Application.Instance.IdFactory.Get(this);
+        protected int Id => IdFactory.Get(this);
 
         /// <summary>
         /// The height of the menu bar item.

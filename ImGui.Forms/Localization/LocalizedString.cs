@@ -22,21 +22,6 @@ namespace ImGui.Forms.Localization
         /// </summary>
         public bool IsEmpty => string.IsNullOrEmpty(_fixedText) && (string.IsNullOrEmpty(_id) || _args == null);
 
-        /// <summary>
-        /// Set up a localized string, based on a localization ID.
-        /// </summary>
-        /// <param name="id">The ID of the localization to return.</param>
-        public LocalizedString(string id) : this(id, null, Array.Empty<Func<object>>())
-        { }
-
-        /// <summary>
-        /// Set up a localized string, based on a localization ID and formatting arguments.
-        /// </summary>
-        /// <param name="id">The ID of the localization to return.</param>
-        /// <param name="args">The arguments of the localization to return.</param>
-        public LocalizedString(string id, params Func<object>[] args) : this(id, null, args)
-        { }
-
         private LocalizedString(string id, string fixedText, Func<object>[] args)
         {
             _locale = null;
@@ -54,6 +39,34 @@ namespace ImGui.Forms.Localization
 
             _id = id ?? throw new ArgumentNullException(nameof(id));
             _fixedText = null;
+        }
+
+        /// <summary>
+        /// Set up a localized string, based on a localization ID.
+        /// </summary>
+        /// <param name="localizationId">The ID of the localization to represent.</param>
+        public static LocalizedString FromId(string localizationId)
+        {
+            return new LocalizedString(localizationId, null, Array.Empty<Func<object>>());
+        }
+
+        /// <summary>
+        /// Set up a localized string, based on a localization ID and formatting arguments.
+        /// </summary>
+        /// <param name="localizationId">The ID of the localization to represent.</param>
+        /// <param name="args">The arguments of the localization to represent.</param>
+        public static LocalizedString FromId(string localizationId, params Func<object>[] args)
+        {
+            return new LocalizedString(localizationId, null, args);
+        }
+
+        /// <summary>
+        /// Set up a localized string, based on a fixed text.
+        /// </summary>
+        /// <param name="fixedText">The fixed text to represent.</param>
+        public static LocalizedString FromText(string fixedText)
+        {
+            return new LocalizedString(null, fixedText ?? string.Empty, Array.Empty<Func<object>>());
         }
 
         public override string ToString()
@@ -95,7 +108,7 @@ namespace ImGui.Forms.Localization
             return _id == locStr._id;
         }
 
-        public static implicit operator LocalizedString(string s) => new(null, s ?? string.Empty, Array.Empty<Func<object>>());
+        public static implicit operator LocalizedString(string s) => FromText(s);
         public static implicit operator string(LocalizedString s) => s.ToString();
     }
 }

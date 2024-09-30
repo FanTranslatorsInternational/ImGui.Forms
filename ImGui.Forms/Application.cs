@@ -38,7 +38,7 @@ namespace ImGui.Forms
 
         internal Sdl2Window Window => _executionContext.Window;
 
-        internal ILocalizer Localizer { get; }
+        public ILocalizer Localizer { get; }
 
         internal ImageFactory ImageFactory { get; private set; }
 

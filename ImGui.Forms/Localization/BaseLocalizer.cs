@@ -42,16 +42,16 @@ namespace ImGui.Forms.Localization
             SetCurrentLocale(locale);
         }
 
-        public string Localize(string name, params object[] args)
+        public string Localize(string localizationId, params object[] args)
         {
             // Return localization of current locale
             if (_localizations.TryGetValue(CurrentLocale, out LanguageInfo language)
-                && language.LocalizationEntries.TryGetValue(name, out string localization))
+                && language.LocalizationEntries.TryGetValue(localizationId, out string localization))
                 return string.Format(localization, args);
 
             // Otherwise, return localization of default locale
             if (_localizations.TryGetValue(DefaultLocale, out language)
-                && language.LocalizationEntries.TryGetValue(name, out localization))
+                && language.LocalizationEntries.TryGetValue(localizationId, out localization))
                 return string.Format(localization, args);
 
             // Otherwise, return localization placeholder

@@ -11,6 +11,6 @@ namespace ImGui.Forms.Localization
         string GetLanguageName(string locale);
         void ChangeLocale(string locale);
 
-        string Localize(string name, params object[] args);
+        string Localize(string localizationId, params object[] args);
     }
 }

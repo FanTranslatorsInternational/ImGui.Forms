@@ -2,7 +2,6 @@
 using System.Linq;
 using ImGui.Forms.Resources;
 using ImGuiNET;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ImGui.Forms.Controls.Menu
 {

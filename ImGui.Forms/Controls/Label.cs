@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Drawing;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Localization;
@@ -83,8 +82,7 @@ namespace ImGui.Forms.Controls
 
         protected override void RemoveStyles()
         {
-            ImFontPtr? fontPtr = Font?.GetPointer();
-            if (fontPtr != null)
+            if (Font?.GetPointer() != null)
                 ImGuiNET.ImGui.PopFont();
 
             if (!TextColor.IsEmpty)

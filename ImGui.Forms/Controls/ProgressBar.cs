@@ -64,8 +64,7 @@ namespace ImGui.Forms.Controls
 
         protected override void RemoveStyles()
         {
-            ImFontPtr? fontPtr = Font?.GetPointer();
-            if (fontPtr != null)
+            if (Font?.GetPointer() != null)
                 ImGuiNET.ImGui.PopFont();
         }
     }

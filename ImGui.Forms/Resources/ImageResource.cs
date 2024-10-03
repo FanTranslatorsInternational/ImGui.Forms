@@ -53,6 +53,17 @@ namespace ImGui.Forms.Resources
         }
 
         /// <summary>
+        /// Creates a new <see cref="ImageResource"/> from an embedded resource <paramref name="resourceName"/> in <see cref="Assembly.GetCallingAssembly"/>.
+        /// </summary>
+        /// <param name="resourceName">The name of the resource to load.</param>
+        /// <returns>An <see cref="ImageResource"/> representing the image.</returns>
+        /// <remarks>To load built-in images, see <see cref="ImageResources"/>.</remarks>
+        public static ImageResource FromResource(string resourceName)
+        {
+            return FromResource(Assembly.GetCallingAssembly(), resourceName);
+        }
+
+        /// <summary>
         /// Creates a new <see cref="ImageResource"/> from an embedded resource <paramref name="resourceName"/> in <paramref name="assembly"/>.
         /// </summary>
         /// <param name="assembly">The <see cref="Assembly"/> to load the embedded resource from.</param>

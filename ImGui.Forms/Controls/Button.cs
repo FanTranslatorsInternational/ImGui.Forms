@@ -90,9 +90,8 @@ namespace ImGui.Forms.Controls
         private void RemoveStyles(bool enabled, FontResource font)
         {
             ImGuiNET.ImGui.PopStyleVar();
-
-            ImFontPtr? fontPtr = font?.GetPointer();
-            if (fontPtr != null)
+            
+            if (Font?.GetPointer() != null)
                 ImGuiNET.ImGui.PopFont();
 
             if (!enabled)

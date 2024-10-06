@@ -17,12 +17,21 @@ namespace ImGui.Forms.Controls
     {
         private string _input = string.Empty;
 
+        private bool _isAppliedEnumItems = false;
+
         #region Properties
 
         public IList<ComboBoxItem<TItem>> Items { get; } = new List<ComboBoxItem<TItem>>();
 
-        public bool IsShowSelectAnItemText { get; set; } = true;
+        public bool IsShowSelectAnItemText { get; set; } = false;
         public ComboBoxItem<TItem> SelectedItem { get; set; }
+
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the ComboBox should populate its items 
+        /// with the members of the associated enum type, if applicable.
+        /// </summary>
+        public bool IsUseEnumTypeItems { get; set; } = true;
 
         public SizeValue Width { get; set; } = SizeValue.Content;
 
@@ -57,6 +66,25 @@ namespace ImGui.Forms.Controls
 
         protected override unsafe void UpdateInternal(Rectangle contentRect)
         {
+            if(!_isAppliedEnumItems && IsUseEnumTypeItems)
+            {
+                if(typeof(TItem).IsEnum)
+                {
+                    var enumValues = Enum.GetValues(typeof(TItem));
+                    var enumValuesAsStrings = Enum.GetNames(typeof(TItem));
+                    for(int i = 0; i < enumValues.Length; i++)
+                    {
+                        var item = new ComboBoxItem<TItem>((TItem)enumValues.GetValue(i), enumValuesAsStrings[i]);
+                        this.Items.Add(item);
+                    }
+
+                    this._isAppliedEnumItems = true;
+                }
+                else
+                {
+                    throw new Exception("IsUseEnumTypeItems applied while TItem is not an enum.");
+                }
+            }
             //Check if both strings matches
             uint maxShowItems = MaxShowItems;
             if (maxShowItems == 0)

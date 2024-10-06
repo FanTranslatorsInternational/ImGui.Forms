@@ -21,6 +21,7 @@ namespace ImGui.Forms.Controls
 
         public IList<ComboBoxItem<TItem>> Items { get; } = new List<ComboBoxItem<TItem>>();
 
+        public bool IsShowSelectAnItemText { get; set; } = true;
         public ComboBoxItem<TItem> SelectedItem { get; set; }
 
         public SizeValue Width { get; set; } = SizeValue.Content;
@@ -64,6 +65,7 @@ namespace ImGui.Forms.Controls
             ImGuiNET.ImGui.PushID(Id);
 
             bool isFinal = ImGuiNET.ImGui.InputText("##in", ref _input, MaxCharacters, ImGuiInputTextFlags.CallbackAlways | ImGuiInputTextFlags.EnterReturnsTrue, Propose);
+            
             if (isFinal)
             {
                 ComboBoxItem<TItem> selectedItem = Items.FirstOrDefault(i => i.Name == _input);
@@ -92,8 +94,11 @@ namespace ImGui.Forms.Controls
             ImGuiNET.ImGui.SetNextWindowSize(size);
             if (ImGuiNET.ImGui.BeginPopup("combobox", ImGuiWindowFlags.NoMove))
             {
-                ImGuiNET.ImGui.Text("Select an item");
-                ImGuiNET.ImGui.Separator();
+                if(IsShowSelectAnItemText)
+                {
+                    ImGuiNET.ImGui.Text("Select an item");
+                    ImGuiNET.ImGui.Separator();
+                }
                 foreach (ComboBoxItem<TItem> item in Items)
                 {
                     if (!ImGuiNET.ImGui.Selectable(item.Name))

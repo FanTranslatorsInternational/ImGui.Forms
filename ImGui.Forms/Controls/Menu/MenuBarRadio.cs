@@ -19,6 +19,12 @@ namespace ImGui.Forms.Controls.Menu
             set => _radioMenu.Text = value;
         }
 
+        public FontResource Font
+        {
+            get => _radioMenu.Font;
+            set => _radioMenu.Font = value;
+        }
+
         public IList<MenuBarCheckBox> CheckItems { get; }
 
         public MenuBarCheckBox SelectedItem { get; private set; }
@@ -37,7 +43,7 @@ namespace ImGui.Forms.Controls.Menu
 
         #endregion
 
-        public MenuBarRadio(LocalizedString text)
+        public MenuBarRadio(LocalizedString text = default)
         {
             var checkItems = new ObservableList<MenuBarCheckBox>();
             checkItems.ItemAdded += CheckItems_ItemAdded;
@@ -106,15 +112,15 @@ namespace ImGui.Forms.Controls.Menu
 
         private void Item_CheckChanged(object sender, EventArgs e)
         {
-            foreach (var language in _radioMenu.Items.Cast<MenuBarCheckBox>())
+            foreach (MenuBarCheckBox checkbox in _radioMenu.Items.Cast<MenuBarCheckBox>())
             {
-                language.CheckChanged -= Item_CheckChanged;
-                language.Checked = language == sender;
-                language.CheckChanged += Item_CheckChanged;
+                checkbox.CheckChanged -= Item_CheckChanged;
+                checkbox.Checked = checkbox == sender;
+                checkbox.CheckChanged += Item_CheckChanged;
             }
 
             SelectedItem = (MenuBarCheckBox)sender;
-            SelectedItemChanged?.Invoke(this, new EventArgs());
+            SelectedItemChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

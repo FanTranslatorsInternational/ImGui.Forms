@@ -1,5 +1,4 @@
-﻿using System.Numerics;
-using ImGui.Forms.Controls.Base;
+﻿using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 using Veldrid;
@@ -11,6 +10,8 @@ namespace ImGui.Forms.Controls
         private ThemedImageResource _baseImg;
 
         #region Properties
+
+        public Size Size { get; set; } = Size.Content;
 
         public ThemedImageResource Image
         {
@@ -31,7 +32,15 @@ namespace ImGui.Forms.Controls
 
         public override Size GetSize()
         {
-            return new Size(_baseImg?.Width ?? 0, _baseImg?.Height ?? 0);
+            SizeValue width = Size.Width.IsContentAligned
+                ? SizeValue.Absolute(_baseImg?.Width ?? 0)
+                : Size.Width;
+
+            SizeValue height = Size.Height.IsContentAligned
+                ? SizeValue.Absolute(_baseImg?.Height ?? 0)
+                : Size.Height;
+
+            return new Size(width, height);
         }
 
         protected override void UpdateInternal(Rectangle contentRect)
@@ -39,7 +48,7 @@ namespace ImGui.Forms.Controls
             if (_baseImg == null || (nint)_baseImg == nint.Zero)
                 return;
 
-            ImGuiNET.ImGui.Image((nint)Image, new Vector2(_baseImg.Width, _baseImg.Height));
+            ImGuiNET.ImGui.Image((nint)Image, contentRect.Size);
         }
     }
 }

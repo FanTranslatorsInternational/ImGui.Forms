@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Layouts;
 using ImGui.Forms.Controls.Lists;
 using ImGui.Forms.Controls.Tree;
 using ImGui.Forms.Models;
+using ImGui.Forms.Resources;
 using ImGui.Forms.Support;
 using ImGuiNET;
 
@@ -16,6 +16,9 @@ namespace ImGui.Forms.Modals.IO
 {
     public class OpenFileDialog : Modal
     {
+        private const string ItemTypeDirectory_ = "D";
+        private const string ItemTypeFile_ = "F";
+
         private History<string> _dictHistory;
         private string _currentDir;
 
@@ -53,19 +56,19 @@ namespace ImGui.Forms.Modals.IO
             _backBtn = new ArrowButton { Direction = ImGuiDir.Left, Enabled = false };
             _forBtn = new ArrowButton { Direction = ImGuiDir.Right, Enabled = false };
             _dirTextBox = new TextBox { Width = .7f };
-            _searchTextBox = new TextBox { Width = .3f, Placeholder = "Search..." };
+            _searchTextBox = new TextBox { Width = .3f, Placeholder = LocalizationResources.Search() };
             _selectedFileTextBox = new TextBox { Width = 1f };
             _fileFilters = new ComboBox<FileFilter>();
 
             _treeView = new TreeView<string> { Size = new Size(.3f, 1f) };
 
             _fileTable = new DataTable<FileEntry> { Size = new Size(.7f, 1f) };
-            _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.Name, "Name"));
-            _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.Type, "Type"));
-            _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.DateModified.ToString(CultureInfo.CurrentCulture), "Date modified"));
+            _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.Name, LocalizationResources.ItemName()));
+            _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.Type, LocalizationResources.ItemType()));
+            _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.DateModified.ToString(CultureInfo.CurrentCulture), LocalizationResources.ItemDateModified()));
 
-            var cnlBtn = new Button { Text = "Cancel", Width = 80 };
-            _openBtn = new Button { Text = "Open", Width = 80, Enabled = false };
+            var cancelBtn = new Button { Text = LocalizationResources.Cancel(), Width = 80 };
+            _openBtn = new Button { Text = LocalizationResources.Ok(), Width = 80, Enabled = false };
 
             #endregion
 
@@ -85,16 +88,14 @@ namespace ImGui.Forms.Modals.IO
 
             _fileFilters.SelectedItemChanged += _fileFilters_SelectedItemChanged;
 
-            cnlBtn.Clicked += CnlBtn_Clicked;
+            cancelBtn.Clicked += CnlBtn_Clicked;
             _openBtn.Clicked += OpenBtnClicked;
 
             #endregion
 
             Result = DialogResult.Cancel;
 
-            var width = (int)Math.Ceiling(Application.Instance.MainForm.Width * .9f);
-            var height = (int)Math.Ceiling(Application.Instance.MainForm.Height * .8f);
-            Size = new Vector2(width, height);
+            Size = new Size(SizeValue.Relative(.9f), SizeValue.Relative(.8f));
 
             Content = new StackLayout
             {
@@ -105,7 +106,7 @@ namespace ImGui.Forms.Modals.IO
                     new StackLayout
                     {
                         Alignment = Alignment.Horizontal,
-                        Size = new Size(SizeValue.Parent, SizeValue.Content),
+                        Size = Size.WidthAlign,
                         ItemSpacing = 5,
                         Items =
                         {
@@ -128,12 +129,11 @@ namespace ImGui.Forms.Modals.IO
                     new StackLayout
                     {
                         Alignment = Alignment.Horizontal,
-                        HorizontalAlignment = HorizontalAlignment.Right,
-                        Size = new Size(7f, SizeValue.Content),
+                        Size = Size.WidthAlign,
                         ItemSpacing = 5,
                         Items =
                         {
-                            new Label {Text = "File name:"},
+                            new Label {Text = LocalizationResources.SelectedFile()},
                             _selectedFileTextBox,
                             _fileFilters
                         }
@@ -142,12 +142,12 @@ namespace ImGui.Forms.Modals.IO
                     {
                         Alignment = Alignment.Horizontal,
                         HorizontalAlignment = HorizontalAlignment.Right,
-                        Size = new Size(SizeValue.Parent, SizeValue.Content),
+                        Size = Size.WidthAlign,
                         ItemSpacing = 5,
                         Items =
                         {
                             new StackItem(_openBtn),
-                            new StackItem(cnlBtn)
+                            new StackItem(cancelBtn)
                         }
                     }
                 }
@@ -164,8 +164,10 @@ namespace ImGui.Forms.Modals.IO
             _selectedFileTextBox.Text = InitialFileName;
 
             // Initialize file tree and file view
+            var desktopDir = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
             var userDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            _treeView.Nodes.Add(new TreeNode<string> { Text = "Desktop", Data = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), Nodes = { new TreeNode<string>() } });
+
+            _treeView.Nodes.Add(new TreeNode<string> { Text = Path.GetFileName(desktopDir), Data = desktopDir, Nodes = { new TreeNode<string>() } });
             _treeView.Nodes.Add(new TreeNode<string> { Text = Path.GetFileName(userDir), Data = userDir, Nodes = { new TreeNode<string>() } });
 
             UpdateFileView();
@@ -192,7 +194,7 @@ namespace ImGui.Forms.Modals.IO
         private IEnumerable<FileEntry> GetDirectories(string dir)
         {
             return Directory.EnumerateDirectories(dir).Select(x => new FileEntry
-            { Name = Path.GetFileName(x), Type = "D", DateModified = Directory.GetLastAccessTime(x) });
+            { Name = Path.GetFileName(x), Type = ItemTypeDirectory_, DateModified = Directory.GetLastAccessTime(x) });
         }
 
         private IEnumerable<FileEntry> GetFiles(string dir)
@@ -205,9 +207,13 @@ namespace ImGui.Forms.Modals.IO
 
             // Apply extension filter, if set
             if (!useSearch && _fileFilters.SelectedItem != null)
-                files = files.Where(f => GetFileExtensions(f).Any(e => _fileFilters.SelectedItem.Content.Extensions.Contains(e)));
+            {
+                IList<string> extensions = _fileFilters.SelectedItem.Content.Extensions;
+                if (extensions.All(e => e != "*"))
+                    files = files.Where(f => GetFileExtensions(f).Any(e => extensions.Contains(e)));
+            }
 
-            return files.Select(x => new FileEntry { Name = Path.GetFileName(x), Type = "F", DateModified = File.GetLastWriteTime(x) });
+            return files.Select(x => new FileEntry { Name = Path.GetFileName(x), Type = ItemTypeFile_, DateModified = File.GetLastWriteTime(x) });
         }
 
         private string[] GetFileExtensions(string filePath)
@@ -254,7 +260,7 @@ namespace ImGui.Forms.Modals.IO
 
         private void Filters_ItemAdded(object sender, ItemEventArgs<FileFilter> e)
         {
-            _fileFilters.Items.Add(new ComboBoxItem<FileFilter>(e.Item));
+            _fileFilters.Items.Add(new DropDownItem<FileFilter>(e.Item));
         }
 
         private void Filters_ItemRemoved(object sender, ItemEventArgs<FileFilter> e)
@@ -264,12 +270,12 @@ namespace ImGui.Forms.Modals.IO
 
         private void Filters_ItemInserted(object sender, ItemEventArgs<FileFilter> e)
         {
-            _fileFilters.Items.Insert(e.Index, new ComboBoxItem<FileFilter>(e.Item));
+            _fileFilters.Items.Insert(e.Index, new DropDownItem<FileFilter>(e.Item));
         }
 
         private void Filters_ItemSet(object sender, ItemEventArgs<FileFilter> e)
         {
-            _fileFilters.Items[e.Index] = new ComboBoxItem<FileFilter>(e.Item);
+            _fileFilters.Items[e.Index] = new DropDownItem<FileFilter>(e.Item);
         }
 
         private void _fileFilters_SelectedItemChanged(object sender, EventArgs e)

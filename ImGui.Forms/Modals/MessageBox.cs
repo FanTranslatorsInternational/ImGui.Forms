@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Numerics;
 using System.Threading.Tasks;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Base;
@@ -13,11 +12,6 @@ namespace ImGui.Forms.Modals
 {
     public class MessageBox : Modal
     {
-        private const string Ok_ = "Ok";
-        private const string Yes_ = "Yes";
-        private const string No_ = "No";
-        private const string Cancel_ = "Cancel";
-
         private const int ButtonWidth_ = 75;
 
         private MessageBox(LocalizedString caption, LocalizedString text, MessageBoxType type, MessageBoxButton buttons)
@@ -76,27 +70,28 @@ namespace ImGui.Forms.Modals
             var msgType = GetTypeImage(type);
             var msgLabel = new Label { Text = text };
 
-            var messageLayout = new StackLayout { Alignment = Alignment.Horizontal, Size = Models.Size.Content, ItemSpacing = 5 };
+            var messageLayout = new StackLayout { Alignment = Alignment.Horizontal, Size = Size.Content, ItemSpacing = 5 };
             if (msgType != null)
                 messageLayout.Items.Add(new StackItem(msgType) { VerticalAlignment = VerticalAlignment.Center });
             messageLayout.Items.Add(new StackItem(msgLabel) { VerticalAlignment = VerticalAlignment.Center });
 
             // Prepare buttons
-            var buttonLayout = new StackLayout { Alignment = Alignment.Horizontal, HorizontalAlignment = HorizontalAlignment.Right, Size = new Models.Size(SizeValue.Parent,SizeValue.Content), ItemSpacing = 5 };
+            var buttonLayout = new StackLayout { Alignment = Alignment.Horizontal, Size = Size.Content, ItemSpacing = 5 };
             foreach (var button in GetButtons(buttons))
                 buttonLayout.Items.Add(button);
 
             // Prepare main layout
-            var mainLayout = new StackLayout { Alignment = Alignment.Vertical, ItemSpacing = 5, Size = Models.Size.Content };
-            mainLayout.Items.Add(new StackItem(messageLayout));
-            mainLayout.Items.Add(buttonLayout);
+            var mainLayout = new StackLayout { Alignment = Alignment.Vertical, Size = Size.Content, ItemSpacing = 5 };
+            mainLayout.Items.Add(messageLayout);
+            mainLayout.Items.Add(new StackItem(buttonLayout) { HorizontalAlignment = HorizontalAlignment.Right });
 
             // Add modal
-            var mainSize = new Vector2(Application.Instance.MainForm.Width, Application.Instance.MainForm.Height);
+            var mainSize = Application.Instance.MainForm.Size;
 
-            var width = msgLabel.GetWidth((int)mainSize.X) + (msgType?.GetWidth((int)mainSize.X) ?? 0) + messageLayout.ItemSpacing;
-            var height = mainLayout.GetHeight((int)mainSize.Y);
-            Size = new Vector2(width, height);
+            var width = mainLayout.GetWidth((int)mainSize.X, (int)mainSize.Y) + (msgType?.GetWidth((int)mainSize.X, (int)mainSize.Y) ?? 0) + messageLayout.ItemSpacing;
+            var height = mainLayout.GetHeight((int)mainSize.X, (int)mainSize.Y);
+
+            Size = new Size(SizeValue.Absolute(width), SizeValue.Absolute(height));
             Content = mainLayout;
         }
 
@@ -126,15 +121,16 @@ namespace ImGui.Forms.Modals
         {
             if (buttons.HasFlag(MessageBoxButton.Ok))
             {
-                var okButton = new Button { Text = Ok_, Width = ButtonWidth_ };
-                okButton.Clicked += (s, e) => Close();
+                var okButton = new Button { Text = LocalizationResources.Ok(), Width = SizeValue.Absolute(ButtonWidth_) };
+                okButton.Clicked += (_, _) => Close();
 
                 yield return okButton;
             }
+
             if (buttons.HasFlag(MessageBoxButton.Yes))
             {
-                var yesButton = new Button { Text = Yes_, Width = ButtonWidth_ };
-                yesButton.Clicked += (s, e) =>
+                var yesButton = new Button { Text = LocalizationResources.Yes(), Width = SizeValue.Absolute(ButtonWidth_) };
+                yesButton.Clicked += (_, _) =>
                 {
                     Result = DialogResult.Yes;
                     Close();
@@ -142,10 +138,11 @@ namespace ImGui.Forms.Modals
 
                 yield return yesButton;
             }
+
             if (buttons.HasFlag(MessageBoxButton.No))
             {
-                var noButton = new Button { Text = No_, Width = ButtonWidth_ };
-                noButton.Clicked += (s, e) =>
+                var noButton = new Button { Text = LocalizationResources.No(), Width = SizeValue.Absolute(ButtonWidth_) };
+                noButton.Clicked += (_, _) =>
                 {
                     Result = DialogResult.No;
                     Close();
@@ -153,16 +150,17 @@ namespace ImGui.Forms.Modals
 
                 yield return noButton;
             }
+
             if (buttons.HasFlag(MessageBoxButton.Cancel))
             {
-                var noButton = new Button { Text = Cancel_, Width = ButtonWidth_ };
-                noButton.Clicked += (s, e) =>
+                var cancelButton = new Button { Text = LocalizationResources.Cancel(), Width = SizeValue.Absolute(ButtonWidth_) };
+                cancelButton.Clicked += (_, _) =>
                 {
                     Result = DialogResult.Cancel;
                     Close();
                 };
 
-                yield return noButton;
+                yield return cancelButton;
             }
         }
     }

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Numerics;
+﻿using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
 using ImGui.Forms.Controls.Base;
@@ -12,7 +11,7 @@ using Veldrid;
 
 namespace ImGui.Forms.Modals
 {
-    public class Modal : Component
+    public abstract class Modal : Component
     {
         private CancellationTokenSource _tokenSource;
         private bool _shouldClose;
@@ -30,19 +29,9 @@ namespace ImGui.Forms.Modals
 
         protected DialogResult Result { get; set; }
 
-        public Vector2 Size { get; set; } = new(200, 80);
-        public int Width => (int)Size.X;
-        public int Height => (int)Size.Y;
+        public Size Size { get; set; } = new(SizeValue.Absolute(200), SizeValue.Absolute(80));
 
-        public override Size GetSize()
-        {
-            return new Size(Width, Height);
-        }
-
-        public int GetHeaderHeight()
-        {
-            return TextMeasurer.GetCurrentLineHeight(withDescent: true) + 6;
-        }
+        public override Size GetSize() => Size;
 
         protected override async void UpdateInternal(Rectangle contentRect)
         {
@@ -116,6 +105,11 @@ namespace ImGui.Forms.Modals
             _shouldClose = !await ShouldCancelClose();
         }
 
+        private int GetHeaderHeight()
+        {
+            return TextMeasurer.GetCurrentLineHeight(withDescent: true) + 6;
+        }
+
         // HINT: Only gets executed if _shouldClose is set to true
         private async Task CloseCore()
         {
@@ -145,10 +139,13 @@ namespace ImGui.Forms.Modals
 
             var form = Application.Instance.MainForm;
 
-            var modalPos = new Vector2((form.Width - modal.Width) / 2f, (form.Height - modal.Height - modal.GetHeaderHeight()) / 2f);
+            var modalWidth = GetDimension(modal.Size.Width, form.Width);
+            var modalHeight = GetDimension(modal.Size.Height, form.Height);
+
+            var modalPos = new Vector2((form.Width - modalWidth) / 2f, (form.Height - modalHeight - modal.GetHeaderHeight()) / 2f);
             var contentPos = modalPos + new Vector2(form.Padding.X, modal.GetHeaderHeight() + form.Padding.Y);
 
-            var contentSize = new Vector2(modal.Width, modal.Height);
+            var contentSize = new Vector2(modalWidth, modalHeight);
             var modalSize = contentSize + new Vector2(form.Padding.X * 2, modal.GetHeaderHeight() + form.Padding.Y * 2);
 
             ImGuiNET.ImGui.SetNextWindowPos(modalPos);

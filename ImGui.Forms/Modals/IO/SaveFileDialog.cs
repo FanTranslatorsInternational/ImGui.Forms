@@ -3,13 +3,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Numerics;
 using System.Threading.Tasks;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Layouts;
 using ImGui.Forms.Controls.Lists;
 using ImGui.Forms.Controls.Tree;
 using ImGui.Forms.Models;
+using ImGui.Forms.Resources;
 using ImGui.Forms.Support;
 using ImGuiNET;
 
@@ -17,6 +17,9 @@ namespace ImGui.Forms.Modals.IO
 {
     public class SaveFileDialog : Modal
     {
+        private const string ItemTypeDirectory_ = "D";
+        private const string ItemTypeFile_ = "F";
+
         private History<string> _dictHistory;
         private string _currentDir;
 
@@ -42,19 +45,19 @@ namespace ImGui.Forms.Modals.IO
             _backBtn = new ArrowButton { Direction = ImGuiDir.Left, Enabled = false };
             _forBtn = new ArrowButton { Direction = ImGuiDir.Right, Enabled = false };
             _dirTextBox = new TextBox { Width = .7f };
-            _searchTextBox = new TextBox { Width = .3f, Placeholder = "Search..." };
-            _selectedFileTextBox = new TextBox { Width = .7f };
+            _searchTextBox = new TextBox { Width = .3f, Placeholder = LocalizationResources.Search() };
+            _selectedFileTextBox = new TextBox { Width = 1f };
 
             _treeView = new TreeView<string> { Size = new Size(.3f, 1f) };
             _treeView.NodeExpanded += _treeView_NodeExpanded;
 
             _fileTable = new DataTable<FileEntry> { Size = new Size(.7f, 1f) };
-            _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.Name, "Name"));
-            _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.Type, "Type"));
-            _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.DateModified.ToString(CultureInfo.CurrentCulture), "Date modified"));
+            _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.Name, LocalizationResources.ItemName()));
+            _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.Type, LocalizationResources.ItemType()));
+            _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.DateModified.ToString(CultureInfo.CurrentCulture), LocalizationResources.ItemDateModified()));
 
-            var cnlBtn = new Button { Text = "Cancel", Width = 80 };
-            _saveBtn = new Button { Text = "Save", Width = 80, Enabled = !string.IsNullOrEmpty(filePath) };
+            var cancelBtn = new Button { Text = LocalizationResources.Cancel(), Width = 80 };
+            _saveBtn = new Button { Text = LocalizationResources.Save(), Width = 80, Enabled = !string.IsNullOrEmpty(filePath) };
 
             #endregion
 
@@ -78,14 +81,12 @@ namespace ImGui.Forms.Modals.IO
             _fileTable.DoubleClicked += _fileTable_DoubleClicked;
             _fileTable.SelectedRowsChanged += _fileTable_SelectedRowsChanged;
 
-            cnlBtn.Clicked += CnlBtn_Clicked;
+            cancelBtn.Clicked += CnlBtn_Clicked;
             _saveBtn.Clicked += SaveBtnClicked;
 
             #endregion
 
-            var width = (int)Math.Ceiling(Application.Instance.MainForm.Width * .9f);
-            var height = (int)Math.Ceiling(Application.Instance.MainForm.Height * .8f);
-            Size = new Vector2(width, height);
+            Size = new Size(SizeValue.Relative(.9f), SizeValue.Relative(.8f));
 
             Content = new StackLayout
             {
@@ -97,7 +98,7 @@ namespace ImGui.Forms.Modals.IO
                     new StackLayout
                     {
                         Alignment = Alignment.Horizontal,
-                        Size = new Size(SizeValue.Parent, SizeValue.Content),
+                        Size = Size.WidthAlign,
                         ItemSpacing = 5,
                         Items =
                         {
@@ -124,12 +125,11 @@ namespace ImGui.Forms.Modals.IO
                     new StackLayout
                     {
                         Alignment = Alignment.Horizontal,
-                        HorizontalAlignment = HorizontalAlignment.Right,
-                        Size = new Size(7f, SizeValue.Content),
+                        Size = Size.WidthAlign,
                         ItemSpacing = 5,
                         Items =
                         {
-                            new Label {Text = "File name:"},
+                            new Label {Text = LocalizationResources.SelectedFile()},
                             _selectedFileTextBox
                         }
                     },
@@ -139,12 +139,12 @@ namespace ImGui.Forms.Modals.IO
                     {
                         Alignment = Alignment.Horizontal,
                         HorizontalAlignment = HorizontalAlignment.Right,
-                        Size = new Size(SizeValue.Parent, SizeValue.Content),
+                        Size = Size.WidthAlign,
                         ItemSpacing = 5,
                         Items =
                         {
                             new StackItem(_saveBtn),
-                            new StackItem(cnlBtn)
+                            new StackItem(cancelBtn)
                         }
                     }
                 }
@@ -160,9 +160,12 @@ namespace ImGui.Forms.Modals.IO
             _dirTextBox.Text = _currentDir;
 
             // Initialize file tree and file view
+            var desktopDir = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
             var userDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            _treeView.Nodes.Add(new TreeNode<string> { Text = "Desktop", Data = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), Nodes = { new TreeNode<string>() } });
+
+            _treeView.Nodes.Add(new TreeNode<string> { Text = Path.GetFileName(desktopDir), Data = desktopDir, Nodes = { new TreeNode<string>() } });
             _treeView.Nodes.Add(new TreeNode<string> { Text = Path.GetFileName(userDir), Data = userDir, Nodes = { new TreeNode<string>() } });
+
 
             UpdateFileView();
         }
@@ -188,7 +191,7 @@ namespace ImGui.Forms.Modals.IO
         private IEnumerable<FileEntry> GetDirectories(string dir)
         {
             return Directory.EnumerateDirectories(dir).Select(x => new FileEntry
-            { Name = Path.GetFileName(x), Type = "D", DateModified = Directory.GetLastAccessTime(x) });
+            { Name = Path.GetFileName(x), Type = ItemTypeDirectory_, DateModified = Directory.GetLastAccessTime(x) });
         }
 
         private IEnumerable<FileEntry> GetFiles(string dir)
@@ -197,7 +200,7 @@ namespace ImGui.Forms.Modals.IO
             var searchTerm = string.IsNullOrEmpty(_searchTextBox.Text) ? "*" : _searchTextBox.Text;
             var files = Directory.EnumerateFiles(dir, searchTerm);
 
-            return files.Select(x => new FileEntry { Name = Path.GetFileName(x), Type = "F", DateModified = File.GetLastWriteTime(x) });
+            return files.Select(x => new FileEntry { Name = Path.GetFileName(x), Type = ItemTypeFile_, DateModified = File.GetLastWriteTime(x) });
         }
 
         private async Task<bool> ShouldOverwrite(string path)
@@ -205,7 +208,7 @@ namespace ImGui.Forms.Modals.IO
             if (!File.Exists(path))
                 return true;
 
-            return await MessageBox.ShowYesNoAsync("File exists", $"Do you want to overwrite file {Path.GetFileName(path)}?") != DialogResult.No;
+            return await MessageBox.ShowYesNoAsync(LocalizationResources.ReplaceFileCaption(), LocalizationResources.ReplaceFileText(Path.GetFileName(path))) != DialogResult.No;
         }
 
         #endregion

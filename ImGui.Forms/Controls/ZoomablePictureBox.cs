@@ -29,6 +29,8 @@ namespace ImGui.Forms.Controls
             }
         }
 
+        public Size Size { get; set; } = Size.Parent;
+
         #endregion
 
         #region Events
@@ -42,10 +44,7 @@ namespace ImGui.Forms.Controls
             Image = image;
         }
 
-        public override Size GetSize()
-        {
-            return Size.Parent;
-        }
+        public override Size GetSize() => Size;
 
         public void Zoom(float scale)
         {

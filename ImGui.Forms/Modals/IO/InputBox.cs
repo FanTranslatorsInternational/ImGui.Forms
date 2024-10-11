@@ -1,38 +1,35 @@
 ﻿using System;
-using System.Numerics;
 using System.Threading.Tasks;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Layouts;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Models.IO;
+using ImGui.Forms.Resources;
 using Veldrid;
 
 namespace ImGui.Forms.Modals.IO
 {
     public class InputBox : Modal
     {
-        private const string Ok_ = "Ok";
-        private const string Cancel_ = "Cancel";
-
         private const int ButtonWidth_ = 75;
 
         private readonly TextBox _textBox;
 
         public string Input { get; private set; }
 
-        private InputBox(LocalizedString caption, LocalizedString text, string preset, LocalizedString? placeHolder, int maxCharacters)
+        private InputBox(LocalizedString caption, LocalizedString text, string preset, LocalizedString? placeholder, int maxCharacters)
         {
             #region Controls
 
-            var okButton = new Button { Text = Ok_, Width = ButtonWidth_ };
-            var cancelButton = new Button { Text = Cancel_, Width = ButtonWidth_ };
+            var okButton = new Button { Text = LocalizationResources.Ok(), Width = ButtonWidth_ };
+            var cancelButton = new Button { Text = LocalizationResources.Cancel(), Width = ButtonWidth_ };
 
             var label = new Label { Text = text };
 
             _textBox = new TextBox();
-            if (placeHolder != null)
-                _textBox.Placeholder = placeHolder.Value;
+            if (placeholder != null)
+                _textBox.Placeholder = placeholder.Value;
             if (maxCharacters >= 0)
                 _textBox.MaxCharacters = (uint)maxCharacters;
 
@@ -63,7 +60,7 @@ namespace ImGui.Forms.Modals.IO
             {
                 Alignment = Alignment.Vertical,
                 ItemSpacing = 4,
-                Size = new Size(SizeValue.Parent, SizeValue.Content),
+                Size = Size.WidthAlign,
                 Items =
                 {
                     label,
@@ -73,7 +70,7 @@ namespace ImGui.Forms.Modals.IO
                         Alignment = Alignment.Horizontal,
                         HorizontalAlignment = HorizontalAlignment.Right,
                         ItemSpacing = 4,
-                        Size=new Size(SizeValue.Parent, SizeValue.Content),
+                        Size=Size.WidthAlign,
                         Items =
                         {
                             okButton,
@@ -83,9 +80,8 @@ namespace ImGui.Forms.Modals.IO
                 }
             };
 
-            var width = Application.Instance.MainForm.Width * .8f;
-            var height = Content.GetHeight(Application.Instance.MainForm.Height);
-            Size = new Vector2(width, height);
+            var height = Content.GetHeight(Application.Instance.MainForm.Width, Application.Instance.MainForm.Height);
+            Size = new Size(SizeValue.Relative(.8f), SizeValue.Absolute(height));
         }
 
         private void TextBox_TextChanged(object sender, EventArgs e)

@@ -131,13 +131,13 @@ namespace ImGui.Forms.Controls
             {
                 if (ImGuiNET.ImGui.InputText($"##{Id}", ref _text, MaxCharacters, flags))
                     OnTextChanged();
-
-                // Check if InputText is active and lost focus
-                if (!ImGuiNET.ImGui.IsItemActive() && _activePreviousFrame)
-                    OnFocusLost();
-
-                _activePreviousFrame = ImGuiNET.ImGui.IsItemActive();
             }
+
+            // Check if item is active and lost focus
+            if (!ImGuiNET.ImGui.IsItemActive() && _activePreviousFrame)
+                OnFocusLost();
+
+            _activePreviousFrame = ImGuiNET.ImGui.IsItemActive();
 
             if (isReadonly || !enabled)
                 ImGuiNET.ImGui.PopStyleColor(3);

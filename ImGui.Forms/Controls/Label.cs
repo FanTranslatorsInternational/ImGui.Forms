@@ -18,7 +18,7 @@ namespace ImGui.Forms.Controls
 
         public FontResource Font { get; set; }
 
-        public float LineDistance { get; set; }
+        public int LineDistance { get; set; }
 
         public ThemedColor TextColor { get; set; }
 

@@ -13,6 +13,11 @@ namespace ImGui.Forms.Controls
         #region Properties
 
         /// <summary>
+        /// The size of this component.
+        /// </summary>
+        public Size Size { get; set; } = Size.Parent;
+
+        /// <summary>
         /// The text that was set or changed in this component.
         /// </summary>
         public string Text
@@ -43,7 +48,7 @@ namespace ImGui.Forms.Controls
 
         #endregion
 
-        public override Size GetSize() => Size.Parent;
+        public override Size GetSize() => Size;
 
         protected override void UpdateInternal(Rectangle contentRect)
         {

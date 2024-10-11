@@ -16,14 +16,13 @@ namespace ImGui.Forms.Controls
 
         public LocalizedString Text { get; set; }
         public LocalizedString Tooltip { get; set; }
+        public FontResource Font { get; set; }
 
         public KeyCommand KeyAction { get; set; }
 
         public Vector2 Padding { get; set; } = new(2, 2);
 
         public SizeValue Width { get; set; } = SizeValue.Content;
-
-        public FontResource Font { get; set; }
 
         #endregion
 
@@ -58,7 +57,7 @@ namespace ImGui.Forms.Controls
 
             ApplyStyles(enabled, font);
 
-            if ((ImGuiNET.ImGui.Button(EscapeText(), new Vector2(contentRect.Width, contentRect.Height)) || IsKeyDown(KeyAction)) && Enabled)
+            if ((ImGuiNET.ImGui.Button(EscapeText(), contentRect.Size) || IsKeyDown(KeyAction)) && Enabled)
                 OnClicked();
 
             if (Tooltip is { IsEmpty: false } && IsHoveredCore())
@@ -100,7 +99,7 @@ namespace ImGui.Forms.Controls
 
         protected void OnClicked()
         {
-            Clicked?.Invoke(this, new EventArgs());
+            Clicked?.Invoke(this, EventArgs.Empty);
         }
 
         protected string EscapeText()

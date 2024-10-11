@@ -15,12 +15,12 @@ namespace ImGui.Forms.Controls
         #region Properties
 
         public LocalizedString Text { get; set; }
-
         public LocalizedString Tooltip { get; set; }
+        public FontResource Font { get; set; }
 
         public bool Checked
         {
-            get=> _checked;
+            get => _checked;
             set
             {
                 _checked = value;
@@ -43,19 +43,26 @@ namespace ImGui.Forms.Controls
 
         public override Size GetSize()
         {
+            ApplyStyles(Enabled, Font);
+
             var size = TextMeasurer.MeasureText(Text);
-            return new Size((int)(Math.Ceiling(size.X) + 21 + ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.X), (int)Math.Max(Math.Ceiling(size.Y), 21));
+            var width = (int)(Math.Ceiling(size.X) + 21 + ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.X);
+            var height = (int)Math.Max(Math.Ceiling(size.Y), 21);
+
+            RemoveStyles(Enabled, Font);
+
+            return new Size(width, height);
         }
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            // TODO: Draw checkbox manually, when disabled, to work around checkmark flickering
             ImGuiNET.ImGui.SetNextItemWidth(contentRect.Width);
 
             var check = Checked;
             var enabled = Enabled;
+            var font = Font;
 
-            ApplyStyles(enabled);
+            ApplyStyles(enabled, font);
 
             if (IsHovering(contentRect) && !string.IsNullOrEmpty(Tooltip))
                 ImGuiNET.ImGui.SetTooltip(Tooltip);
@@ -63,10 +70,10 @@ namespace ImGui.Forms.Controls
             if (ImGuiNET.ImGui.Checkbox(Text, ref check) && Enabled)
                 Checked = check;
 
-            RemoveStyles(enabled);
+            RemoveStyles(enabled, font);
         }
 
-        private void ApplyStyles(bool enabled)
+        private void ApplyStyles(bool enabled, FontResource font)
         {
             if (!enabled)
             {
@@ -75,10 +82,17 @@ namespace ImGui.Forms.Controls
                 ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
                 ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
             }
+
+            ImFontPtr? fontPtr = font?.GetPointer();
+            if (fontPtr != null)
+                ImGuiNET.ImGui.PushFont(fontPtr.Value);
         }
 
-        private void RemoveStyles(bool enabled)
+        private void RemoveStyles(bool enabled, FontResource font)
         {
+            if (font?.GetPointer() != null)
+                ImGuiNET.ImGui.PopFont();
+
             if (!enabled)
                 ImGuiNET.ImGui.PopStyleColor(4);
         }
@@ -90,7 +104,7 @@ namespace ImGui.Forms.Controls
 
         private void OnCheckChanged()
         {
-            CheckChanged?.Invoke(this, new EventArgs());
+            CheckChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

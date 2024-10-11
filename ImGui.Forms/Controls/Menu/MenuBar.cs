@@ -5,7 +5,7 @@ using ImGuiNET;
 
 namespace ImGui.Forms.Controls.Menu
 {
-    public class MenuBar
+    public abstract class MenuBar
     {
         private readonly bool _isMain;
 
@@ -14,10 +14,6 @@ namespace ImGui.Forms.Controls.Menu
         public FontResource Font { get; set; }
 
         public int Height => GetHeight();
-
-        protected MenuBar() : this(false)
-        {
-        }
 
         protected MenuBar(bool isMain)
         {
@@ -31,8 +27,8 @@ namespace ImGui.Forms.Controls.Menu
                 ImGuiNET.ImGui.PushFont(fontPtr.Value);
 
             // Begin menu bar
-            bool isMenuOpen = _isMain ? 
-                ImGuiNET.ImGui.BeginMainMenuBar() : 
+            bool isMenuOpen = _isMain ?
+                ImGuiNET.ImGui.BeginMainMenuBar() :
                 ImGuiNET.ImGui.BeginMenuBar();
             if (isMenuOpen)
             {
@@ -48,7 +44,7 @@ namespace ImGui.Forms.Controls.Menu
                 foreach (var child in Items)
                     child.UpdateEvents();
             }
-            
+
             if (fontPtr != null)
                 ImGuiNET.ImGui.PopFont();
         }
@@ -59,9 +55,11 @@ namespace ImGui.Forms.Controls.Menu
             if (fontPtr != null)
                 ImGuiNET.ImGui.PushFont(fontPtr.Value);
 
-            // HINT: It's currently unknown where those 3 pixels come from, but they have to be added to get the correct size of the menu
-            var height = Items.Max(x => x.Height) + 3;
-            
+            var height = Items.Count > 0
+                ? Items.Max(x => x.Height) :
+                // HINT: It's currently unknown where those 3 pixels come from, but they have to be added to get the correct size of the menu
+                (int)(TextMeasurer.GetCurrentLineHeight() + ImGuiNET.ImGui.GetStyle().FramePadding.Y * 2) + 3;
+
             if (fontPtr != null)
                 ImGuiNET.ImGui.PopFont();
 

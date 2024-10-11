@@ -30,10 +30,7 @@ namespace ImGui.Forms.Controls
 
         #endregion
 
-        public override Size GetSize()
-        {
-            return Size;
-        }
+        public override Size GetSize() => Size;
 
         protected override void UpdateInternal(Rectangle contentRect)
         {

@@ -1,6 +1,7 @@
 ﻿using System;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Resources;
+using ImGuiNET;
 
 namespace ImGui.Forms.Controls.Menu
 {
@@ -11,6 +12,8 @@ namespace ImGui.Forms.Controls.Menu
         #region Properties
 
         public LocalizedString Text { get; set; }
+
+        public FontResource Font { get; set; }
 
         public override int Height => GetHeight();
 
@@ -32,7 +35,7 @@ namespace ImGui.Forms.Controls.Menu
 
         #endregion
 
-        public MenuBarCheckBox(LocalizedString text)
+        public MenuBarCheckBox(LocalizedString text = default)
         {
             Text = text;
         }
@@ -54,16 +57,29 @@ namespace ImGui.Forms.Controls.Menu
             ApplyStyles();
 
             var textSize = TextMeasurer.MeasureText(Text);
-            var height = (int)(textSize.Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y);
+            var height = (int)(textSize.Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y * 2);
 
             RemoveStyles();
 
             return height;
         }
 
+        protected override void ApplyStyles()
+        {
+            ImFontPtr? fontPtr = Font?.GetPointer();
+            if (fontPtr != null)
+                ImGuiNET.ImGui.PushFont(fontPtr.Value);
+        }
+
+        protected override void RemoveStyles()
+        {
+            if (Font?.GetPointer() != null)
+                ImGuiNET.ImGui.PopFont();
+        }
+
         private void OnCheckedChanged()
         {
-            CheckChanged?.Invoke(this, new EventArgs());
+            CheckChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

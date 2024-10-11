@@ -1,21 +1,18 @@
 ﻿using System;
 using System.Linq;
-using System.Numerics;
 using System.Threading.Tasks;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Layouts;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Models.IO;
+using ImGui.Forms.Resources;
 using Veldrid;
 
 namespace ImGui.Forms.Modals.IO
 {
     public class ComboInputBox : Modal
     {
-        private const string Ok_ = "Ok";
-        private const string Cancel_ = "Cancel";
-
         private const int ButtonWidth_ = 75;
 
         private readonly ComboBox<LocalizedString> _comboBox;
@@ -26,14 +23,23 @@ namespace ImGui.Forms.Modals.IO
         {
             #region Controls
 
-            var okButton = new Button { Text = Ok_, Width = ButtonWidth_ };
-            var cancelButton = new Button { Text = Cancel_, Width = ButtonWidth_ };
+            var okButton = new Button { Text = LocalizationResources.Ok(), Width = ButtonWidth_ };
+            var cancelButton = new Button { Text = LocalizationResources.Cancel(), Width = ButtonWidth_ };
 
             var label = new Label { Text = text };
 
-            _comboBox = new ComboBox<LocalizedString>();
+            _comboBox = new ComboBox<LocalizedString> { MaxShowItems = 2 };
             foreach (LocalizedString item in items)
                 _comboBox.Items.Add(item);
+
+            var buttonLayout = new StackLayout { Alignment = Alignment.Horizontal, Size = Size.Content, ItemSpacing = 5 };
+            buttonLayout.Items.Add(okButton);
+            buttonLayout.Items.Add(cancelButton);
+
+            var mainLayout = new StackLayout { Alignment = Alignment.Vertical, Size = Size.Content, ItemSpacing = 5 };
+            mainLayout.Items.Add(label);
+            mainLayout.Items.Add(_comboBox);
+            mainLayout.Items.Add(new StackItem(buttonLayout) { HorizontalAlignment = HorizontalAlignment.Right });
 
             #endregion
 
@@ -59,33 +65,14 @@ namespace ImGui.Forms.Modals.IO
             Result = DialogResult.Cancel;
             Caption = caption;
 
-            Content = new StackLayout
-            {
-                Alignment = Alignment.Vertical,
-                ItemSpacing = 4,
-                Size = new Size(SizeValue.Parent, SizeValue.Content),
-                Items =
-                {
-                    label,
-                    _comboBox,
-                    new StackLayout
-                    {
-                        Alignment = Alignment.Horizontal,
-                        HorizontalAlignment = HorizontalAlignment.Right,
-                        ItemSpacing = 4,
-                        Size=new Size(SizeValue.Parent, SizeValue.Content),
-                        Items =
-                        {
-                            okButton,
-                            cancelButton
-                        }
-                    }
-                }
-            };
+            Content = mainLayout;
 
-            var width = Application.Instance.MainForm.Width * .8f;
-            var height = Content.GetHeight(Application.Instance.MainForm.Height);
-            Size = new Vector2(width, height);
+            var mainSize = Application.Instance.MainForm.Size;
+
+            var width = mainLayout.GetWidth((int)mainSize.X, (int)mainSize.Y);
+            var height = mainLayout.GetHeight((int)mainSize.X, (int)mainSize.Y);
+
+            Size = new Size(SizeValue.Absolute(width), SizeValue.Absolute(height));
         }
 
         private void ComboBox_SelectedItemChanged(object sender, EventArgs e)

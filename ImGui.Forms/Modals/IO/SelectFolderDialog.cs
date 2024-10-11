@@ -2,22 +2,16 @@
 using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Threading.Tasks;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Layouts;
 using ImGui.Forms.Controls.Tree;
 using ImGui.Forms.Models;
+using ImGui.Forms.Resources;
 
 namespace ImGui.Forms.Modals.IO
 {
     public class SelectFolderDialog : Modal
     {
-        private const string Ok_ = "Ok";
-        private const string Cancel_ = "Cancel";
-        private const string NewFolder_ = "Create new folder";
-
-        private const int ButtonWidth_ = 75;
-
         private TreeView<string> _treeView;
 
         private Button _newFolderButton;
@@ -32,9 +26,9 @@ namespace ImGui.Forms.Modals.IO
 
             _treeView = new TreeView<string>();
 
-            _newFolderButton = new Button { Text = NewFolder_, Enabled = false };
-            _okButton = new Button { Text = Ok_, Width = ButtonWidth_, Enabled = false };
-            _cancelButton = new Button { Text = Cancel_, Width = ButtonWidth_ };
+            _newFolderButton = new Button { Text = LocalizationResources.CreateFolderCaption(), Enabled = false, Padding = new Vector2(5, 2) };
+            _okButton = new Button { Text = LocalizationResources.Ok(), Width = 80, Enabled = false };
+            _cancelButton = new Button { Text = LocalizationResources.Cancel(), Width = 80 };
 
             #endregion
 
@@ -51,9 +45,7 @@ namespace ImGui.Forms.Modals.IO
 
             #region Main content
 
-            var width = Application.Instance.MainForm.Width * .9f;
-            var height = Application.Instance.MainForm.Height * .8f;
-            Size = new Vector2(width, height);
+            Size = new Size(SizeValue.Relative(.9f), SizeValue.Relative(.8f));
 
             Result = DialogResult.Cancel;
             Content = new StackLayout
@@ -96,8 +88,10 @@ namespace ImGui.Forms.Modals.IO
             Directory = GetInitialDirectory();
 
             // Initialize file tree and file view
+            var desktopDir = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
             var userDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            _treeView.Nodes.Add(new TreeNode<string> { Text = "Desktop", Data = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), Nodes = { new TreeNode<string>() } });
+
+            _treeView.Nodes.Add(new TreeNode<string> { Text = Path.GetFileName(desktopDir), Data = desktopDir, Nodes = { new TreeNode<string>() } });
             _treeView.Nodes.Add(new TreeNode<string> { Text = Path.GetFileName(userDir), Data = userDir, Nodes = { new TreeNode<string>() } });
 
             foreach (var drive in DriveInfo.GetDrives())
@@ -109,7 +103,7 @@ namespace ImGui.Forms.Modals.IO
         private async void _newFolderButton_Clicked(object sender, EventArgs e)
         {
             var path = GetNodePath(_treeView.SelectedNode);
-            var newFolderName = await InputBox.ShowAsync("Create folder", "New folder name:");
+            var newFolderName = await InputBox.ShowAsync(LocalizationResources.CreateFolderCaption(), LocalizationResources.CreateFolderText());
 
             if (string.IsNullOrEmpty(newFolderName))
                 return;
@@ -171,7 +165,7 @@ namespace ImGui.Forms.Modals.IO
 
         #endregion
 
-        #region Support method
+        #region Support methods
 
         private string GetInitialDirectory()
         {

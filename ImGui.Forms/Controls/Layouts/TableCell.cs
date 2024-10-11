@@ -47,18 +47,18 @@ namespace ImGui.Forms.Controls.Layouts
             Content = component;
         }
 
-        public int GetWidth(int parentWidth, float layoutCorrection = 1f)
+        public int GetWidth(int parentWidth, int parentHeight, float layoutCorrection = 1f)
         {
             if (Size.Width.IsContentAligned)
-                return Content?.GetWidth(parentWidth, layoutCorrection) ?? 0;
+                return Content?.GetWidth(parentWidth, parentHeight, layoutCorrection) ?? 0;
 
             return Component.GetDimension(Size.Width, parentWidth, layoutCorrection);
         }
 
-        public int GetHeight(int parentHeight, float layoutCorrection = 1f)
+        public int GetHeight(int parentWidth, int parentHeight, float layoutCorrection = 1f)
         {
             if (Size.Height.IsContentAligned)
-                return Content?.GetHeight(parentHeight, layoutCorrection) ?? 0;
+                return Content?.GetHeight(parentWidth, parentHeight, layoutCorrection) ?? 0;
 
             return Component.GetDimension(Size.Height, parentHeight, layoutCorrection);
         }

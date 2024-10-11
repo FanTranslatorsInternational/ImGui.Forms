@@ -9,10 +9,11 @@ using Size = ImGui.Forms.Models.Size;
 
 namespace ImGui.Forms.Controls.Base
 {
-    // TODO: Due to executive inconsistency, remove ApplyStyles/RemoveStyles methods and apply styles in Update/Size methods directly
     public abstract class Component
     {
         private bool _tabInactive;
+
+        #region Properties
 
         /// <summary>
         /// The Id for this component.
@@ -39,6 +40,8 @@ namespace ImGui.Forms.Controls.Base
         /// Determines if the component should have a visible border.
         /// </summary>
         public bool ShowBorder { get; set; }
+
+        #endregion
 
         #region Events
 
@@ -119,13 +122,14 @@ namespace ImGui.Forms.Controls.Base
         /// Gets the finalized width of this component.
         /// </summary>
         /// <param name="parentWidth">The width of the parent component.</param>
+        /// <param name="parentHeight">The height of the parent component.</param>
         /// <param name="layoutCorrection">A correctional value for layouts.</param>
         /// <returns>The finalized width of this component.</returns>
-        public int GetWidth(int parentWidth, float layoutCorrection = 1f)
+        public int GetWidth(int parentWidth, int parentHeight, float layoutCorrection = 1f)
         {
             var width = GetSize().Width;
             return width.IsContentAligned ?
-                GetContentWidth(parentWidth, layoutCorrection) :
+                GetContentWidth(parentWidth, parentHeight, layoutCorrection) :
                 GetDimension(width, parentWidth, layoutCorrection);
         }
 
@@ -133,37 +137,39 @@ namespace ImGui.Forms.Controls.Base
         /// Gets the width of this component, if it's content aligned.
         /// </summary>
         /// <param name="parentWidth">The width of the parent component.</param>
+        /// <param name="parentHeight">The height of the parent component.</param>
         /// <param name="layoutCorrection">A correctional value for layouts.</param>
         /// <returns>The content width of this component.</returns>
-        protected virtual int GetContentWidth(int parentWidth, float layoutCorrection = 1f) => 0;
+        protected virtual int GetContentWidth(int parentWidth, int parentHeight, float layoutCorrection = 1f) => 0;
 
         /// <summary>
         /// Gets the finalized height of this component.
         /// </summary>
+        /// <param name="parentWidth">The width of the parent component.</param>
         /// <param name="parentHeight">The height of the parent component.</param>
         /// <param name="layoutCorrection">A correctional value for layouts.</param>
         /// <returns>The finalized height of this component.</returns>
-        public int GetHeight(int parentHeight, float layoutCorrection = 1f)
+        public int GetHeight(int parentWidth, int parentHeight, float layoutCorrection = 1f)
         {
             var height = GetSize().Height;
             return height.IsContentAligned ?
-                GetContentHeight(parentHeight, layoutCorrection) :
+                GetContentHeight(parentWidth, parentHeight, layoutCorrection) :
                 GetDimension(height, parentHeight, layoutCorrection);
         }
 
         /// <summary>
         /// Gets the height of this component, if it's content aligned.
         /// </summary>
+        /// <param name="parentWidth">The width of the parent component.</param>
         /// <param name="parentHeight">The height of the parent component.</param>
         /// <param name="layoutCorrection">A correctional value for layouts.</param>
         /// <returns>The content height of this component.</returns>
-        protected virtual int GetContentHeight(int parentHeight, float layoutCorrection = 1f) => 0;
+        protected virtual int GetContentHeight(int parentWidth, int parentHeight, float layoutCorrection = 1f) => 0;
 
         /// <summary>
         /// Gets the absolute or relative size of the component. Use <see cref="GetWidth"/> or <see cref="GetHeight"/> to get the finalized size.
         /// </summary>
         /// <returns>The absolute or relative size of this component.</returns>
-        /// TODO: Make gettable property, default value Size.Content
         public abstract Size GetSize();
 
         /// <summary>
@@ -243,7 +249,7 @@ namespace ImGui.Forms.Controls.Base
         /// <param name="maxDimensionValue">The maximum to calculate relative <see cref="SizeValue"/>s against.</param>
         /// <param name="correction">The corrective value to calculate relative <see cref="SizeValue"/>s against.</param>
         /// <returns></returns>
-        internal static int GetDimension(SizeValue dimensionValue, int maxDimensionValue, float correction = 1f)
+        protected internal static int GetDimension(SizeValue dimensionValue, int maxDimensionValue, float correction = 1f)
         {
             if (dimensionValue.IsAbsolute)
                 return (int)Math.Min(dimensionValue.Value, maxDimensionValue);

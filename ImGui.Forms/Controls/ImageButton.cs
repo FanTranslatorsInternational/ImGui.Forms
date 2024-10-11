@@ -58,7 +58,7 @@ namespace ImGui.Forms.Controls
             var enabled = Enabled;
             ApplyStyles(enabled);
 
-            if ((nint)Image != nint.Zero)
+            if (Image != null && (nint)Image != nint.Zero)
             {
                 if ((ImGuiNET.ImGui.ImageButton($"##{Id}", (nint)Image, GetImageSize()) || IsKeyDown(KeyAction)) && Enabled)
                     OnClicked();

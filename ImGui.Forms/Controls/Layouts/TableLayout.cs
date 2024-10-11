@@ -36,15 +36,15 @@ namespace ImGui.Forms.Controls.Layouts
 
         public override Size GetSize() => Size;
 
-        protected override int GetContentWidth(int parentWidth, float layoutCorrection = 1f)
+        protected override int GetContentWidth(int parentWidth, int parentHeight, float layoutCorrection = 1f)
         {
-            var widths = GetColumnWidths(parentWidth, layoutCorrection);
+            var widths = GetColumnWidths(parentWidth, parentHeight, layoutCorrection);
             return Math.Min(parentWidth, widths.Sum(x => x) + (widths.Length - 1) * (int)Spacing.X);
         }
 
-        protected override int GetContentHeight(int parentHeight, float layoutCorrection = 1)
+        protected override int GetContentHeight(int parentWidth, int parentHeight, float layoutCorrection = 1)
         {
-            var heights = GetRowHeights(parentHeight, layoutCorrection);
+            var heights = GetRowHeights(parentWidth, parentHeight, layoutCorrection);
             return Math.Min(parentHeight, heights.Sum(x => x) + (heights.Length - 1) * (int)Spacing.Y);
         }
 
@@ -75,8 +75,8 @@ namespace ImGui.Forms.Controls.Layouts
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            var localWidths = GetColumnWidths(contentRect.Width, 1f);
-            var localHeights = GetRowHeights(contentRect.Height, 1f);
+            var localWidths = GetColumnWidths(contentRect.Width, contentRect.Height, 1f);
+            var localHeights = GetRowHeights(contentRect.Width, contentRect.Height, 1f);
 
             var totalWidth = localWidths.Sum() + Spacing.X * (localWidths.Length - 1);
             var totalHeight = localHeights.Sum() + Spacing.Y * (localHeights.Length - 1);
@@ -116,8 +116,8 @@ namespace ImGui.Forms.Controls.Layouts
 
                             // Apply cell alignment
                             var cellInternalSize = cell?.Content?.GetSize() ?? Size.Parent;
-                            var cellInternalWidth = cellInternalSize.Width.IsAbsolute ? cell?.Content?.GetWidth(cellWidth) ?? 0 : cellWidth;
-                            var cellInternalHeight = cellInternalSize.Height.IsAbsolute ? cell?.Content?.GetHeight(cellHeight) ?? 0 : cellHeight;
+                            var cellInternalWidth = cellInternalSize.Width.IsAbsolute ? cell?.Content?.GetWidth(cellWidth, cellHeight) ?? 0 : cellWidth;
+                            var cellInternalHeight = cellInternalSize.Height.IsAbsolute ? cell?.Content?.GetHeight(cellWidth, cellHeight) ?? 0 : cellHeight;
                             var cellXOffset = 0f;
                             var cellYOffset = 0f;
 
@@ -195,7 +195,7 @@ namespace ImGui.Forms.Controls.Layouts
 
         #region Width calculation
 
-        private int[] GetColumnWidths(int componentWidth, float layoutCorrection)
+        private int[] GetColumnWidths(int componentWidth, int componentHeight, float layoutCorrection)
         {
             var maxColumnCount = GetMaxColumnCount();
             var result = Enumerable.Repeat(-1, maxColumnCount).ToArray();
@@ -217,7 +217,7 @@ namespace ImGui.Forms.Controls.Layouts
                         var widthValue = (int)cell.Size.Width.Value;
 
                         var maxValue = widthValue < 0 ?
-                            cell.Content.GetWidth(componentWidth, layoutCorrection) :
+                            cell.Content.GetWidth(componentWidth, componentHeight, layoutCorrection) :
                             widthValue;
                         maxValue = Math.Min(availableWidth, maxValue);
 
@@ -256,7 +256,7 @@ namespace ImGui.Forms.Controls.Layouts
                         maxIsAbsolute = true;
 
                         var maxValue = cellWidth.Value < 0 ?
-                            cell.GetWidth(componentWidth, layoutCorrection) :
+                            cell.GetWidth(componentWidth, componentHeight, layoutCorrection) :
                             (int)cellWidth.Value;
 
                         if (maxValue > maxCellWidth)
@@ -266,7 +266,7 @@ namespace ImGui.Forms.Controls.Layouts
                     }
 
                     maxIsAbsolute = false;
-                    maxCellWidth = cell.GetWidth(availableWidth, widthCorrection);
+                    maxCellWidth = cell.GetWidth(availableWidth, componentHeight, widthCorrection);
                 }
 
                 // If max width is not absolute, do nothing
@@ -305,7 +305,7 @@ namespace ImGui.Forms.Controls.Layouts
 
         #region Height calculation
 
-        private int[] GetRowHeights(int componentHeight, float layoutCorrection)
+        private int[] GetRowHeights(int componentWidth, int componentHeight, float layoutCorrection)
         {
             var result = Enumerable.Repeat(-1, Rows.Count).ToArray();
 
@@ -324,7 +324,7 @@ namespace ImGui.Forms.Controls.Layouts
                         if (cell?.Content == null) continue;
 
                         var maxValue = cell.Size.Height.IsContentAligned ?
-                            cell.Content.GetHeight(componentHeight, layoutCorrection) :
+                            cell.Content.GetHeight(componentWidth, componentHeight, layoutCorrection) :
                             (int)cell.Size.Height.Value;
                         if (!Size.Height.IsContentAligned)
                             maxValue = Math.Min(availableHeight, maxValue);
@@ -365,7 +365,7 @@ namespace ImGui.Forms.Controls.Layouts
                         maxIsAbsolute = true;
 
                         var maxValue = cellHeight.IsContentAligned ?
-                            cell.GetHeight(componentHeight, layoutCorrection) :
+                            cell.GetHeight(componentWidth, componentHeight, layoutCorrection) :
                             cellHeight.Value;
                         if (!Size.Height.IsContentAligned)
                             maxValue = Math.Min(availableHeight, maxValue);
@@ -377,7 +377,7 @@ namespace ImGui.Forms.Controls.Layouts
                     }
 
                     maxIsAbsolute = false;
-                    maxCellHeight = cell.GetHeight(availableHeight, heightCorrection);
+                    maxCellHeight = cell.GetHeight(componentWidth, availableHeight, heightCorrection);
                 }
 
                 // If max height is not absolute, do nothing

@@ -13,10 +13,9 @@ namespace ImGui.Forms.Controls
         #region Properties
 
         public LocalizedString Caption { get; set; }
+        public Size Size { get; set; } = Size.WidthAlign;
 
         public Component Content { get; set; }
-
-        public int ContentHeight { get; set; } = 200;
 
         public bool Expanded { get; set; }
 
@@ -36,7 +35,13 @@ namespace ImGui.Forms.Controls
 
         public override Size GetSize()
         {
-            return new Size(1f, (int)(GetHeaderHeight() + (Expanded ? ImGuiNET.ImGui.GetStyle().ItemSpacing.X + ContentHeight : 0)));
+            SizeValue height = Size.Height.IsContentAligned
+                    ? Expanded
+                        ? SizeValue.Absolute((int)(GetHeaderHeight() + ImGuiNET.ImGui.GetStyle().ItemSpacing.X + 200))
+                        : SizeValue.Absolute(GetHeaderHeight())
+                    : Size.Height;
+
+            return new Size(Size.Width, height);
         }
 
         protected override void UpdateInternal(Rectangle contentRect)

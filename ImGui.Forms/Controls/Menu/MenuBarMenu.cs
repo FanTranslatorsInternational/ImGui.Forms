@@ -12,6 +12,8 @@ namespace ImGui.Forms.Controls.Menu
 
         public LocalizedString Text { get; set; }
 
+        public FontResource Font { get; set; }
+
         public Vector2 Padding { get; set; } = new(8, 8);
 
         public IList<MenuBarItem> Items { get; } = new List<MenuBarItem>();
@@ -20,16 +22,13 @@ namespace ImGui.Forms.Controls.Menu
 
         #endregion
 
-        public MenuBarMenu(LocalizedString text)
+        public MenuBarMenu(LocalizedString text = default)
         {
             Text = text;
         }
 
         protected override void UpdateInternal()
         {
-            ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(4, 5));
-            ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Padding);
-
             if (ImGuiNET.ImGui.BeginMenu(Text, Enabled))
             {
                 foreach (var item in Items)
@@ -39,13 +38,13 @@ namespace ImGui.Forms.Controls.Menu
             }
             else
                 UpdateEventsInternal();
-
-
-            ImGuiNET.ImGui.PopStyleVar(2);
         }
 
         protected override void UpdateEventsInternal()
         {
+            if (!Enabled)
+                return;
+
             foreach (var item in Items)
                 item.UpdateEvents();
         }
@@ -55,11 +54,29 @@ namespace ImGui.Forms.Controls.Menu
             ApplyStyles();
 
             var textSize = TextMeasurer.MeasureText(Text);
-            var height = (int)(textSize.Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y);
+            var height = (int)(textSize.Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y * 2);
 
             RemoveStyles();
 
             return height;
+        }
+
+        protected override void ApplyStyles()
+        {
+            ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(4, 5));
+            ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Padding);
+
+            ImFontPtr? fontPtr = Font?.GetPointer();
+            if (fontPtr != null)
+                ImGuiNET.ImGui.PushFont(fontPtr.Value);
+        }
+
+        protected override void RemoveStyles()
+        {
+            if (Font?.GetPointer() != null)
+                ImGuiNET.ImGui.PopFont();
+
+            ImGuiNET.ImGui.PopStyleVar(2);
         }
     }
 }

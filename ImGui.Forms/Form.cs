@@ -132,8 +132,8 @@ namespace ImGui.Forms
             ImGuiNET.ImGui.SetWindowPos(new Vector2(0, menuHeight));
 
             var contentPos = ImGuiNET.ImGui.GetCursorScreenPos();
-            var contentWidth = Content?.GetWidth(Width - (int)Padding.X * 2) ?? 0;
-            var contentHeight = Content?.GetHeight(Height - (int)Padding.Y * 2 - menuHeight) ?? 0;
+            var contentWidth = Content?.GetWidth(Width - (int)Padding.X * 2, Height - (int)Padding.Y * 2 - menuHeight) ?? 0;
+            var contentHeight = Content?.GetHeight(Width - (int)Padding.X * 2, Height - (int)Padding.Y * 2 - menuHeight) ?? 0;
             var contentRect = new Veldrid.Rectangle((int)contentPos.X, (int)contentPos.Y, contentWidth, contentHeight);
 
             Content?.Update(contentRect);
@@ -175,7 +175,7 @@ namespace ImGui.Forms
 
         internal async Task OnClosing(ClosingEventArgs e)
         {
-            if (Closing == null) 
+            if (Closing == null)
                 return;
 
             await Closing?.Invoke(this, e);

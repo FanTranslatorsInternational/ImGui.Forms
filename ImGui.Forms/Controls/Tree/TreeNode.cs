@@ -42,7 +42,7 @@ namespace ImGui.Forms.Controls.Tree
 
         public bool IsRoot => Parent?._isRoot ?? true;
 
-        public new IList<TreeNode<TNodeData>> Nodes => _nodes;
+        public IList<TreeNode<TNodeData>> Nodes => _nodes;
 
         public TreeNode<TNodeData> Parent { get; private set; }
 

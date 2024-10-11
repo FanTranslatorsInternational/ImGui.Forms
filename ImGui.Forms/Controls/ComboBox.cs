@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 using ImGuiNET;
@@ -15,13 +16,24 @@ namespace ImGui.Forms.Controls
 {
     public class ComboBox<TItem> : Component
     {
+        private const int ButtonSizeX_ = 11;
+
         private string _input = string.Empty;
+        private DropDownItem<TItem> _selected;
 
         #region Properties
 
-        public IList<ComboBoxItem<TItem>> Items { get; } = new List<ComboBoxItem<TItem>>();
+        public IList<DropDownItem<TItem>> Items { get; } = new List<DropDownItem<TItem>>();
 
-        public ComboBoxItem<TItem> SelectedItem { get; set; }
+        public DropDownItem<TItem> SelectedItem
+        {
+            get => _selected;
+            set
+            {
+                _selected = value;
+                _input = value.Name;
+            }
+        }
 
         public SizeValue Width { get; set; } = SizeValue.Content;
 
@@ -46,7 +58,7 @@ namespace ImGui.Forms.Controls
         public override Size GetSize()
         {
             var maxWidth = Items.Select(x => TextMeasurer.GetCurrentLineWidth(x.Name)).DefaultIfEmpty(0).Max() + (int)ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.X * 2;
-            var arrowWidth = 20;
+            int arrowWidth = (int)(ButtonSizeX_ + ImGuiNET.ImGui.GetStyle().FramePadding.X * 2);
 
             SizeValue width = Width.IsContentAligned ? maxWidth + arrowWidth : Width;
             var height = TextMeasurer.GetCurrentLineHeight() + (int)ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.Y * 2;
@@ -63,10 +75,13 @@ namespace ImGui.Forms.Controls
 
             ImGuiNET.ImGui.PushID(Id);
 
+            var arrowWidth = ButtonSizeX_ + ImGuiNET.ImGui.GetStyle().FramePadding.X * 2;
+            ImGuiNET.ImGui.SetNextItemWidth(contentRect.Width - arrowWidth);
+
             bool isFinal = ImGuiNET.ImGui.InputText("##in", ref _input, MaxCharacters, ImGuiInputTextFlags.CallbackAlways | ImGuiInputTextFlags.EnterReturnsTrue, Propose);
             if (isFinal)
             {
-                ComboBoxItem<TItem> selectedItem = Items.FirstOrDefault(i => i.Name == _input);
+                DropDownItem<TItem> selectedItem = Items.FirstOrDefault(i => i.Name == _input);
                 if (SelectedItem != selectedItem)
                 {
                     SelectedItem = selectedItem;
@@ -92,9 +107,7 @@ namespace ImGui.Forms.Controls
             ImGuiNET.ImGui.SetNextWindowSize(size);
             if (ImGuiNET.ImGui.BeginPopup("combobox", ImGuiWindowFlags.NoMove))
             {
-                ImGuiNET.ImGui.Text("Select an item");
-                ImGuiNET.ImGui.Separator();
-                foreach (ComboBoxItem<TItem> item in Items)
+                foreach (DropDownItem<TItem> item in Items)
                 {
                     if (!ImGuiNET.ImGui.Selectable(item.Name))
                         continue;
@@ -159,7 +172,7 @@ namespace ImGui.Forms.Controls
             int prevDiff = -1;
             string? itemName = null;
 
-            foreach (ComboBoxItem<TItem> item in Items)
+            foreach (DropDownItem<TItem> item in Items)
             {
                 if (!Identical(bufferString, item.Name, out int diff))
                     continue;
@@ -214,5 +227,20 @@ namespace ImGui.Forms.Controls
             diff = item.Length - buf.Length;
             return true;
         }
+    }
+
+    public class DropDownItem<TItem>
+    {
+        public TItem Content { get; }
+
+        public LocalizedString Name { get; }
+
+        public DropDownItem(TItem content, LocalizedString name = default)
+        {
+            Content = content;
+            Name = name.IsEmpty ? (LocalizedString)content.ToString() : name;
+        }
+
+        public static implicit operator DropDownItem<TItem>(TItem o) => new(o);
     }
 }

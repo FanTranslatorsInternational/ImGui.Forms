@@ -36,8 +36,8 @@ namespace ImGui.Forms.Controls.Layouts
                     if (!(item?.Visible ?? false))
                         continue;
 
-                    var itemWidth = item.GetWidth(contentRect.Width);
-                    var itemHeight = item.GetHeight(contentRect.Height);
+                    var itemWidth = item.GetWidth(contentRect.Width, contentRect.Height);
+                    var itemHeight = item.GetHeight(contentRect.Width,contentRect.Height);
 
                     // Wrap positions
                     if (x + itemWidth + ItemSpacing.X >= contentRect.Width)

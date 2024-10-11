@@ -42,6 +42,12 @@ namespace ImGui.Forms.Localization
             SetCurrentLocale(locale);
         }
 
+        public bool TryLocalize(string localizationId, out string localization, params object[] args)
+        {
+            localization = Localize(localizationId, args);
+            return localization != UndefinedValue;
+        }
+
         public string Localize(string localizationId, params object[] args)
         {
             // Return localization of current locale

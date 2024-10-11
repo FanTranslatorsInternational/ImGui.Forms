@@ -5,20 +5,21 @@ using ImGui.Forms.Controls.Layouts;
 
 namespace ImGui.Forms.Controls.Lists
 {
-    public class ActivableList : BaseList<ActivableComponent>
+    public class ActivableList<TItem> : List<TItem>
+        where TItem : ActivableComponent
     {
-        protected override void OnItemAdded(ItemEventArgs<ActivableComponent> e)
+        protected override void OnItemAdded(ItemEventArgs<TItem> e)
         {
             e.Item.Activated += Item_Activated;
         }
 
-        protected override void OnItemSet(ItemSetEventArgs<ActivableComponent> e)
+        protected override void OnItemSet(ItemSetEventArgs<TItem> e)
         {
             e.PreviousItem.Activated -= Item_Activated;
             e.Item.Activated += Item_Activated;
         }
 
-        protected override void OnItemRemoved(ItemEventArgs<ActivableComponent> e)
+        protected override void OnItemRemoved(ItemEventArgs<TItem> e)
         {
             e.Item.Activated -= Item_Activated;
         }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
 using ImGui.Forms.Models.IO;
@@ -18,6 +19,8 @@ namespace ImGui.Forms.Controls
 
         public ImGuiDir Direction { get; set; }
 
+        public Vector2 Padding { get; set; } = new(4, 3);
+
         #endregion
 
         #region Events
@@ -33,14 +36,14 @@ namespace ImGui.Forms.Controls
 
         public override Size GetSize()
         {
-            var padding = ImGuiNET.ImGui.GetStyle().FramePadding;
-
-            return new Size((int)Math.Ceiling(ButtonSizeX_ + padding.X * 2), (int)Math.Ceiling(ButtonSizeY_ + padding.Y * 2));
+            return new Size((int)Math.Ceiling(ButtonSizeX_ + Padding.X * 2), (int)Math.Ceiling(ButtonSizeY_ + Padding.Y * 2));
         }
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
             var enabled = Enabled;
+
+            ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Padding);
 
             if (!enabled)
             {
@@ -54,6 +57,8 @@ namespace ImGui.Forms.Controls
 
             if (!enabled)
                 ImGuiNET.ImGui.PopStyleColor(3);
+
+            ImGuiNET.ImGui.PopStyleVar();
         }
 
         private void OnClicked()

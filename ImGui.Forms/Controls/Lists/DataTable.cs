@@ -1,10 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
-using ImGui.Forms.Extensions;
 using ImGuiNET;
 using Rectangle = Veldrid.Rectangle;
 using Size = ImGui.Forms.Models.Size;
@@ -14,13 +12,13 @@ namespace ImGui.Forms.Controls.Lists
     public class DataTable<TData> : Component
     {
         private (int, int) _clickedCell = (-1, -1);
-        private readonly IList<int> _selectedIndexes = new List<int>();
+        private readonly IList<int> _selectedIndexes = new System.Collections.Generic.List<int>();
 
-        private IList<DataTableRow<TData>> _rows = new List<DataTableRow<TData>>();
+        private IList<DataTableRow<TData>> _rows = new System.Collections.Generic.List<DataTableRow<TData>>();
 
         #region Properties
 
-        public IList<DataTableColumn<TData>> Columns { get; } = new List<DataTableColumn<TData>>();
+        public IList<DataTableColumn<TData>> Columns { get; } = new System.Collections.Generic.List<DataTableColumn<TData>>();
 
         public IList<DataTableRow<TData>> Rows
         {
@@ -57,19 +55,16 @@ namespace ImGui.Forms.Controls.Lists
 
         #endregion
 
-        public override Size GetSize()
-        {
-            return Size;
-        }
+        public override Size GetSize() => Size;
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            var localRows = _rows ?? new List<DataTableRow<TData>>();
+            var localRows = _rows ?? new System.Collections.Generic.List<DataTableRow<TData>>();
 
             var flags = ImGuiTableFlags.BordersV;
             if (IsResizable) flags |= ImGuiTableFlags.Resizable;
 
-            if (ImGuiNET.ImGui.BeginChild($"{Id}c"))
+            if (ImGuiNET.ImGui.BeginChild($"{Id}c", contentRect.Size))
             {
                 if (ImGuiNET.ImGui.BeginTable($"{Id}t", Columns.Count, flags))
                 {

@@ -1,7 +1,6 @@
 ﻿using ImGuiNET;
 using System;
 using System.Numerics;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ImGui.Forms.Resources
 {

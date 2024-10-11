@@ -73,14 +73,14 @@ namespace ImGui.Forms.Controls.Layouts
 
         public override Size GetSize() => _size;
 
-        protected override int GetContentWidth(int parentWidth, float layoutCorrection = 1)
+        protected override int GetContentWidth(int parentWidth, int parentHeight, float layoutCorrection = 1)
         {
-            return _tableLayout.GetWidth(parentWidth, layoutCorrection);
+            return _tableLayout.GetWidth(parentWidth, parentHeight, layoutCorrection);
         }
 
-        protected override int GetContentHeight(int parentHeight, float layoutCorrection = 1)
+        protected override int GetContentHeight(int parentWidth, int parentHeight, float layoutCorrection = 1)
         {
-            return _tableLayout.GetHeight(parentHeight, layoutCorrection);
+            return _tableLayout.GetHeight(parentWidth, parentHeight, layoutCorrection);
         }
 
         protected override void UpdateInternal(Rectangle contentRect)

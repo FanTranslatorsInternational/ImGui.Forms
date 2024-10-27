@@ -11,7 +11,7 @@ using Veldrid;
 
 namespace ImGui.Forms.Controls.Text.Editor
 {
-    // Original implementation in C++ and for Dear ImGui: https://github.com/BalazsJako/ImGuiColorTextEdit
+    // Original implementation in C++ and for Dear ImGui by BalazsJako: https://github.com/BalazsJako/ImGuiColorTextEdit
     // Modified by onepiecefreak: Translated to C#; Adjusted to ImGui.Forms paradigms and code design
 
     public class TextEditor : Component

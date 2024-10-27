@@ -25,12 +25,21 @@ jobs:
       with:
         dotnet-version: 8.0.303
 
-    # Upload ImGui.Forms to nuget.org
+    - name: Build ImGui.Forms
+      run: |
+        dotnet pack --configuration Release --output nuget
+
     - name: Publish ImGui.Forms
-      uses: brandedoutcast/publish-nuget@v2
-      with:
-        PROJECT_FILE_PATH: ImGui.Forms/ImGui.Forms.csproj
-        VERSION_FILE_PATH: ImGui.Forms/ImGui.Forms.nuspec
-        VERSION_REGEX: '^\s*<version>(.*)<\/version>\s*$'
-        TAG_FORMAT: '*'
-        NUGET_KEY: ${{secrets.NUGET_API_KEY}}
+      run: |
+        for %f in (*.nupkg) do
+          dotnet nuget push %f --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+    # Upload ImGui.Forms to nuget.org
+    #- name: Publish ImGui.Forms
+    #  uses: brandedoutcast/publish-nuget@v2
+    #  with:
+    #    PROJECT_FILE_PATH: ImGui.Forms/ImGui.Forms.csproj
+    #    VERSION_FILE_PATH: ImGui.Forms/ImGui.Forms.nuspec
+    #    VERSION_REGEX: '^\s*<version>(.*)<\/version>\s*$'
+    #    TAG_FORMAT: '*'
+    #    NUGET_KEY: ${{secrets.NUGET_API_KEY}}

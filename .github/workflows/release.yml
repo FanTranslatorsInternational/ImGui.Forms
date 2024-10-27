@@ -31,4 +31,6 @@ jobs:
 
     - name: Publish ImGui.Forms
       run: |
-        for %f in (*.nupkg) do dotnet nuget push %f --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+        foreach($file in (Get-ChildItem "nuget" -Recurse -Include *.nupkg)) {
+          dotnet nuget push $file --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+        }

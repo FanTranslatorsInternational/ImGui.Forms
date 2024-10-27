@@ -5,20 +5,12 @@ namespace ImGui.Forms.Localization
 {
     public abstract class BaseLocalizer : ILocalizer
     {
-        private readonly IDictionary<string, LanguageInfo> _localizations;
+        private IDictionary<string, LanguageInfo> _localizations;
 
         protected abstract string DefaultLocale { get; }
         protected abstract string UndefinedValue { get; }
 
         public string CurrentLocale { get; private set; }
-
-        public BaseLocalizer()
-        {
-            _localizations = GetLocalizations();
-            
-            // HINT: SetCurrentLocale is not used on purpose, to not apply override logic in case of failure
-            CurrentLocale = GetInitialLocale();
-        }
 
         public IList<string> GetLocales()
         {
@@ -62,6 +54,14 @@ namespace ImGui.Forms.Localization
 
             // Otherwise, return localization placeholder
             return UndefinedValue;
+        }
+
+        protected void Initialize()
+        {
+            _localizations = GetLocalizations();
+
+            // HINT: SetCurrentLocale is not used on purpose, to not apply override logic in case of failure
+            CurrentLocale = GetInitialLocale();
         }
 
         protected abstract IList<LanguageInfo> InitializeLocalizations();

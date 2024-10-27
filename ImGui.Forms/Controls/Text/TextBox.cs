@@ -8,7 +8,7 @@ using ImGuiNET;
 using Rectangle = Veldrid.Rectangle;
 using Size = ImGui.Forms.Models.Size;
 
-namespace ImGui.Forms.Controls
+namespace ImGui.Forms.Controls.Text
 {
     public class TextBox : Component
     {
@@ -155,7 +155,7 @@ namespace ImGui.Forms.Controls
         protected override void RemoveStyles()
         {
             ImGuiNET.ImGui.PopStyleVar();
-            
+
             if (Font?.GetPointer() != null)
                 ImGuiNET.ImGui.PopFont();
         }

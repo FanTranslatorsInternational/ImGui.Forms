@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Layouts;
 using ImGui.Forms.Controls.Lists;
+using ImGui.Forms.Controls.Text;
 using ImGui.Forms.Controls.Tree;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;

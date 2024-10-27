@@ -4,7 +4,7 @@ using ImGui.Forms.Models;
 using ImGuiNET;
 using Veldrid;
 
-namespace ImGui.Forms.Controls
+namespace ImGui.Forms.Controls.Text
 {
     public class MultiLineTextBox : Component
     {

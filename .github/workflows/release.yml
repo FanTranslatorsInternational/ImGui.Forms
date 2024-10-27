@@ -11,12 +11,10 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: nuget/setup-nuget@v1
 
     # Setup the build
     - name: Wait for other release builds
-      uses: softprops/turnstyle@v1
+      uses: softprops/turnstyle@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -31,15 +29,4 @@ jobs:
 
     - name: Publish ImGui.Forms
       run: |
-        for %f in (*.nupkg) do
-          dotnet nuget push %f --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
-
-    # Upload ImGui.Forms to nuget.org
-    #- name: Publish ImGui.Forms
-    #  uses: brandedoutcast/publish-nuget@v2
-    #  with:
-    #    PROJECT_FILE_PATH: ImGui.Forms/ImGui.Forms.csproj
-    #    VERSION_FILE_PATH: ImGui.Forms/ImGui.Forms.nuspec
-    #    VERSION_REGEX: '^\s*<version>(.*)<\/version>\s*$'
-    #    TAG_FORMAT: '*'
-    #    NUGET_KEY: ${{secrets.NUGET_API_KEY}}
+        for %f in (*.nupkg) do dotnet nuget push %f --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate

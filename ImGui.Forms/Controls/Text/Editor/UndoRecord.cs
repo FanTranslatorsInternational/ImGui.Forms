@@ -4,11 +4,11 @@ namespace ImGui.Forms.Controls.Text.Editor
 {
     struct UndoRecord
     {
-        public string mAdded;
+        public string mAdded = string.Empty;
         public Coordinate mAddedStart;
         public Coordinate mAddedEnd;
 
-        public string mRemoved;
+        public string mRemoved = string.Empty;
         public Coordinate mRemovedStart;
         public Coordinate mRemovedEnd;
 
@@ -44,7 +44,7 @@ namespace ImGui.Forms.Controls.Text.Editor
             if (mRemoved.Length > 0)
             {
                 var start = mRemovedStart;
-                aEditor.InsertTextAt(start, mRemoved);
+                aEditor.InsertTextAt(ref start, mRemoved);
                 aEditor.Colorize(mRemovedStart.Line - 1, mRemovedEnd.Line - mRemovedStart.Line + 2);
             }
 
@@ -63,7 +63,7 @@ namespace ImGui.Forms.Controls.Text.Editor
             if (mAdded.Length > 0)
             {
                 var start = mAddedStart;
-                aEditor.InsertTextAt(start, mAdded);
+                aEditor.InsertTextAt(ref start, mAdded);
                 aEditor.Colorize(mAddedStart.Line - 1, mAddedEnd.Line - mAddedStart.Line + 1);
             }
 

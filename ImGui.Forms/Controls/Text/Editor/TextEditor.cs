@@ -12,7 +12,10 @@ using Veldrid;
 namespace ImGui.Forms.Controls.Text.Editor
 {
     // Original implementation in C++ and for Dear ImGui by BalazsJako: https://github.com/BalazsJako/ImGuiColorTextEdit
-    // Modified by onepiecefreak: Translated to C#; Adjusted to ImGui.Forms paradigms and code design
+    // Modified by onepiecefreak:
+    // - Translated to C#
+    // - Adjusted to ImGui.Forms paradigms and code design
+    // - Word finding and cursor movements was changed to match Notepad++ more instead
 
     public class TextEditor : Component
     {
@@ -237,7 +240,7 @@ namespace ImGui.Forms.Controls.Text.Editor
             _isTextChanged = true;
         }
 
-        internal int InsertTextAt(Coordinate aWhere, string aValue)
+        internal int InsertTextAt(ref Coordinate aWhere, string aValue)
         {
             if (IsReadOnly)
                 return 0;
@@ -255,32 +258,32 @@ namespace ImGui.Forms.Controls.Text.Editor
                         // skip
                         continue;
                     case '\n':
-                    {
-                        if (cindex < _lines[aWhere.Line].Length)
                         {
-                            GlyphLine newLine = InsertLine(aWhere.Line + 1);
-                            GlyphLine line = _lines[aWhere.Line];
-                            newLine?.Glyphs.InsertRange(0, line.Glyphs[cindex..]);
-                            line.Glyphs.RemoveRange(cindex, line.Length - cindex);
-                        }
-                        else
-                        {
-                            InsertLine(aWhere.Line + 1);
-                        }
+                            if (cindex < _lines[aWhere.Line].Length)
+                            {
+                                GlyphLine newLine = InsertLine(aWhere.Line + 1);
+                                GlyphLine line = _lines[aWhere.Line];
+                                newLine?.Glyphs.InsertRange(0, line.Glyphs[cindex..]);
+                                line.Glyphs.RemoveRange(cindex, line.Length - cindex);
+                            }
+                            else
+                            {
+                                InsertLine(aWhere.Line + 1);
+                            }
 
-                        ++aWhere.Line;
-                        aWhere.Column = 0;
-                        cindex = 0;
-                        ++totalLines;
-                        break;
-                    }
+                            ++aWhere.Line;
+                            aWhere.Column = 0;
+                            cindex = 0;
+                            ++totalLines;
+                            break;
+                        }
                     default:
-                    {
-                        GlyphLine line = _lines[aWhere.Line];
-                        line.Glyphs.Insert(cindex++, new Glyph(character));
-                        ++aWhere.Column;
-                        break;
-                    }
+                        {
+                            GlyphLine line = _lines[aWhere.Line];
+                            line.Glyphs.Insert(cindex++, new Glyph(character));
+                            ++aWhere.Column;
+                            break;
+                        }
                 }
 
                 _isTextChanged = true;
@@ -293,6 +296,8 @@ namespace ImGui.Forms.Controls.Text.Editor
         {
             if (IsReadOnly)
                 return;
+
+            _undoBuffer.RemoveRange(_undoIndex, _undoBuffer.Count - _undoIndex);
 
             _undoBuffer.Add(aValue);
             ++_undoIndex;
@@ -357,21 +362,26 @@ namespace ImGui.Forms.Controls.Text.Editor
             if (cindex >= line.Length)
                 return at;
 
-            while (cindex > 0 && char.IsWhiteSpace(line[cindex].Character))
-                --cindex;
-
+            char startChar = line[cindex].Character;
             PaletteIndex cstart = line[cindex].ColorIndex;
+
+            bool letterOrDigit = char.IsLetterOrDigit(startChar);
+
             while (cindex > 0)
             {
-                char c = line[cindex].Character;
-                if (c <= 32 && char.IsWhiteSpace(c))
-                {
-                    cindex++;
-                    break;
-                }
-
                 if (cstart != line[cindex - 1].ColorIndex)
                     break;
+
+                if (letterOrDigit)
+                {
+                    if (!char.IsLetterOrDigit(line[cindex - 1].Character))
+                        break;
+                }
+                else
+                {
+                    if (startChar != line[cindex - 1].Character)
+                        break;
+                }
 
                 --cindex;
             }
@@ -391,23 +401,31 @@ namespace ImGui.Forms.Controls.Text.Editor
             if (cindex >= line.Length)
                 return at;
 
-            bool prevspace = char.IsWhiteSpace(line[cindex].Character);
             PaletteIndex cstart = line[cindex].ColorIndex;
             while (cindex < line.Length)
             {
-                char c = line[cindex].Character;
                 if (cstart != line[cindex].ColorIndex)
                     break;
 
-                if (prevspace != char.IsWhiteSpace(c))
-                {
-                    if (char.IsWhiteSpace(c))
-                        while (cindex < line.Length && char.IsWhiteSpace(line[cindex].Character))
-                            ++cindex;
-                    break;
-                }
+                char startChar = line[cindex].Character;
+                bool letterOrDigit = char.IsLetterOrDigit(startChar);
 
-                cindex++;
+                while (cindex < line.Length)
+                {
+                    if (letterOrDigit)
+                    {
+                        if (!char.IsLetterOrDigit(line[cindex].Character))
+                            break;
+                    }
+                    else
+                    {
+                        if (startChar != line[cindex].Character)
+                            break;
+                    }
+
+                    ++cindex;
+                }
+                break;
             }
 
             return new Coordinate(aFrom.Line, GetCharacterColumn(aFrom.Line, cindex));
@@ -705,153 +723,71 @@ namespace ImGui.Forms.Controls.Text.Editor
         private void HandleKeyboardInputs()
         {
             ImGuiIOPtr io = ImGuiNET.ImGui.GetIO();
+
             bool shift = io.KeyShift;
             bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
             bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
+            bool isZ = io.InputQueueCharacters.Size == 1 && (char)io.InputQueueCharacters[0] is 'z' or 'Z';
+            bool isY = io.InputQueueCharacters.Size == 1 && (char)io.InputQueueCharacters[0] is 'y' or 'Y';
 
             if (ImGuiNET.ImGui.IsWindowFocused())
             {
                 if (ImGuiNET.ImGui.IsWindowHovered())
                     ImGuiNET.ImGui.SetMouseCursor(ImGuiMouseCursor.TextInput);
-                //ImGuiNET.ImGui.CaptureKeyboardFromApp(true);
 
                 io.WantCaptureKeyboard = true;
                 io.WantTextInput = true;
 
-                switch (IsReadOnly)
-                {
-                    case false when ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.Z)):
-                    case false when !ctrl && !shift && alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.Backspace)):
-                        Undo();
-                        break;
-                    case false when ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.Y)):
-                        Redo();
-                        break;
-                    default:
-                    {
-                        switch (ctrl)
-                        {
-                            case false when !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.UpArrow)):
-                                MoveUp(1, shift);
-                                break;
-                            case false when !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.DownArrow)):
-                                MoveDown(1, shift);
-                                break;
-                            default:
-                            {
-                                switch (alt)
-                                {
-                                    case false when ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.LeftArrow)):
-                                        MoveLeft(1, shift, ctrl);
-                                        break;
-                                    case false when ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.RightArrow)):
-                                        MoveRight(1, shift, ctrl);
-                                        break;
-                                    case false when ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.PageUp)):
-                                        MoveUp(GetPageSize() - 4, shift);
-                                        break;
-                                    case false when ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.PageDown)):
-                                        MoveDown(GetPageSize() - 4, shift);
-                                        break;
-                                    case false when ctrl && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.Home)):
-                                        MoveTop(shift);
-                                        break;
-                                    default:
-                                    {
-                                        switch (ctrl)
-                                        {
-                                            case true when !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.End)):
-                                                MoveBottom(shift);
-                                                break;
-                                            case false when !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.Home)):
-                                                MoveHome(shift);
-                                                break;
-                                            case false when !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.End)):
-                                                MoveEnd(shift);
-                                                break;
-                                            default:
-                                            {
-                                                switch (IsReadOnly)
-                                                {
-                                                    case false when !ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.Delete)):
-                                                        Delete();
-                                                        break;
-                                                    case false when !ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.Backspace)):
-                                                        Backspace();
-                                                        break;
-                                                    default:
-                                                    {
-                                                        switch (ctrl)
-                                                        {
-                                                            case false when !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.Insert)):
-                                                                IsOverwrite ^= true;
-                                                                break;
-                                                            case true when !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.Insert)):
-                                                            case true when !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.C)):
-                                                                Copy();
-                                                                break;
-                                                            default:
-                                                            {
-                                                                switch (IsReadOnly)
-                                                                {
-                                                                    case false when !ctrl && shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.Insert)):
-                                                                    case false when ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.V)):
-                                                                        Paste();
-                                                                        break;
-                                                                    default:
-                                                                    {
-                                                                        switch (ctrl)
-                                                                        {
-                                                                            case true when !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.X)):
-                                                                            case false when shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.Delete)):
-                                                                                Cut();
-                                                                                break;
-                                                                            case true when !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.A)):
-                                                                                SelectAll();
-                                                                                break;
-                                                                            default:
-                                                                            {
-                                                                                switch (IsReadOnly)
-                                                                                {
-                                                                                    case false when !ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.Enter)):
-                                                                                        EnterCharacter('\n', false);
-                                                                                        break;
-                                                                                    case false when !ctrl && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiNET.ImGui.GetKeyIndex(ImGuiKey.Tab)):
-                                                                                        EnterCharacter('\t', shift);
-                                                                                        break;
-                                                                                }
-
-                                                                                break;
-                                                                            }
-                                                                        }
-
-                                                                        break;
-                                                                    }
-                                                                }
-
-                                                                break;
-                                                            }
-                                                        }
-
-                                                        break;
-                                                    }
-                                                }
-
-                                                break;
-                                            }
-                                        }
-
-                                        break;
-                                    }
-                                }
-
-                                break;
-                            }
-                        }
-
-                        break;
-                    }
-                }
+                if (!IsReadOnly && ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Z))
+                    Undo();
+                else if (!IsReadOnly && !ctrl && !shift && alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Backspace))
+                    Undo();
+                else if (!IsReadOnly && ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Y))
+                    Redo();
+                else if (!ctrl && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.UpArrow))
+                    MoveUp(1, shift);
+                else if (!ctrl && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.DownArrow))
+                    MoveDown(1, shift);
+                else if (!alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.LeftArrow))
+                    MoveLeft(1, shift, ctrl);
+                else if (!alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.RightArrow))
+                    MoveRight(1, shift, ctrl);
+                else if (!alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.PageUp))
+                    MoveUp(GetPageSize() - 4, shift);
+                else if (!alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.PageDown))
+                    MoveDown(GetPageSize() - 4, shift);
+                else if (!alt && ctrl && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Home))
+                    MoveTop(shift);
+                else if (ctrl && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.End))
+                    MoveBottom(shift);
+                else if (!ctrl && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Home))
+                    MoveHome(shift);
+                else if (!ctrl && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.End))
+                    MoveEnd(shift);
+                else if (!IsReadOnly && !ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Delete))
+                    Delete();
+                else if (!IsReadOnly && !ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Backspace))
+                    Backspace();
+                else if (!ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Insert))
+                    IsOverwrite ^= true;
+                else if (ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Insert))
+                    Copy();
+                else if (ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.C))
+                    Copy();
+                else if (!IsReadOnly && !ctrl && shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Insert))
+                    Paste();
+                else if (!IsReadOnly && ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.V))
+                    Paste();
+                else if (ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.X))
+                    Cut();
+                else if (!ctrl && shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Delete))
+                    Cut();
+                else if (ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.A))
+                    SelectAll();
+                else if (!IsReadOnly && !ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Enter))
+                    EnterCharacter('\n', false);
+                else if (!IsReadOnly && !ctrl && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Tab))
+                    EnterCharacter('\t', shift);
 
                 if (!IsReadOnly && io.InputQueueCharacters.Size > 0)
                 {
@@ -963,7 +899,7 @@ namespace ImGui.Forms.Controls.Text.Editor
             if (_lineBuffer != string.Empty)
                 throw new InvalidOperationException("Data in line buffer.");
 
-            Vector2 contentSize = ImGuiNET.ImGui.GetWindowContentRegionMax();
+            Vector2 contentSize = ImGuiNET.ImGui.GetContentRegionAvail();
             ImDrawListPtr drawList = ImGuiNET.ImGui.GetWindowDrawList();
             float longest = _textStart;
 
@@ -1147,42 +1083,42 @@ namespace ImGui.Forms.Controls.Text.Editor
                         switch (glyph.Character)
                         {
                             case '\t':
-                            {
-                                float oldX = bufferOffset.X;
-                                bufferOffset.X = (float)(1.0f + Math.Floor((1.0f + bufferOffset.X) / (TabSize * spaceSize))) * (TabSize * spaceSize);
-                                ++i;
-
-                                if (IsShowingWhitespaces)
                                 {
-                                    float s = ImGuiNET.ImGui.GetFontSize();
-                                    float x1 = textScreenPos.X + oldX + 1.0f;
-                                    float x2 = textScreenPos.X + bufferOffset.X - 1.0f;
-                                    float y = textScreenPos.Y + bufferOffset.Y + s * 0.5f;
-                                    Vector2 p1 = new(x1, y);
-                                    Vector2 p2 = new(x2, y);
-                                    Vector2 p3 = new(x2 - s * 0.2f, y - s * 0.2f);
-                                    Vector2 p4 = new(x2 - s * 0.2f, y + s * 0.2f);
-                                    drawList.AddLine(p1, p2, 0x90909090);
-                                    drawList.AddLine(p2, p3, 0x90909090);
-                                    drawList.AddLine(p2, p4, 0x90909090);
-                                }
+                                    float oldX = bufferOffset.X;
+                                    bufferOffset.X = (float)(1.0f + Math.Floor((1.0f + bufferOffset.X) / (TabSize * spaceSize))) * (TabSize * spaceSize);
+                                    ++i;
 
-                                break;
-                            }
+                                    if (IsShowingWhitespaces)
+                                    {
+                                        float s = ImGuiNET.ImGui.GetFontSize();
+                                        float x1 = textScreenPos.X + oldX + 1.0f;
+                                        float x2 = textScreenPos.X + bufferOffset.X - 1.0f;
+                                        float y = textScreenPos.Y + bufferOffset.Y + s * 0.5f;
+                                        Vector2 p1 = new(x1, y);
+                                        Vector2 p2 = new(x2, y);
+                                        Vector2 p3 = new(x2 - s * 0.2f, y - s * 0.2f);
+                                        Vector2 p4 = new(x2 - s * 0.2f, y + s * 0.2f);
+                                        drawList.AddLine(p1, p2, 0x90909090);
+                                        drawList.AddLine(p2, p3, 0x90909090);
+                                        drawList.AddLine(p2, p4, 0x90909090);
+                                    }
+
+                                    break;
+                                }
                             case ' ':
-                            {
-                                if (IsShowingWhitespaces)
                                 {
-                                    float s = ImGuiNET.ImGui.GetFontSize();
-                                    float x = textScreenPos.X + bufferOffset.X + spaceSize * 0.5f;
-                                    float y = textScreenPos.Y + bufferOffset.Y + s * 0.5f;
-                                    drawList.AddCircleFilled(new Vector2(x, y), 1.5f, 0x80808080, 4);
-                                }
+                                    if (IsShowingWhitespaces)
+                                    {
+                                        float s = ImGuiNET.ImGui.GetFontSize();
+                                        float x = textScreenPos.X + bufferOffset.X + spaceSize * 0.5f;
+                                        float y = textScreenPos.Y + bufferOffset.Y + s * 0.5f;
+                                        drawList.AddCircleFilled(new Vector2(x, y), 1.5f, 0x80808080, 4);
+                                    }
 
-                                bufferOffset.X += spaceSize;
-                                i++;
-                                break;
-                            }
+                                    bufferOffset.X += spaceSize;
+                                    i++;
+                                    break;
+                                }
                             default:
                                 _lineBuffer += line[i++].Character;
                                 break;
@@ -1582,7 +1518,7 @@ namespace ImGui.Forms.Controls.Text.Editor
             Coordinate start = pos < mState.SelectionStart ? pos : mState.SelectionStart;
             int totalLines = pos.Line - start.Line;
 
-            totalLines += InsertTextAt(pos, aValue);
+            totalLines += InsertTextAt(ref pos, aValue);
 
             SetSelection(pos, pos);
             SetCursorPosition(pos);
@@ -1758,10 +1694,13 @@ namespace ImGui.Forms.Controls.Text.Editor
                 }
                 else
                 {
-                    cindex++;
+                    if (!aWordMode)
+                        cindex++;
+
                     cursorPos = new Coordinate(lindex, GetCharacterColumn(lindex, cindex));
+
                     if (aWordMode)
-                        cursorPos = FindNextWord(cursorPos);
+                        cursorPos = FindWordEnd(cursorPos);
                 }
             }
 
@@ -2207,7 +2146,7 @@ namespace ImGui.Forms.Controls.Text.Editor
 
         public string GetText()
         {
-            return GetText(new Coordinate(), new Coordinate(_lines.Count, 0));
+            return GetText(new Coordinate(0, 0), new Coordinate(_lines.Count, 0));
         }
 
         public List<string> GetTextLines()
@@ -2400,22 +2339,22 @@ namespace ImGui.Forms.Controls.Text.Editor
                             switch (c)
                             {
                                 case '\"' when currentIndex + 1 < line.Length && line[currentIndex + 1].Character == '\"':
-                                {
-                                    currentIndex += 1;
-                                    if (currentIndex < line.Length)
-                                        currentGlyph.IsMultiLineComment = inComment;
-                                    break;
-                                }
+                                    {
+                                        currentIndex += 1;
+                                        if (currentIndex < line.Length)
+                                            currentGlyph.IsMultiLineComment = inComment;
+                                        break;
+                                    }
                                 case '\"':
                                     withinString = false;
                                     break;
                                 case '\\':
-                                {
-                                    currentIndex += 1;
-                                    if (currentIndex < line.Length)
-                                        currentGlyph.IsMultiLineComment = inComment;
-                                    break;
-                                }
+                                    {
+                                        currentIndex += 1;
+                                        if (currentIndex < line.Length)
+                                            currentGlyph.IsMultiLineComment = inComment;
+                                        break;
+                                    }
                             }
                         }
                         else

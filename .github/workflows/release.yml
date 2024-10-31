@@ -11,26 +11,26 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - uses: nuget/setup-nuget@v1
+    - uses: actions/checkout@v4
+    - uses: nuget/setup-nuget@v2
 
     # Setup the build
     - name: Wait for other release builds
-      uses: softprops/turnstyle@v1
+      uses: softprops/turnstyle@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 8.0.303
 
-    # Upload ImGui.Forms to nuget.org
+    - name: Build ImGui.Forms
+      run: |
+        dotnet pack --configuration Release --output nuget
+
     - name: Publish ImGui.Forms
-      uses: brandedoutcast/publish-nuget@v2
-      with:
-        PROJECT_FILE_PATH: ImGui.Forms/ImGui.Forms.csproj
-        VERSION_FILE_PATH: ImGui.Forms/ImGui.Forms.nuspec
-        VERSION_REGEX: '^\s*<version>(.*)<\/version>\s*$'
-        TAG_FORMAT: '*'
-        NUGET_KEY: ${{secrets.NUGET_API_KEY}}
+      run: |
+        foreach($file in (Get-ChildItem "nuget" -Recurse -Include *.nupkg)) {
+          dotnet nuget push $file --api-key "${{ secrets.NUGET_API_KEY }}" --source https://api.nuget.org/v3/index.json --skip-duplicate
+        }

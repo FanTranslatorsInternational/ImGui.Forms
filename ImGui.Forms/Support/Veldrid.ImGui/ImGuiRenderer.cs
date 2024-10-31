@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using ImGui.Forms.Factories;
 using ImGuiNET;
 using Veldrid;
+using Veldrid.Sdl2;
 
 namespace ImGui.Forms.Support.Veldrid.ImGui
 {
@@ -20,6 +19,9 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
         private GraphicsDevice _gd;
         private readonly Assembly _assembly;
         private ColorSpaceHandling _colorSpaceHandling;
+
+        // Key events
+        private readonly List<(SDL_Keycode, int)> _sdlKeyboardEvents = new();
 
         // Device objects
         private DeviceBuffer _vertexBuffer;
@@ -50,6 +52,11 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
         private bool _frameBegun;
 
         /// <summary>
+        /// If keyboard events are keyboard layout agnostic.
+        /// </summary>
+        public bool IgnoreKeyboardLayout { get; set; }
+
+        /// <summary>
         /// Constructs a new ImGuiRenderer.
         /// </summary>
         /// <param name="gd">The GraphicsDevice used to create and update resources.</param>
@@ -72,6 +79,8 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
         public ImGuiRenderer(GraphicsDevice gd, OutputDescription outputDescription, int width, int height,
             ColorSpaceHandling colorSpaceHandling)
         {
+            Sdl2Events.Subscribe(HandleKeyEvent);
+
             _gd = gd;
             _assembly = typeof(ImGuiRenderer).GetTypeInfo().Assembly;
             _colorSpaceHandling = colorSpaceHandling;
@@ -437,6 +446,8 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
         {
             _frameBegun = true;
             ImGuiNET.ImGui.NewFrame();
+
+            _sdlKeyboardEvents.Clear();
         }
 
         /// <summary>
@@ -621,7 +632,175 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
             }
         }
 
-        private unsafe void UpdateImGuiInput(InputSnapshot snapshot)
+        private bool TryMapKey(SDL_Keycode key, out ImGuiKey result)
+        {
+            ImGuiKey keyToImGuiKeyShortcut(SDL_Keycode keyToConvert, SDL_Keycode startKey1, ImGuiKey startKey2)
+            {
+                int changeFromStart1 = (int)keyToConvert - (int)startKey1;
+                return startKey2 + changeFromStart1;
+            }
+
+            if (key is >= SDL_Keycode.SDLK_F1 and <= SDL_Keycode.SDLK_F12)
+            {
+                result = keyToImGuiKeyShortcut(key, SDL_Keycode.SDLK_F1, ImGuiKey.F1);
+                return true;
+            }
+            else if (key is >= SDL_Keycode.SDLK_KP_1 and <= SDL_Keycode.SDLK_KP_0)
+            {
+                result = key == SDL_Keycode.SDLK_KP_0 ? ImGuiKey.Keypad0 :
+                    keyToImGuiKeyShortcut(key, SDL_Keycode.SDLK_KP_1, ImGuiKey.Keypad1);
+                return true;
+            }
+            else if (key is >= SDL_Keycode.SDLK_a and <= SDL_Keycode.SDLK_z)
+            {
+                result = keyToImGuiKeyShortcut(key, SDL_Keycode.SDLK_a, ImGuiKey.A);
+                return true;
+            }
+            else if (key is >= SDL_Keycode.SDLK_0 and <= SDL_Keycode.SDLK_9)
+            {
+                result = keyToImGuiKeyShortcut(key, SDL_Keycode.SDLK_0, ImGuiKey._0);
+                return true;
+            }
+
+            switch (key)
+            {
+                case SDL_Keycode.SDLK_LSHIFT:
+                case SDL_Keycode.SDLK_RSHIFT:
+                    result = ImGuiKey.ModShift;
+                    return true;
+                case SDL_Keycode.SDLK_LCTRL:
+                case SDL_Keycode.SDLK_RCTRL:
+                    result = ImGuiKey.ModCtrl;
+                    return true;
+                case SDL_Keycode.SDLK_LALT:
+                case SDL_Keycode.SDLK_RALT:
+                    result = ImGuiKey.ModAlt;
+                    return true;
+                case SDL_Keycode.SDLK_LGUI:
+                case SDL_Keycode.SDLK_RGUI:
+                    result = ImGuiKey.ModSuper;
+                    return true;
+                case SDL_Keycode.SDLK_MENU:
+                    result = ImGuiKey.Menu;
+                    return true;
+                case SDL_Keycode.SDLK_UP:
+                    result = ImGuiKey.UpArrow;
+                    return true;
+                case SDL_Keycode.SDLK_DOWN:
+                    result = ImGuiKey.DownArrow;
+                    return true;
+                case SDL_Keycode.SDLK_LEFT:
+                    result = ImGuiKey.LeftArrow;
+                    return true;
+                case SDL_Keycode.SDLK_RIGHT:
+                    result = ImGuiKey.RightArrow;
+                    return true;
+                case SDL_Keycode.SDLK_RETURN:
+                    result = ImGuiKey.Enter;
+                    return true;
+                case SDL_Keycode.SDLK_ESCAPE:
+                    result = ImGuiKey.Escape;
+                    return true;
+                case SDL_Keycode.SDLK_SPACE:
+                    result = ImGuiKey.Space;
+                    return true;
+                case SDL_Keycode.SDLK_TAB:
+                    result = ImGuiKey.Tab;
+                    return true;
+                case SDL_Keycode.SDLK_BACKSPACE:
+                    result = ImGuiKey.Backspace;
+                    return true;
+                case SDL_Keycode.SDLK_INSERT:
+                    result = ImGuiKey.Insert;
+                    return true;
+                case SDL_Keycode.SDLK_DELETE:
+                    result = ImGuiKey.Delete;
+                    return true;
+                case SDL_Keycode.SDLK_PAGEUP:
+                    result = ImGuiKey.PageUp;
+                    return true;
+                case SDL_Keycode.SDLK_PAGEDOWN:
+                    result = ImGuiKey.PageDown;
+                    return true;
+                case SDL_Keycode.SDLK_HOME:
+                    result = ImGuiKey.Home;
+                    return true;
+                case SDL_Keycode.SDLK_END:
+                    result = ImGuiKey.End;
+                    return true;
+                case SDL_Keycode.SDLK_CAPSLOCK:
+                    result = ImGuiKey.CapsLock;
+                    return true;
+                case SDL_Keycode.SDLK_SCROLLLOCK:
+                    result = ImGuiKey.ScrollLock;
+                    return true;
+                case SDL_Keycode.SDLK_PRINTSCREEN:
+                    result = ImGuiKey.PrintScreen;
+                    return true;
+                case SDL_Keycode.SDLK_PAUSE:
+                    result = ImGuiKey.Pause;
+                    return true;
+                case SDL_Keycode.SDLK_NUMLOCKCLEAR:
+                    result = ImGuiKey.NumLock;
+                    return true;
+                case SDL_Keycode.SDLK_KP_DIVIDE:
+                    result = ImGuiKey.KeypadDivide;
+                    return true;
+                case SDL_Keycode.SDLK_KP_MULTIPLY:
+                    result = ImGuiKey.KeypadMultiply;
+                    return true;
+                case SDL_Keycode.SDLK_KP_MINUS:
+                    result = ImGuiKey.KeypadSubtract;
+                    return true;
+                case SDL_Keycode.SDLK_KP_PLUS:
+                    result = ImGuiKey.KeypadAdd;
+                    return true;
+                case SDL_Keycode.SDLK_KP_DECIMAL:
+                    result = ImGuiKey.KeypadDecimal;
+                    return true;
+                case SDL_Keycode.SDLK_KP_ENTER:
+                    result = ImGuiKey.KeypadEnter;
+                    return true;
+                case SDL_Keycode.SDLK_BACKQUOTE:
+                    result = ImGuiKey.GraveAccent;
+                    return true;
+                case SDL_Keycode.SDLK_MINUS:
+                    result = ImGuiKey.Minus;
+                    return true;
+                case SDL_Keycode.SDLK_PLUS:
+                    result = ImGuiKey.Equal;
+                    return true;
+                case SDL_Keycode.SDLK_LEFTBRACKET:
+                    result = ImGuiKey.LeftBracket;
+                    return true;
+                case SDL_Keycode.SDLK_RIGHTBRACKET:
+                    result = ImGuiKey.RightBracket;
+                    return true;
+                case SDL_Keycode.SDLK_SEMICOLON:
+                    result = ImGuiKey.Semicolon;
+                    return true;
+                case SDL_Keycode.SDLK_QUOTE:
+                    result = ImGuiKey.Apostrophe;
+                    return true;
+                case SDL_Keycode.SDLK_COMMA:
+                    result = ImGuiKey.Comma;
+                    return true;
+                case SDL_Keycode.SDLK_PERIOD:
+                    result = ImGuiKey.Period;
+                    return true;
+                case SDL_Keycode.SDLK_SLASH:
+                    result = ImGuiKey.Slash;
+                    return true;
+                case SDL_Keycode.SDLK_BACKSLASH:
+                    result = ImGuiKey.Backslash;
+                    return true;
+                default:
+                    result = ImGuiKey.GamepadBack;
+                    return false;
+            }
+        }
+
+        private void UpdateImGuiInput(InputSnapshot snapshot)
         {
             ImGuiIOPtr io = ImGuiNET.ImGui.GetIO();
             io.AddMousePosEvent(snapshot.MousePosition.X, snapshot.MousePosition.Y);
@@ -639,10 +818,23 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
 
             for (int i = 0; i < snapshot.KeyEvents.Count; i++)
             {
-                KeyEvent keyEvent = snapshot.KeyEvents[i];
-                if (TryMapKey(keyEvent.Key, out ImGuiKey imguikey))
+                if (IgnoreKeyboardLayout)
                 {
-                    io.AddKeyEvent(imguikey, keyEvent.Down);
+                    KeyEvent keyEvent = snapshot.KeyEvents[i];
+
+                    if (TryMapKey(keyEvent.Key, out ImGuiKey imguikey))
+                    {
+                        io.AddKeyEvent(imguikey, keyEvent.Down);
+                    }
+                }
+                else
+                {
+                    (SDL_Keycode sdlKey, int state) = _sdlKeyboardEvents[i];
+
+                    if (TryMapKey(sdlKey, out ImGuiKey imguikey))
+                    {
+                        io.AddKeyEvent(imguikey, state == 1);
+                    }
                 }
             }
         }
@@ -781,6 +973,18 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
             foreach (IDisposable resource in _ownedResources)
             {
                 resource.Dispose();
+            }
+        }
+
+        private unsafe void HandleKeyEvent(ref SDL_Event ev)
+        {
+            if (ev.type is not SDL_EventType.KeyDown and not SDL_EventType.KeyUp)
+                return;
+
+            fixed (SDL_Event* sdlPtr = &ev)
+            {
+                var keyPtr = (SDL_KeyboardEvent*)sdlPtr;
+                _sdlKeyboardEvents.Add((keyPtr->keysym.sym, keyPtr->state));
             }
         }
 

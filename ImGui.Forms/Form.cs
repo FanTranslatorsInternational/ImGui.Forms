@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
 using ImGui.Forms.Extensions;
+using ImGui.Forms.Factories;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Modals;
 using ImGui.Forms.Resources;
@@ -25,6 +26,8 @@ namespace ImGui.Forms
         private bool _setIcon;
 
         #region Properties
+
+        public int Id => IdFactory.Get(this);
 
         public LocalizedString Title { get; set; } = string.Empty;
         public Vector2 Size { get; set; } = new(700, 400);
@@ -107,7 +110,7 @@ namespace ImGui.Forms
             Application.Instance.Window.Title = Title;
 
             // Begin window
-            ImGuiNET.ImGui.Begin(Title, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove);
+            ImGuiNET.ImGui.Begin($"{Id}", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove);
 
             ImGuiNET.ImGui.SetWindowSize(Size, ImGuiCond.Always);
 

@@ -118,7 +118,7 @@ namespace ImGui.Forms
             CreateWindow(form, out var window, out var gd);
 
             _executionContext = new ExecutionContext(form, gd, window);
-            
+
             ImageFactory = new ImageFactory(gd, _executionContext.Renderer);
 
             FontFactory.Initialize(ImGuiNET.ImGui.GetIO(), _executionContext.Renderer);
@@ -181,8 +181,6 @@ namespace ImGui.Forms
 
             ImageFactory.FreeTextures();
             IdFactory.FreeIds();
-
-            //FontFactory.InitializeFonts(ImGuiNET.ImGui.GetIO(), _executionContext.Renderer);
 
             // Snapshot current machine state
             var snapshot = _executionContext.Window.PumpEvents();

@@ -142,6 +142,10 @@ namespace ImGui.Forms.Controls.Text.Editor
                 {
                     istart = 0;
                     ++lstart;
+
+                    if (istart >= iend && (lstart >= lend || lstart >= _lines.Count))
+                        break;
+
                     if (line.HasCarriageReturn)
                         result.Append('\r');
                     result.Append('\n');
@@ -585,7 +589,7 @@ namespace ImGui.Forms.Controls.Text.Editor
 
         private void RemoveLine(int aStart, int aEnd)
         {
-            if (IsReadOnly || aEnd > aStart || _lines.Count > aEnd - aStart)
+            if (IsReadOnly || aEnd < aStart || _lines.Count <= aEnd - aStart)
                 return;
 
             Dictionary<int, string> etmp = new();
@@ -727,8 +731,6 @@ namespace ImGui.Forms.Controls.Text.Editor
             bool shift = io.KeyShift;
             bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
             bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
-            bool isZ = io.InputQueueCharacters.Size == 1 && (char)io.InputQueueCharacters[0] is 'z' or 'Z';
-            bool isY = io.InputQueueCharacters.Size == 1 && (char)io.InputQueueCharacters[0] is 'y' or 'Y';
 
             if (ImGuiNET.ImGui.IsWindowFocused())
             {

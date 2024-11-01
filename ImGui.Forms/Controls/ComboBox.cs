@@ -31,7 +31,7 @@ namespace ImGui.Forms.Controls
             set
             {
                 _selected = value;
-                _input = value.Name;
+                _input = value?.Name ?? string.Empty;
             }
         }
 

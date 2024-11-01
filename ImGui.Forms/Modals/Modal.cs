@@ -46,9 +46,9 @@ namespace ImGui.Forms.Modals
                 // Create content of popup
                 Content?.Update(new Rectangle(contentRect.X, contentRect.Y, contentRect.Width, contentRect.Height));
 
-                if (ImGuiNET.ImGui.IsKeyChordPressed(OkAction.GetImGuiKeyChord()))
+                if (OkAction.IsPressed())
                     Close(DialogResult.Ok);
-                else if (ImGuiNET.ImGui.IsKeyChordPressed(CancelAction.GetImGuiKeyChord()))
+                else if (CancelAction.IsPressed())
                     Close(DialogResult.Cancel);
 
                 // Create content of child modal

@@ -34,7 +34,7 @@ namespace ImGui.Forms.Controls.Menu
         protected override void UpdateInternal()
         {
             // Add menu button
-            if ((ImGuiNET.ImGui.MenuItem(Text, Enabled) || ImGuiNET.ImGui.IsKeyChordPressed(KeyAction.GetImGuiKeyChord())) && Enabled)
+            if ((ImGuiNET.ImGui.MenuItem(Text, Enabled) || KeyAction.IsPressed()) && Enabled)
                 // Execute click event, if set
                 Clicked?.Invoke(this, EventArgs.Empty);
         }
@@ -42,7 +42,7 @@ namespace ImGui.Forms.Controls.Menu
         protected override void UpdateEventsInternal()
         {
             // Add menu button
-            if (ImGuiNET.ImGui.IsKeyChordPressed(KeyAction.GetImGuiKeyChord()) && Enabled)
+            if (KeyAction.IsPressed() && Enabled)
                 // Execute click event, if set
                 Clicked?.Invoke(this, EventArgs.Empty);
         }

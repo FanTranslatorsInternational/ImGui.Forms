@@ -9,7 +9,10 @@ namespace ImGui.Forms.Models.IO
         private readonly ModifierKeys _modifiers;
         private readonly Key _key;
 
-        public bool IsEmpty => _modifiers == 0 && _key == 0;
+        public bool IsEmpty => !HasModifier && !HasKey;
+
+        public bool HasModifier => _modifiers != ModifierKeys.None;
+        public bool HasKey => _key != Key.Unknown;
 
         public KeyCommand(Key key) : this(ModifierKeys.None, key)
         { }
@@ -20,27 +23,64 @@ namespace ImGui.Forms.Models.IO
             _key = key;
         }
 
-        public ImGuiKey GetImGuiKey()
+        public bool IsPressed()
         {
-            return _key == Key.Unknown ? ImGuiKey.None : GetKey(_key);
+            if (IsEmpty)
+                return false;
+
+            if (!HasModifier)
+                return ImGuiNET.ImGui.IsKeyPressed(GetImGuiKey());
+
+            if (!HasKey)
+                return ImGuiNET.ImGui.IsKeyPressed(GetImGuiModifierKey());
+
+            return ImGuiNET.ImGui.IsKeyChordPressed(GetImGuiKeyChord());
+
         }
 
-        public ImGuiKey GetImGuiModifierKey()
+        public bool IsDown()
         {
-            return _modifiers == ModifierKeys.None ? ImGuiKey.ModNone : GetModifierKey(_modifiers);
+            if (IsEmpty)
+                return false;
+
+            if (HasKey)
+                return ImGuiNET.ImGui.IsKeyDown(GetImGuiKey());
+
+            return ImGuiNET.ImGui.IsKeyDown(GetImGuiModifierKey());
+        }
+
+        public bool IsReleased()
+        {
+            if (IsEmpty)
+                return false;
+
+            if (HasKey)
+                return ImGuiNET.ImGui.IsKeyReleased(GetImGuiKey());
+
+            return ImGuiNET.ImGui.IsKeyReleased(GetImGuiModifierKey());
         }
 
         // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
-        public ImGuiKey GetImGuiKeyChord()
+        private ImGuiKey GetImGuiKeyChord()
         {
-            if (IsEmpty)
+            ImGuiKey result = GetImGuiKey();
+            return result | GetImGuiModifierKey();
+        }
+
+        private ImGuiKey GetImGuiKey()
+        {
+            if (!ImGuiKeyMapper.TryMapKey(_key, out ImGuiKey imGuiKey))
                 return ImGuiKey.None;
 
-            ImGuiKey result = GetKey(_key);
-            if (_modifiers != ModifierKeys.None)
-                result |= GetModifierKey(_modifiers);
+            return imGuiKey;
+        }
 
-            return result;
+        private ImGuiKey GetImGuiModifierKey()
+        {
+            if (!ImGuiKeyMapper.TryMapModifierKey(_modifiers, out ImGuiKey imGuiKey))
+                return ImGuiKey.ModNone;
+
+            return imGuiKey;
         }
 
         public static bool operator ==(KeyCommand a, KeyCommand b) => a._modifiers == b._modifiers && a._key == b._key;
@@ -49,22 +89,6 @@ namespace ImGui.Forms.Models.IO
         public override string ToString()
         {
             return $"Mod: {_modifiers}, Key: {_key}";
-        }
-
-        private ImGuiKey GetKey(Key key)
-        {
-            if (!ImGuiKeyMapper.TryMapKey(key, out ImGuiKey imGuiKey))
-                return ImGuiKey.None;
-
-            return imGuiKey;
-        }
-
-        private ImGuiKey GetModifierKey(ModifierKeys key)
-        {
-            if (!ImGuiKeyMapper.TryMapModifierKey(key, out ImGuiKey imGuiKey))
-                return ImGuiKey.None;
-
-            return imGuiKey;
         }
     }
 }

@@ -60,12 +60,12 @@ namespace ImGui.Forms.Controls
 
             if (Image != null && (nint)Image != nint.Zero)
             {
-                if ((ImGuiNET.ImGui.ImageButton($"##{Id}", (nint)Image, GetImageSize()) || IsKeyDown(KeyAction)) && Enabled)
+                if ((ImGuiNET.ImGui.ImageButton($"##{Id}", (nint)Image, GetImageSize()) || ImGuiNET.ImGui.IsKeyChordPressed(KeyAction.GetImGuiKeyChord())) && Enabled)
                     OnClicked();
             }
             else
             {
-                if ((ImGuiNET.ImGui.Button(string.Empty, GetImageSize() + Padding * 2) || IsKeyDown(KeyAction)) && Enabled)
+                if ((ImGuiNET.ImGui.Button(string.Empty, GetImageSize() + Padding * 2) || ImGuiNET.ImGui.IsKeyChordPressed(KeyAction.GetImGuiKeyChord())) && Enabled)
                     OnClicked();
             }
 

@@ -56,8 +56,8 @@ namespace ImGui.Forms.Controls
         {
             if (Image == null || (nint)_baseImg == nint.Zero)
                 return;
-
-            ImGuiSupport.Dummy(Id, contentRect.Position, contentRect.Size);
+            
+            ImGuiNET.ImGui.Dummy(contentRect.Size);
 
             var componentCenterPosition = contentRect.Position + contentRect.Size / 2;
             var translatedComponentCenterPosition = componentCenterPosition + _transform.Translation;

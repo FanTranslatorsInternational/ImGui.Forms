@@ -46,9 +46,9 @@ namespace ImGui.Forms.Modals
                 // Create content of popup
                 Content?.Update(new Rectangle(contentRect.X, contentRect.Y, contentRect.Width, contentRect.Height));
 
-                if (IsKeyDown(OkAction))
+                if (ImGuiNET.ImGui.IsKeyChordPressed(OkAction.GetImGuiKeyChord()))
                     Close(DialogResult.Ok);
-                else if (IsKeyDown(CancelAction))
+                else if (ImGuiNET.ImGui.IsKeyChordPressed(CancelAction.GetImGuiKeyChord()))
                     Close(DialogResult.Cancel);
 
                 // Create content of child modal
@@ -80,7 +80,9 @@ namespace ImGui.Forms.Modals
             ShowInternal();
 
             // Wait for modal to be closed
+            _shouldClose = false;
             _tokenSource = new CancellationTokenSource();
+
             try
             {
                 await Task.Delay(Timeout.Infinite, _tokenSource.Token);
@@ -89,6 +91,8 @@ namespace ImGui.Forms.Modals
             {
                 // ignored
             }
+
+            _tokenSource = null;
 
             return Result;
         }
@@ -118,7 +122,7 @@ namespace ImGui.Forms.Modals
 
             await CloseInternal();
 
-            _tokenSource?.Cancel();
+            await _tokenSource?.CancelAsync()!;
 
             ImGuiNET.ImGui.CloseCurrentPopup();
         }

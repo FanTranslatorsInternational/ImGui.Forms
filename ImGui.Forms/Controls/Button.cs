@@ -57,7 +57,7 @@ namespace ImGui.Forms.Controls
 
             ApplyStyles(enabled, font);
 
-            if ((ImGuiNET.ImGui.Button(EscapeText(), contentRect.Size) || IsKeyDown(KeyAction)) && Enabled)
+            if ((ImGuiNET.ImGui.Button(EscapeText(), contentRect.Size) || ImGuiNET.ImGui.IsKeyChordPressed(KeyAction.GetImGuiKeyChord())) && Enabled)
                 OnClicked();
 
             if (Tooltip is { IsEmpty: false } && IsHoveredCore())

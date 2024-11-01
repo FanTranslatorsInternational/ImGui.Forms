@@ -188,28 +188,6 @@ namespace ImGui.Forms.Controls.Base
         /// </summary>
         protected virtual void RemoveStyles() { }
 
-        protected bool IsKeyDown(KeyCommand keyDown)
-        {
-            if (keyDown.IsEmpty)
-                return false;
-
-            if (!Application.Instance.TryGetKeyDownCommand(out KeyCommand internalKeyDown))
-                return false;
-
-            return keyDown == internalKeyDown;
-        }
-
-        protected bool IsKeyUp(KeyCommand keyUp)
-        {
-            if (keyUp.IsEmpty)
-                return false;
-
-            if (!Application.Instance.TryGetKeyUpCommand(out KeyCommand internalKeyUp))
-                return false;
-
-            return keyUp == internalKeyUp;
-        }
-
         /// <summary>
         /// Used by <see cref="TabControl"/> to mark components as inactive,
         /// due to them not being selected as the active page.

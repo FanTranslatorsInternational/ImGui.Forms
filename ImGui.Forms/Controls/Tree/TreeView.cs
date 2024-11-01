@@ -187,13 +187,13 @@ namespace ImGui.Forms.Controls.Tree
         private readonly IList<KeyCommand> _pressedArrows = new List<KeyCommand>(2);
         private void UpdateArrowKeyState()
         {
-            if (IsKeyDown(PreviousNodeKey) && !_pressedArrows.Contains(PreviousNodeKey) && Enabled)
+            if (ImGuiNET.ImGui.IsKeyDown(PreviousNodeKey.GetImGuiKey()) && !_pressedArrows.Contains(PreviousNodeKey) && Enabled)
                 _pressedArrows.Add(PreviousNodeKey);
-            if (IsKeyDown(NextNodeKey) && !_pressedArrows.Contains(NextNodeKey) && Enabled)
+            if (ImGuiNET.ImGui.IsKeyDown(NextNodeKey.GetImGuiKey()) && !_pressedArrows.Contains(NextNodeKey) && Enabled)
                 _pressedArrows.Add(NextNodeKey);
-            if (IsKeyUp(PreviousNodeKey))
+            if (ImGuiNET.ImGui.IsKeyReleased(PreviousNodeKey.GetImGuiKey()))
                 _pressedArrows.Remove(PreviousNodeKey);
-            if (IsKeyUp(NextNodeKey))
+            if (ImGuiNET.ImGui.IsKeyReleased(NextNodeKey.GetImGuiKey()))
                 _pressedArrows.Remove(NextNodeKey);
 
             KeyCommand currentArrowKeyDown = default;

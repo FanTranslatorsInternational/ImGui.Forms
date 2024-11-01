@@ -52,7 +52,7 @@ namespace ImGui.Forms.Controls
                 ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
             }
 
-            if ((ImGuiNET.ImGui.ArrowButton($"##{Id}", Direction) || IsKeyDown(KeyAction)) && Enabled)
+            if ((ImGuiNET.ImGui.ArrowButton($"##{Id}", Direction) || ImGuiNET.ImGui.IsKeyChordPressed(KeyAction.GetImGuiKeyChord())) && Enabled)
                 OnClicked();
 
             if (!enabled)

@@ -23,9 +23,6 @@ namespace ImGui.Forms
         private DragDropEventEx[] _dragDropEvents;
         private bool[] _frameHandledDragDrops;
 
-        private KeyCommand _keyUpCommand;
-        private KeyCommand _keyDownCommand;
-
         #region Static properties
 
         public static Application Instance { get; private set; }
@@ -68,8 +65,6 @@ namespace ImGui.Forms
 
             _executionContext.Window.Resized += Window_Resized;
             _executionContext.Window.DragDrop += Window_DragDrop;
-            _executionContext.Window.KeyDown += Window_KeyDown;
-            _executionContext.Window.KeyUp += Window_KeyUp;
             _executionContext.Window.Shown += Window_Shown;
             _executionContext.Window.SetCloseRequestedHandler(ShouldCancelClose);
 
@@ -212,8 +207,6 @@ namespace ImGui.Forms
         private void UpdateApplicationEvents()
         {
             _dragDropEvents = Array.Empty<DragDropEventEx>();
-            _keyUpCommand = default;
-            _keyDownCommand = default;
             _frameHandledDragDrops = Array.Empty<bool>();
         }
 
@@ -269,35 +262,11 @@ namespace ImGui.Forms
             _dragDropEvents[^1] = new DragDropEventEx(obj, ImGuiNET.ImGui.GetMousePos());
         }
 
-        private void Window_KeyUp(KeyEvent obj)
-        {
-            _keyUpCommand = new KeyCommand(obj.Modifiers, obj.Key);
-        }
-
-        private void Window_KeyDown(KeyEvent obj)
-        {
-            _keyDownCommand = new KeyCommand(obj.Modifiers, obj.Key);
-        }
-
         #endregion
 
         private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
             UnhandledException?.Invoke(this, e.ExceptionObject as Exception);
-        }
-
-        internal bool TryGetKeyDownCommand(out KeyCommand keyDown)
-        {
-            keyDown = _keyDownCommand;
-
-            return !_keyDownCommand.IsEmpty;
-        }
-
-        internal bool TryGetKeyUpCommand(out KeyCommand keyUp)
-        {
-            keyUp = _keyUpCommand;
-
-            return !_keyUpCommand.IsEmpty;
         }
 
         internal bool TryGetDragDrop(Veldrid.Rectangle controlRect, out DragDropEvent[] events)

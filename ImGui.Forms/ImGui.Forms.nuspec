@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Imgui.Forms</id>
-    <version>1.3.2</version>
+    <version>1.3.3</version>
     <description>A WinForms-inspired object-oriented framework around Dear ImGui (https://github.com/ocornut/imgui)</description>
 
     <authors>onepiecefreak</authors>
@@ -18,7 +18,7 @@
     <repository type="git" url="https://github.com/FanTranslatorsInternational/ImGui.Forms" />
 
     <dependencies>
-      <group targetFramework="net8">
+      <group targetFramework="net8.0">
         <dependency id="ImGui.NET" version="1.91.0.1" />
         <dependency id="SixLabors.ImageSharp" version="3.1.5" />
         <dependency id="Veldrid.StartupUtilities" version="4.9.0" />
@@ -27,6 +27,6 @@
   </metadata>
 
   <files>
-    <file src="bin\Release\net8\*.dll" target="lib\net8\"/>
+    <file src="bin\Release\net8.0\*.dll" target="lib\net8.0\"/>
   </files>
 </package>

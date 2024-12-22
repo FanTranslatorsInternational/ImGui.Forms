@@ -27,6 +27,7 @@ jobs:
 
     - name: Build ImGui.Forms
       run: |
+        dotnet build --configuration Release
         dotnet pack --configuration Release --output nuget
 
     - name: Publish ImGui.Forms

@@ -172,8 +172,10 @@ namespace ImGui.Forms.Factories
                 builder.AddRanges(GlyphRangeProvider.GetLatinRange());
             if (rangeFlags.HasFlag(FontGlyphRange.Cyrillic))
                 builder.AddRanges(GlyphRangeProvider.GetCyrillicRange());
-            if (rangeFlags.HasFlag(FontGlyphRange.ChineseJapaneseKorean))
-                builder.AddRanges(GlyphRangeProvider.GetCjkRange());
+            if (rangeFlags.HasFlag(FontGlyphRange.ChineseJapanese))
+                builder.AddRanges(GlyphRangeProvider.GetCjRange());
+            if (rangeFlags.HasFlag(FontGlyphRange.Korean))
+                builder.AddRanges(GlyphRangeProvider.GetKoreanRange());
             if (rangeFlags.HasFlag(FontGlyphRange.Greek))
                 builder.AddRanges(GlyphRangeProvider.GetGreekRange());
             if (rangeFlags.HasFlag(FontGlyphRange.Thai))

@@ -26,8 +26,9 @@ namespace ImGui.Forms.Providers
             //0x1e030,0x1e08f
         };
 
-        private static readonly ushort[] _cjkRange = new ushort[]
+        private static readonly ushort[] _cjRange = new ushort[]
         {
+            0x2026,0x2026,
             0x2e80,0x2fd5,
             0x3000,0x303f,
             0x3041,0x3096,
@@ -39,6 +40,12 @@ namespace ImGui.Forms.Providers
             0x4e00,0x9fff,
             0xf900,0xfa6a,
             0xff01,0xff9f
+        };
+
+        private static readonly ushort[] _koreanRange = new ushort[]
+        {
+            0x3131, 0x3163,
+            0xac00, 0xd79d
         };
 
         private static readonly ushort[] _greekRange = new ushort[]
@@ -90,9 +97,14 @@ namespace ImGui.Forms.Providers
             return GetPointer(_cyrillicRange);
         }
 
-        public static nint GetCjkRange()
+        public static nint GetCjRange()
         {
-            return GetPointer(_cjkRange);
+            return GetPointer(_cjRange);
+        }
+
+        public static nint GetKoreanRange()
+        {
+            return GetPointer(_koreanRange);
         }
 
         public static nint GetGreekRange()

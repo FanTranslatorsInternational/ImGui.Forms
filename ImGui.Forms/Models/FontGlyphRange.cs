@@ -7,12 +7,13 @@ namespace ImGui.Forms.Models
     {
         Latin = 1 << 0,
         Cyrillic = 1 << 1,
-        ChineseJapaneseKorean = 1 << 2,
-        Greek = 1 << 3,
-        Thai = 1 << 4,
-        Vietnamese = 1 << 5,
-        Symbols = 1 << 6,
+        ChineseJapanese = 1 << 2,
+        Korean = 1 << 3,
+        Greek = 1 << 4,
+        Thai = 1 << 5,
+        Vietnamese = 1 << 6,
+        Symbols = 1 << 7,
 
-        All = 0x7F
+        All = 0xFF
     }
 }

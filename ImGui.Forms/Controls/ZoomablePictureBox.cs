@@ -65,7 +65,7 @@ namespace ImGui.Forms.Controls
             var io = ImGuiNET.ImGui.GetIO();
 
             // On mouse scroll, rescale matrix
-            if (io.MouseWheel != 0 && IsHovering(contentRect))
+            if (io.MouseWheel != 0 && ImGuiNET.ImGui.IsItemHovered())
             {
                 var scale = Vector2.One + new Vector2(io.MouseWheel / 8);
                 var translatedMousePosition = io.MousePos + _transform.Translation;
@@ -75,7 +75,7 @@ namespace ImGui.Forms.Controls
             }
 
             // On mouse down, re-translate matrix
-            if (!_mouseDown && IsHovering(contentRect) && ImGuiNET.ImGui.IsMouseDown(ImGuiMouseButton.Right))
+            if (!_mouseDown && ImGuiNET.ImGui.IsItemHovered() && ImGuiNET.ImGui.IsMouseDown(ImGuiMouseButton.Right))
             {
                 _mouseDownPosition = ImGuiNET.ImGui.GetMousePos();
                 _mouseDown = true;
@@ -91,7 +91,7 @@ namespace ImGui.Forms.Controls
                 ImGuiNET.ImGui.SetMouseCursor(ImGuiMouseCursor.Arrow);
             }
 
-            if (_mouseDown)
+            if (_mouseDown && ImGuiNET.ImGui.IsItemHovered())
             {
                 _transform *= Matrix3x2.CreateTranslation(ImGuiNET.ImGui.GetMousePos() - _mouseDownPosition);
                 _mouseDownPosition = ImGuiNET.ImGui.GetMousePos();
@@ -104,12 +104,6 @@ namespace ImGui.Forms.Controls
             var absoluteContentEndPosition = absoluteContentPosition + scaledContentSize;
 
             ImGuiNET.ImGui.GetWindowDrawList().AddImage((nint)_baseImg, absoluteContentPosition, absoluteContentEndPosition);
-        }
-
-        private bool IsHovering(Veldrid.Rectangle contentRect)
-        {
-            return ImGuiNET.ImGui.IsMouseHoveringRect(new Vector2(contentRect.X, contentRect.Y),
-                new Vector2(contentRect.X + contentRect.Width, contentRect.Y + contentRect.Height));
         }
 
         private void OnMouseScrolled()

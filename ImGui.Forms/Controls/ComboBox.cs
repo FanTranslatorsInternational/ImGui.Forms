@@ -103,7 +103,11 @@ namespace ImGui.Forms.Controls
             pos.Y += size.Y;
             size.X += ImGuiNET.ImGui.GetItemRectSize().Y;
             size.Y += 5 + size.Y * maxShowItems;
-            ImGuiNET.ImGui.SetNextWindowPos(pos);
+
+            if (pos.Y + size.Y <= Application.Instance.MainForm.Height)
+                ImGuiNET.ImGui.SetNextWindowPos(pos);
+            else
+                ImGuiNET.ImGui.SetNextWindowPos(new Vector2(pos.X, pos.Y - size.Y - ImGuiNET.ImGui.GetItemRectSize().Y));
             ImGuiNET.ImGui.SetNextWindowSize(size);
             if (ImGuiNET.ImGui.BeginPopup("combobox", ImGuiWindowFlags.NoMove))
             {

@@ -111,10 +111,17 @@ namespace ImGui.Forms.Controls
             ImGuiNET.ImGui.SetNextWindowSize(size);
             if (ImGuiNET.ImGui.BeginPopup("combobox", ImGuiWindowFlags.NoMove))
             {
-                foreach (DropDownItem<TItem> item in Items)
+                for (var i = 0; i < Items.Count; i++)
                 {
+                    DropDownItem<TItem> item = Items[i];
+
+                    // Set selectable with item name
+                    ImGuiNET.ImGui.PushID($"{Id}_item{i}");
+
                     if (!ImGuiNET.ImGui.Selectable(item.Name))
                         continue;
+
+                    ImGuiNET.ImGui.PopID();
 
                     _input = item.Name;
 

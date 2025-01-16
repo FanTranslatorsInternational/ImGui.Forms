@@ -60,7 +60,7 @@ namespace ImGui.Forms
             set => Style.SetStyle(ImGuiStyleVar.WindowPadding, value);
         }
 
-        public FontResource DefaultFont { get; set; }
+        public FontResource DefaultFont { get; set; } = FontFactory.GetDefault(13);
 
         #endregion
 

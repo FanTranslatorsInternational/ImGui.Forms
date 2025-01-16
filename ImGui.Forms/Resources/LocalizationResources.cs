@@ -55,7 +55,7 @@ namespace ImGui.Forms.Resources
             var text = string.Empty;
 
             if (!localizer?.TryLocalize(localizationId, out text, args) ?? true)
-                text = fallback;
+                text = string.Format(fallback, args);
 
             return text;
         }

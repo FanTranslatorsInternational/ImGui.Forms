@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Extensions;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
-using ImGui.Forms.Support;
 using ImGuiNET;
 
 namespace ImGui.Forms.Controls
@@ -31,6 +31,8 @@ namespace ImGui.Forms.Controls
 
         public Size Size { get; set; } = Size.Parent;
 
+        public bool ShowImageBorder { get; set; }
+
         #endregion
 
         #region Events
@@ -56,7 +58,7 @@ namespace ImGui.Forms.Controls
         {
             if (Image == null || (nint)_baseImg == nint.Zero)
                 return;
-            
+
             ImGuiNET.ImGui.Dummy(contentRect.Size);
 
             var componentCenterPosition = contentRect.Position + contentRect.Size / 2;
@@ -104,6 +106,8 @@ namespace ImGui.Forms.Controls
             var absoluteContentEndPosition = absoluteContentPosition + scaledContentSize;
 
             ImGuiNET.ImGui.GetWindowDrawList().AddImage((nint)_baseImg, absoluteContentPosition, absoluteContentEndPosition);
+            if (ShowImageBorder)
+                ImGuiNET.ImGui.GetWindowDrawList().AddRect(absoluteContentPosition, absoluteContentEndPosition, Style.GetColor(ImGuiCol.Border).ToUInt32());
         }
 
         private void OnMouseScrolled()

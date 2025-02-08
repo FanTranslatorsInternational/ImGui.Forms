@@ -86,12 +86,12 @@ namespace ImGui.Forms.Factories
 
         private unsafe void CopyImageData(Texture texture, Image<Rgba32> image)
         {
-            if (!image.DangerousTryGetSinglePixelMemory(out Memory<Rgba32> data))
-                return;
+            var copiedImage = new Rgba32[image.Width * image.Height];
+            image.CopyPixelDataTo(copiedImage);
 
             int size = image.Width * image.Height * 4;
 
-            fixed (Rgba32* imgData = data.Span)
+            fixed (Rgba32* imgData = copiedImage)
                 _gd.UpdateTexture(texture, (nint)imgData, (uint)size, 0, 0, 0, (uint)image.Width, (uint)image.Height, 1, 0, 0);
         }
 

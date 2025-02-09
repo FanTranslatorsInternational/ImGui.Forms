@@ -68,6 +68,9 @@ namespace ImGui.Forms.Controls
 
         protected override unsafe void UpdateInternal(Rectangle contentRect)
         {
+            var enabled = Enabled;
+            ApplyStyles(enabled);
+
             //Check if both strings matches
             uint maxShowItems = MaxShowItems;
             if (maxShowItems == 0)
@@ -78,16 +81,22 @@ namespace ImGui.Forms.Controls
             var arrowWidth = ButtonSizeX_ + ImGuiNET.ImGui.GetStyle().FramePadding.X * 2;
             ImGuiNET.ImGui.SetNextItemWidth(contentRect.Width - arrowWidth);
 
-            bool isFinal = ImGuiNET.ImGui.InputText("##in", ref _input, MaxCharacters, ImGuiInputTextFlags.CallbackAlways | ImGuiInputTextFlags.EnterReturnsTrue, Propose);
-            if (isFinal)
+            var localInput = _input;
+
+            bool isFinal = ImGuiNET.ImGui.InputText("##in", ref localInput, MaxCharacters, ImGuiInputTextFlags.CallbackAlways | ImGuiInputTextFlags.EnterReturnsTrue, Propose);
+            if (enabled && isFinal)
             {
-                DropDownItem<TItem> selectedItem = Items.FirstOrDefault(i => i.Name == _input);
+                DropDownItem<TItem> selectedItem = Items.FirstOrDefault(i => i.Name == localInput);
                 if (SelectedItem != selectedItem)
                 {
                     SelectedItem = selectedItem;
                     OnSelectedItemChanged();
                 }
             }
+
+            // Revert text changes, if not enabled
+            if (enabled)
+                _input = localInput;
 
             ImGuiNET.ImGui.OpenPopupOnItemClick("combobox"); // Enable right-click
             Vector2 pos = ImGuiNET.ImGui.GetItemRectMin();
@@ -109,7 +118,7 @@ namespace ImGui.Forms.Controls
             else
                 ImGuiNET.ImGui.SetNextWindowPos(new Vector2(pos.X, pos.Y - size.Y - ImGuiNET.ImGui.GetItemRectSize().Y));
             ImGuiNET.ImGui.SetNextWindowSize(size);
-            if (ImGuiNET.ImGui.BeginPopup("combobox", ImGuiWindowFlags.NoMove))
+            if (enabled && ImGuiNET.ImGui.BeginPopup("combobox", ImGuiWindowFlags.NoMove))
             {
                 for (var i = 0; i < Items.Count; i++)
                 {
@@ -136,11 +145,33 @@ namespace ImGui.Forms.Controls
             }
 
             ImGuiNET.ImGui.PopID();
+
+            RemoveStyles(enabled);
         }
 
         private void OnSelectedItemChanged()
         {
             SelectedItemChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void ApplyStyles(bool enabled)
+        {
+            if (!enabled)
+            {
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Button, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonHovered, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            }
+        }
+
+        private void RemoveStyles(bool enabled)
+        {
+            if (!enabled)
+                ImGuiNET.ImGui.PopStyleColor(6);
         }
 
         private string? _prevBuffer;

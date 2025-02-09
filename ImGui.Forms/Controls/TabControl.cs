@@ -17,6 +17,8 @@ namespace ImGui.Forms.Controls
         private TabPage _selectedPageTemp;
         private TabPage _selectedPage;
 
+        private readonly Dictionary<TabPage, bool> _removeOverwrite = new();
+
         private readonly List<TabPage> _pages = new();
 
         #region Properties
@@ -62,8 +64,8 @@ namespace ImGui.Forms.Controls
                 {
                     var pageFlags = ImGuiTabItemFlags.None;
                     if (page.HasChanges) pageFlags |= ImGuiTabItemFlags.UnsavedDocument;
-                    if (wasManuallyChanged && _selectedPageTemp == page) pageFlags |= ImGuiTabItemFlags.SetSelected;
-                    if (!Enabled && _selectedPage == page) pageFlags |= ImGuiTabItemFlags.SetSelected;
+                    if (IsSelected(page, wasManuallyChanged))
+                        pageFlags |= ImGuiTabItemFlags.SetSelected;
 
                     ImGuiNET.ImGui.PushID(IdFactory.Get(page));
 
@@ -120,7 +122,10 @@ namespace ImGui.Forms.Controls
 
                 // Handle pages to remove asynchronously
                 foreach (TabPage toRemove in toRemovePages)
-                    await RemovePageInternal(toRemove);
+                {
+                    if (!await RemovePageInternal(toRemove))
+                        _removeOverwrite[toRemove] = (wasManuallyChanged && _selectedPageTemp == toRemove) || _selectedPage == toRemove;
+                }
             }
         }
 
@@ -150,6 +155,17 @@ namespace ImGui.Forms.Controls
                 _selectedPage = null;
 
             _pages.Remove(page);
+        }
+
+        private bool IsSelected(TabPage page, bool wasManuallyChanged)
+        {
+            if (wasManuallyChanged && _selectedPageTemp == page)
+                return true;
+
+            if (!Enabled && _selectedPage == page)
+                return true;
+
+            return _removeOverwrite.Remove(page, out bool isSelected) && isSelected;
         }
 
         private async Task<bool> RemovePageInternal(TabPage page)

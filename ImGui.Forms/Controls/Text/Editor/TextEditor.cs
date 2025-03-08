@@ -114,7 +114,14 @@ namespace ImGui.Forms.Controls.Text.Editor
 
         public void SetBreakpoints(HashSet<int> aMarkers) => _breakpoints = aMarkers;
 
-        private string GetText(Coordinate aStart, Coordinate aEnd)
+        public string GetText(Coordinate aCoordinate)
+        {
+            Coordinate endCoordinate = AdvanceCoordinate(aCoordinate, 1);
+
+            return GetText(aCoordinate, endCoordinate);
+        }
+
+        public string GetText(Coordinate aStart, Coordinate aEnd)
         {
             int lstart = aStart.Line;
             int lend = aEnd.Line;
@@ -186,6 +193,14 @@ namespace ImGui.Forms.Controls.Text.Editor
                 column = _lines.Count <= 0 ? 0 : Math.Min(column, GetLineMaxColumn(line));
                 return new Coordinate(line, column);
             }
+        }
+
+        public Coordinate AdvanceCoordinate(Coordinate aCoord, int aCount)
+        {
+            for (var i = 0; i < aCount; i++)
+                Advance(ref aCoord);
+
+            return aCoord;
         }
 
         private void Advance(ref Coordinate aCoordinate)

@@ -6,6 +6,12 @@ namespace ImGui.Forms.Extensions
 {
     public static class ColorExtensions
     {
+        public static uint ToUInt32(this ThemedColor c)
+        {
+            var pixel = ((Color)c).ToPixel<Rgba32>();
+            return (uint)((pixel.A << 24) | (pixel.B << 16) | (pixel.G << 8) | pixel.R);
+        }
+
         public static uint ToUInt32(this Color c)
         {
             var pixel = c.ToPixel<Rgba32>();

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Numerics;
 using ImGui.Forms.Extensions;
 using ImGui.Forms.Models;
@@ -11,8 +12,8 @@ namespace ImGui.Forms
     {
         private const Theme DefaultTheme_ = Theme.Dark;
 
-        private static readonly IDictionary<Theme, IDictionary<ImGuiCol, Color>> Colors = new Dictionary<Theme, IDictionary<ImGuiCol, Color>>();
-        private static readonly IDictionary<Theme, IDictionary<ImGuiStyleVar, object>> Styles = new Dictionary<Theme, IDictionary<ImGuiStyleVar, object>>();
+        private static readonly Dictionary<Theme, Dictionary<ImGuiCol, Color>> Colors = [];
+        private static readonly Dictionary<Theme, Dictionary<ImGuiStyleVar, object>> Styles = [];
 
         // HINT: Set to true initially, so ApplyStyle gets triggered by the first frame and sets every default style accordingly
         private static bool _hasChanges = true;
@@ -73,7 +74,7 @@ namespace ImGui.Forms
         private static void SetStyle(Theme theme, ImGuiStyleVar style, object value)
         {
             if (!Styles.ContainsKey(theme))
-                Styles[theme] = new Dictionary<ImGuiStyleVar, object>();
+                Styles[theme] = [];
 
             Styles[theme][style] = value;
             _hasChanges = true;
@@ -81,23 +82,18 @@ namespace ImGui.Forms
 
         private static object GetStyle(Theme theme, ImGuiStyleVar style)
         {
-            if (!Styles.ContainsKey(theme) || !Styles[theme].ContainsKey(style))
+            if (Styles.TryGetValue(theme, out Dictionary<ImGuiStyleVar, object>? styles)
+                && styles.TryGetValue(style, out object? value))
+                return value;
+
+            ImGuiStylePtr stylePtr = ImGuiNET.ImGui.GetStyle();
+            return style switch
             {
-                var stylePtr = ImGuiNET.ImGui.GetStyle();
-                switch (style)
-                {
-                    case ImGuiStyleVar.ScrollbarRounding:
-                        return stylePtr.ScrollbarRounding;
-
-                    case ImGuiStyleVar.ScrollbarSize:
-                        return stylePtr.ScrollbarSize;
-
-                    case ImGuiStyleVar.WindowPadding:
-                        return stylePtr.WindowPadding;
-                }
-            }
-
-            return Styles[theme][style];
+                ImGuiStyleVar.ScrollbarRounding => stylePtr.ScrollbarRounding,
+                ImGuiStyleVar.ScrollbarSize => stylePtr.ScrollbarSize,
+                ImGuiStyleVar.WindowPadding => stylePtr.WindowPadding,
+                _ => throw new InvalidOperationException($"Unknown style variable {style}.")
+            };
         }
 
         #endregion
@@ -112,7 +108,7 @@ namespace ImGui.Forms
         public static void SetColor(Theme theme, ImGuiCol colorIndex, Color color)
         {
             if (!Colors.ContainsKey(theme))
-                Colors[theme] = new Dictionary<ImGuiCol, Color>();
+                Colors[theme] = [];
 
             Colors[theme][colorIndex] = color;
             _hasChanges = true;
@@ -125,13 +121,12 @@ namespace ImGui.Forms
 
         public static Color GetColor(Theme theme, ImGuiCol colorIndex)
         {
-            if (!Colors.ContainsKey(theme) || !Colors[theme].ContainsKey(colorIndex))
-            {
-                var style = ImGuiNET.ImGui.GetStyle();
-                return style.Colors[(int)colorIndex].ToColor();
-            }
+            if (Colors.TryGetValue(theme, out Dictionary<ImGuiCol, Color>? colors)
+                && colors.TryGetValue(colorIndex, out Color color))
+                return color;
 
-            return Colors[theme][colorIndex];
+            ImGuiStylePtr style = ImGuiNET.ImGui.GetStyle();
+            return style.Colors[(int)colorIndex].ToColor();
         }
 
         #endregion
@@ -150,33 +145,39 @@ namespace ImGui.Forms
                 case Theme.Dark:
                     ImGuiNET.ImGui.StyleColorsDark();
                     break;
+
+                default:
+                    throw new InvalidOperationException($"Unknown theme {Theme}.");
             }
 
-            var stylePtr = ImGuiNET.ImGui.GetStyle();
+            ImGuiStylePtr stylePtr = ImGuiNET.ImGui.GetStyle();
 
-            if (Colors.ContainsKey(Theme))
+            if (Colors.TryGetValue(Theme, out Dictionary<ImGuiCol, Color>? themeColors))
             {
-                foreach (var color in Colors[Theme])
-                    stylePtr.Colors[(int)color.Key] = color.Value.ToVector4();
+                foreach (ImGuiCol imGuiColor in themeColors.Keys)
+                    stylePtr.Colors[(int)imGuiColor] = themeColors[imGuiColor].ToVector4();
             }
 
-            if (Styles.ContainsKey(Theme))
+            if (Styles.TryGetValue(Theme, out Dictionary<ImGuiStyleVar, object>? themeStyles))
             {
-                foreach (var style in Styles[Theme])
+                foreach (ImGuiStyleVar imGuiStyle in themeStyles.Keys)
                 {
-                    switch (style.Key)
+                    switch (imGuiStyle)
                     {
                         case ImGuiStyleVar.ScrollbarRounding:
-                            stylePtr.ScrollbarRounding = (float)style.Value;
+                            stylePtr.ScrollbarRounding = (float)themeStyles[imGuiStyle];
                             break;
 
                         case ImGuiStyleVar.ScrollbarSize:
-                            stylePtr.ScrollbarSize = (float)style.Value;
+                            stylePtr.ScrollbarSize = (float)themeStyles[imGuiStyle];
                             break;
 
                         case ImGuiStyleVar.WindowPadding:
-                            stylePtr.WindowPadding = (Vector2)style.Value;
+                            stylePtr.WindowPadding = (Vector2)themeStyles[imGuiStyle];
                             break;
+
+                        default:
+                            throw new InvalidOperationException($"Unknown style variable {imGuiStyle}.");
                     }
                 }
             }
@@ -189,14 +190,14 @@ namespace ImGui.Forms
     {
         private readonly bool _hasColors;
 
-        private readonly ImGuiCol _colIndex;
+        private readonly ImGuiCol? _colIndex;
 
         private readonly Color _lightColor;
         private readonly Color _darkColor;
 
         public ThemedColor(Color lightColor, Color darkColor)
         {
-            _colIndex = (ImGuiCol)(-1);
+            _colIndex = null;
 
             _lightColor = lightColor;
             _darkColor = darkColor;
@@ -204,7 +205,7 @@ namespace ImGui.Forms
             _hasColors = true;
         }
 
-        public ThemedColor(ImGuiCol colIndex)
+        private ThemedColor(ImGuiCol colIndex)
         {
             _colIndex = colIndex;
 
@@ -215,30 +216,21 @@ namespace ImGui.Forms
 
         public bool IsEmpty => _hasColors && GetColor() == Color.Transparent;
 
-        public uint ToUInt32()
-        {
-            return GetColor().ToUInt32();
-        }
-
         private Color GetColor()
         {
-            if (_colIndex >= 0)
-                return Style.GetColor(_colIndex);
+            if (_colIndex.HasValue)
+                return Style.GetColor(_colIndex.Value);
 
-            switch (Style.Theme)
+            return Style.Theme switch
             {
-                case Theme.Light:
-                    return _lightColor;
-
-                case Theme.Dark:
-                    return _darkColor;
-
-                default:
-                    return Color.Transparent;
-            }
+                Theme.Light => _lightColor,
+                Theme.Dark => _darkColor,
+                _ => Color.Transparent
+            };
         }
 
         public static implicit operator ThemedColor(Color c) => new(c, c);
         public static implicit operator ThemedColor(ImGuiCol c) => new(c);
+        public static implicit operator Color(ThemedColor c) => c.GetColor();
     }
 }

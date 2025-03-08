@@ -4,6 +4,7 @@ using System.Linq;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
+using ImGui.Forms.Extensions;
 using ImGui.Forms.Factories;
 using ImGui.Forms.Models.IO;
 using ImGuiNET;

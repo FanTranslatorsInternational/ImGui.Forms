@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using ImGui.Forms.Support.Veldrid.ImGui;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
@@ -12,22 +11,17 @@ namespace ImGui.Forms.Factories
         private readonly GraphicsDevice _gd;
         private readonly ImGuiRenderer _controller;
 
-        private readonly IDictionary<Image<Rgba32>, nint> _inputPointers;
-        private readonly IDictionary<nint, Image<Rgba32>> _inputPointersReverse;
-        private readonly IDictionary<nint, Texture> _ptrTextures;
-        private readonly IDictionary<nint, int> _ptrTexturesRefCount;
+        private readonly Dictionary<Image<Rgba32>, nint> _inputPointers = [];
+        private readonly Dictionary<nint, Image<Rgba32>> _inputPointersReverse = [];
+        private readonly Dictionary<nint, Texture> _ptrTextures = [];
+        private readonly Dictionary<nint, int> _ptrTexturesRefCount = [];
 
-        private readonly IList<nint> _unloadQueue;
+        private readonly List<nint> _unloadQueue = [];
 
         public ImageFactory(GraphicsDevice gd, ImGuiRenderer controller)
         {
             _gd = gd;
             _controller = controller;
-            _inputPointers = new Dictionary<Image<Rgba32>, nint>();
-            _inputPointersReverse = new Dictionary<nint, Image<Rgba32>>();
-            _ptrTextures = new Dictionary<nint, Texture>();
-            _ptrTexturesRefCount = new Dictionary<nint, int>();
-            _unloadQueue = new List<nint>();
         }
 
         public nint LoadImage(Image<Rgba32> img)

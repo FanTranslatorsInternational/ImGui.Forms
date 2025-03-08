@@ -107,7 +107,7 @@ namespace ImGui.Forms.Resources
             _ptr = nint.Zero;
         }
 
-        public static explicit operator nint(ImageResource ir) => ir.GetPointer();
+        public static explicit operator nint(ImageResource ir) => ir?.GetPointer() ?? nint.Zero;
 
         private nint GetPointer()
         {

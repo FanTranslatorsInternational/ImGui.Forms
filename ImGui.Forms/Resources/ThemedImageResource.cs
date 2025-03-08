@@ -32,11 +32,13 @@ namespace ImGui.Forms.Resources
 
         public void Destroy()
         {
-            _lightImage.Destroy();
-            _darkImage.Destroy();
+            if (_lightImage != null)
+                _lightImage.Destroy();
+            if (_darkImage != null)
+                _darkImage.Destroy();
         }
 
-        public static explicit operator nint(ThemedImageResource ir) => (nint)ir.GetImage();
+        public static explicit operator nint(ThemedImageResource ir) => ir == null ? nint.Zero : (nint)ir.GetImage();
 
         public static implicit operator ThemedImageResource(ImageResource ir) => new(ir, ir);
 

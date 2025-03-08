@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
+using ImGui.Forms.Extensions;
 using ImGuiNET;
 using Rectangle = Veldrid.Rectangle;
 using Size = ImGui.Forms.Models.Size;

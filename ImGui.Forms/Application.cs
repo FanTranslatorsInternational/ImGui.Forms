@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Numerics;
 using ImGui.Forms.Factories;
 using ImGui.Forms.Localization;
-using ImGui.Forms.Models.IO;
 using ImGui.Forms.Support.Veldrid.ImGui;
 using Veldrid;
 using Veldrid.Sdl2;

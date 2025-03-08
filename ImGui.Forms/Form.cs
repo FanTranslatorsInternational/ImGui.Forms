@@ -20,7 +20,7 @@ namespace ImGui.Forms
     // HINT: Does not derive from Container to not be a component and therefore nestable into other containers
     public abstract class Form
     {
-        private readonly IList<Modal> _modals = new List<Modal>();
+        private readonly IList<Modal> _modals = [];
 
         private Image<Rgba32> _icon;
         private bool _setIcon;

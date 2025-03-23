@@ -67,15 +67,15 @@ namespace ImGui.Forms.Controls.Base
             // Handle drawing of component
             ImGuiNET.ImGui.PushID(Id);
 
-            // Draw border
-            if (ShowBorder)
-                ImGuiNET.ImGui.GetWindowDrawList().AddRect(contentRect.Position, contentRect.Position + contentRect.Size, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Border));
-
             ApplyStyles();
             UpdateInternal(contentRect);
             RemoveStyles();
 
             ImGuiNET.ImGui.PopID();
+
+            // Draw border
+            if (ShowBorder)
+                ImGuiNET.ImGui.GetWindowDrawList().AddRect(contentRect.Position, contentRect.Position + contentRect.Size, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Border));
 
             // Handle Drag and Drop after rendering, so drag drop events go from most nested to least nested control
             // HINT: Don't handle Drag and Drop if the component either doesn't allow it or the component is marked as disabled.

@@ -214,10 +214,13 @@ namespace ImGui.Forms
             _hasColors = true;
         }
 
-        public bool IsEmpty => _hasColors && GetColor() == Color.Transparent;
+        public bool IsEmpty => GetColor() == Color.Transparent;
 
         private Color GetColor()
         {
+            if (!_hasColors)
+                return Color.Transparent;
+
             if (_colIndex.HasValue)
                 return Style.GetColor(_colIndex.Value);
 

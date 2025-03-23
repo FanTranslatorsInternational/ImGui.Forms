@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Xml.Linq;
 using ImGui.Forms.Factories;
 using ImGui.Forms.Models;
 using ImGuiNET;
@@ -31,6 +30,29 @@ namespace ImGui.Forms.Resources
 
             if (File.Exists(Data.Metadata.Path))
                 File.Delete(Data.Metadata.Path);
+        }
+
+        public FontResource Clone(int size)
+        {
+            return new FontResource(Clone(Data, size, null));
+        }
+
+        public FontResource Clone(int size, string characterSet)
+        {
+            return new FontResource(Clone(Data, size, characterSet));
+        }
+
+        private FontData Clone(FontData data, int size, string? characterSet)
+        {
+            FontData? fallback = null;
+            if (data.Fallback != null)
+                fallback = Clone(data.Fallback, size, characterSet);
+
+            var metaData = new FontMetaData(data.Metadata.Name, data.Metadata.Path,
+                characterSet == null ? data.Metadata.GlyphRanges : FontGlyphRange.None, characterSet ?? string.Empty,
+                data.Metadata.IsTemporary);
+
+            return new FontData(metaData, size, fallback);
         }
 
         /// <summary>
@@ -68,7 +90,7 @@ namespace ImGui.Forms.Resources
         public string Path { get; }
 
         /// <summary>
-        /// Determines of the font file has to be deleted at disposal.
+        /// Determines if the font file has to be deleted at disposal.
         /// </summary>
         internal bool IsTemporary { get; }
 

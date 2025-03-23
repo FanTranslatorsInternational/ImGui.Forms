@@ -8,11 +8,11 @@ namespace ImGui.Forms.Controls
 {
     public class ZoomablePictureBox : ZoomableComponent
     {
-        private ThemedImageResource _baseImg;
+        private ThemedImageResource? _baseImg;
 
         #region Properties
 
-        public ThemedImageResource Image
+        public ThemedImageResource? Image
         {
             get => _baseImg;
             set
@@ -24,16 +24,23 @@ namespace ImGui.Forms.Controls
 
         public bool ShowImageBorder { get; set; }
 
+        public ThemedColor BackgroundColor { get; set; }
+
         #endregion
 
-        public ZoomablePictureBox(ThemedImageResource image = default)
+        public ZoomablePictureBox(ThemedImageResource? image = null)
         {
             Image = image;
         }
 
         protected override void DrawInternal(Rectangle contentRect)
         {
-            if (Image == null || (nint)_baseImg == nint.Zero)
+            // Draw background color
+            if (!BackgroundColor.IsEmpty)
+                ImGuiNET.ImGui.GetWindowDrawList().AddRectFilled(contentRect.Position, contentRect.Position + contentRect.Size, BackgroundColor.ToUInt32());
+
+            // Draw image
+            if (_baseImg == null || (nint)_baseImg == nint.Zero)
                 return;
 
             var imageStartPosition = -(_baseImg.Size / 2);

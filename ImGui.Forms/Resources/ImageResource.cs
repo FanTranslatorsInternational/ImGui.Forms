@@ -1,4 +1,5 @@
-﻿using SixLabors.ImageSharp.PixelFormats;
+﻿using System.Diagnostics;
+using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
 using System.IO;
 using System.Numerics;
@@ -36,6 +37,9 @@ namespace ImGui.Forms.Resources
         /// <param name="image">The image to load in this <see cref="ImageResource"/>.</param>
         private ImageResource(Image<Rgba32> image)
         {
+            if (image == null)
+                Debugger.Break();
+
             _img = image;
         }
 

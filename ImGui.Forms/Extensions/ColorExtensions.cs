@@ -8,8 +8,7 @@ namespace ImGui.Forms.Extensions
     {
         public static uint ToUInt32(this ThemedColor c)
         {
-            var pixel = ((Color)c).ToPixel<Rgba32>();
-            return (uint)((pixel.A << 24) | (pixel.B << 16) | (pixel.G << 8) | pixel.R);
+            return ((Color)c).ToUInt32();
         }
 
         public static uint ToUInt32(this Color c)

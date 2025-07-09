@@ -89,9 +89,40 @@ namespace ImGui.Forms
             ImGuiStylePtr stylePtr = ImGuiNET.ImGui.GetStyle();
             return style switch
             {
-                ImGuiStyleVar.ScrollbarRounding => stylePtr.ScrollbarRounding,
-                ImGuiStyleVar.ScrollbarSize => stylePtr.ScrollbarSize,
+                ImGuiStyleVar.Alpha => stylePtr.Alpha,
+                ImGuiStyleVar.DisabledAlpha => stylePtr.DisabledAlpha,
                 ImGuiStyleVar.WindowPadding => stylePtr.WindowPadding,
+                ImGuiStyleVar.WindowRounding => stylePtr.WindowRounding,
+                ImGuiStyleVar.WindowBorderSize => stylePtr.WindowBorderSize,
+                ImGuiStyleVar.WindowMinSize => stylePtr.WindowMinSize,
+                ImGuiStyleVar.WindowTitleAlign => stylePtr.WindowTitleAlign,
+                ImGuiStyleVar.ChildRounding => stylePtr.ChildRounding,
+                ImGuiStyleVar.ChildBorderSize => stylePtr.ChildBorderSize,
+                ImGuiStyleVar.PopupRounding => stylePtr.PopupRounding,
+                ImGuiStyleVar.PopupBorderSize => stylePtr.PopupBorderSize,
+                ImGuiStyleVar.FramePadding => stylePtr.FramePadding,
+                ImGuiStyleVar.FrameRounding => stylePtr.FrameRounding,
+                ImGuiStyleVar.FrameBorderSize => stylePtr.FrameBorderSize,
+                ImGuiStyleVar.ItemSpacing => stylePtr.ItemSpacing,
+                ImGuiStyleVar.ItemInnerSpacing => stylePtr.ItemInnerSpacing,
+                ImGuiStyleVar.IndentSpacing => stylePtr.IndentSpacing,
+                ImGuiStyleVar.CellPadding => stylePtr.CellPadding,
+                ImGuiStyleVar.ScrollbarSize => stylePtr.ScrollbarSize,
+                ImGuiStyleVar.ScrollbarRounding => stylePtr.ScrollbarRounding,
+                ImGuiStyleVar.GrabMinSize => stylePtr.GrabMinSize,
+                ImGuiStyleVar.GrabRounding => stylePtr.GrabRounding,
+                ImGuiStyleVar.TabRounding => stylePtr.TabRounding,
+                ImGuiStyleVar.TabBorderSize => stylePtr.TabBorderSize,
+                ImGuiStyleVar.TabBarBorderSize => stylePtr.TabBarBorderSize,
+                ImGuiStyleVar.TabBarOverlineSize => stylePtr.TabBarOverlineSize,
+                ImGuiStyleVar.TableAngledHeadersAngle => stylePtr.TableAngledHeadersAngle,
+                ImGuiStyleVar.TableAngledHeadersTextAlign => stylePtr.TableAngledHeadersTextAlign,
+                ImGuiStyleVar.ButtonTextAlign => stylePtr.ButtonTextAlign,
+                ImGuiStyleVar.SelectableTextAlign => stylePtr.TabRounding,
+                ImGuiStyleVar.SeparatorTextBorderSize => stylePtr.SelectableTextAlign,
+                ImGuiStyleVar.SeparatorTextAlign => stylePtr.SeparatorTextAlign,
+                ImGuiStyleVar.SeparatorTextPadding => stylePtr.SeparatorTextPadding,
+                ImGuiStyleVar.DockingSeparatorSize => stylePtr.DockingSeparatorSize,
                 _ => throw new InvalidOperationException($"Unknown style variable {style}.")
             };
         }
@@ -164,20 +195,41 @@ namespace ImGui.Forms
                 {
                     switch (imGuiStyle)
                     {
-                        case ImGuiStyleVar.ScrollbarRounding:
-                            stylePtr.ScrollbarRounding = (float)themeStyles[imGuiStyle];
-                            break;
-
-                        case ImGuiStyleVar.ScrollbarSize:
-                            stylePtr.ScrollbarSize = (float)themeStyles[imGuiStyle];
-                            break;
-
-                        case ImGuiStyleVar.WindowPadding:
-                            stylePtr.WindowPadding = (Vector2)themeStyles[imGuiStyle];
-                            break;
-
-                        default:
-                            throw new InvalidOperationException($"Unknown style variable {imGuiStyle}.");
+                        case ImGuiStyleVar.Alpha: stylePtr.Alpha = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.DisabledAlpha: stylePtr.DisabledAlpha = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.WindowPadding: stylePtr.WindowPadding = (Vector2)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.WindowRounding: stylePtr.WindowRounding = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.WindowBorderSize: stylePtr.WindowBorderSize = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.WindowMinSize: stylePtr.WindowMinSize = (Vector2)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.WindowTitleAlign: stylePtr.WindowTitleAlign = (Vector2)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.ChildRounding: stylePtr.ChildRounding = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.ChildBorderSize: stylePtr.ChildBorderSize = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.PopupRounding: stylePtr.PopupRounding = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.PopupBorderSize: stylePtr.PopupBorderSize = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.FramePadding: stylePtr.FramePadding = (Vector2)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.FrameRounding: stylePtr.FrameRounding = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.FrameBorderSize: stylePtr.FrameBorderSize = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.ItemSpacing: stylePtr.ItemSpacing = (Vector2)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.ItemInnerSpacing: stylePtr.ItemInnerSpacing = (Vector2)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.IndentSpacing: stylePtr.IndentSpacing = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.CellPadding: stylePtr.CellPadding = (Vector2)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.ScrollbarSize: stylePtr.ScrollbarSize = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.ScrollbarRounding: stylePtr.ScrollbarRounding = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.GrabMinSize: stylePtr.GrabMinSize = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.GrabRounding: stylePtr.GrabRounding = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.TabRounding: stylePtr.TabRounding = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.TabBorderSize: stylePtr.TabBorderSize = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.TabBarBorderSize: stylePtr.TabBarBorderSize = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.TabBarOverlineSize: stylePtr.TabBarOverlineSize = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.TableAngledHeadersAngle: stylePtr.TableAngledHeadersAngle = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.TableAngledHeadersTextAlign: stylePtr.TableAngledHeadersTextAlign = (Vector2)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.ButtonTextAlign: stylePtr.ButtonTextAlign = (Vector2)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.SelectableTextAlign: stylePtr.SelectableTextAlign = (Vector2)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.SeparatorTextBorderSize: stylePtr.SeparatorTextBorderSize = (float)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.SeparatorTextAlign: stylePtr.SeparatorTextAlign = (Vector2)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.SeparatorTextPadding: stylePtr.SeparatorTextPadding = (Vector2)themeStyles[imGuiStyle]; break;
+                        case ImGuiStyleVar.DockingSeparatorSize: stylePtr.DockingSeparatorSize = (float)themeStyles[imGuiStyle]; break;
+                        default: throw new InvalidOperationException($"Unknown style variable {imGuiStyle}.");
                     }
                 }
             }

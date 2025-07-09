@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
@@ -14,6 +15,8 @@ namespace ImGui.Forms.Controls
 
         public LocalizedString Caption { get; set; }
         public Size Size { get; set; } = Size.WidthAlign;
+
+        public int WidthIndent { get; set; } = 5;
 
         public Component Content { get; set; }
 
@@ -36,9 +39,7 @@ namespace ImGui.Forms.Controls
         public override Size GetSize()
         {
             SizeValue height = Size.Height.IsContentAligned
-                    ? Expanded
-                        ? SizeValue.Absolute((int)(GetHeaderHeight() + ImGuiNET.ImGui.GetStyle().ItemSpacing.X + 200))
-                        : SizeValue.Absolute(GetHeaderHeight())
+                    ? SizeValue.Content
                     : Size.Height;
 
             return new Size(Size.Width, height);
@@ -52,9 +53,14 @@ namespace ImGui.Forms.Controls
             expanded = ImGuiNET.ImGui.CollapsingHeader(Caption, flags);
             if (expanded)
             {
-                if (ImGuiNET.ImGui.BeginChild($"{Id}-in"))
+                int contentPosY = GetContentPosY();
+                if (contentPosY <= contentRect.Height)
                 {
-                    Content?.Update(new Rectangle(contentRect.X, contentRect.Y + GetContentPosY(), contentRect.Width, contentRect.Height - GetContentPosY()));
+                    if (ImGuiNET.ImGui.BeginChild($"{Id}-in"))
+                    {
+                        ImGuiNET.ImGui.SetCursorPos(new Vector2(WidthIndent, 0));
+                        Content?.Update(new Rectangle(contentRect.X + WidthIndent, contentRect.Y + contentPosY, contentRect.Width, contentRect.Height - contentPosY));
+                    }
 
                     ImGuiNET.ImGui.EndChild();
                 }
@@ -72,6 +78,18 @@ namespace ImGui.Forms.Controls
             Content?.SetTabInactiveInternal();
         }
 
+        protected override int GetContentHeight(int parentWidth, int parentHeight, float layoutCorrection = 1)
+        {
+            if (!Expanded)
+                return GetHeaderHeight();
+
+            int height = Content.GetHeight(parentWidth, parentHeight, layoutCorrection);
+            if (height <= 0)
+                return GetHeaderHeight();
+
+            return height + GetHeaderHeight() + (int)ImGuiNET.ImGui.GetStyle().ItemSpacing.Y;
+        }
+
         private void OnExpandedChanged()
         {
             ExpandedChanged?.Invoke(this, EventArgs.Empty);
@@ -80,8 +98,9 @@ namespace ImGui.Forms.Controls
         private int GetContentPosY()
         {
             int height = GetHeaderHeight();
+
             if (Expanded)
-                height += (int)ImGuiNET.ImGui.GetStyle().ItemSpacing.X;
+                height += (int)ImGuiNET.ImGui.GetStyle().ItemSpacing.Y;
 
             return height;
         }

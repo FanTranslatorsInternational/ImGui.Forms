@@ -98,6 +98,17 @@ namespace ImGui.Forms.Controls.Base
             );
         }
 
+        protected Vector2 Transform(Rectangle contentRect, Vector2 toTransform)
+        {
+            var contentCenterPosition = contentRect.Position + contentRect.Size / 2;
+
+            var scaledContentPosition = new Vector2(toTransform.X * _transform.M11, toTransform.Y * _transform.M22);
+
+            var absoluteContentPosition = contentCenterPosition + _transform.Translation + scaledContentPosition;
+
+            return absoluteContentPosition;
+        }
+
         private void OnMouseScrolled()
         {
             MouseScrolled?.Invoke(this, EventArgs.Empty);

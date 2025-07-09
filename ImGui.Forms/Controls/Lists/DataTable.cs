@@ -1,10 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
 using ImGui.Forms.Extensions;
+using ImGui.Forms.Localization;
+using ImGui.Forms.Models.IO;
+using ImGui.Forms.Resources;
 using ImGuiNET;
+using Veldrid;
 using Rectangle = Veldrid.Rectangle;
 using Size = ImGui.Forms.Models.Size;
 
@@ -12,8 +17,11 @@ namespace ImGui.Forms.Controls.Lists
 {
     public class DataTable<TData> : Component
     {
+        private readonly KeyCommand _copyCommand = new(ModifierKeys.Control, Key.C);
+
         private (int, int) _clickedCell = (-1, -1);
-        private readonly IList<int> _selectedIndexes = new System.Collections.Generic.List<int>();
+        private int _lastSelectedRow = -1;
+        private readonly HashSet<int> _selectedIndexes = new();
 
         private IList<DataTableRow<TData>> _rows = new System.Collections.Generic.List<DataTableRow<TData>>();
 
@@ -102,14 +110,35 @@ namespace ImGui.Forms.Controls.Lists
                                     if (CanSelectMultiple && ImGuiNET.ImGui.GetIO().KeyCtrl)
                                     {
                                         if (isRowSelected)
+                                        {
                                             _selectedIndexes.Remove(r);
+                                            _lastSelectedRow = -1;
+                                        }
                                         else
+                                        {
                                             _selectedIndexes.Add(r);
+                                            _lastSelectedRow = r;
+                                        }
+                                    }
+                                    else if (CanSelectMultiple && ImGuiNET.ImGui.GetIO().KeyShift)
+                                    {
+                                        if (_lastSelectedRow >= 0 && _lastSelectedRow != r)
+                                        {
+                                            _selectedIndexes.Clear();
+
+                                            var min = Math.Min(_lastSelectedRow, r);
+                                            var max = Math.Max(_lastSelectedRow, r);
+
+                                            for (var i = min; i <= max; i++)
+                                                _selectedIndexes.Add(i);
+                                        }
                                     }
                                     else
                                     {
                                         _selectedIndexes.Clear();
                                         _selectedIndexes.Add(r);
+
+                                        _lastSelectedRow = r;
                                     }
 
                                     OnSelectedRowsChanged();
@@ -132,6 +161,10 @@ namespace ImGui.Forms.Controls.Lists
                         }
                     }
 
+                    // Handle copy data
+                    if (_copyCommand.IsPressed())
+                        CopySelectedRows(localRows);
+
                     // Handle double click event
                     if (ImGuiNET.ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
                         if (ImGuiNET.ImGui.IsMouseHoveringRect(contentRect.Position, contentRect.Position + contentRect.Size, false))
@@ -149,14 +182,54 @@ namespace ImGui.Forms.Controls.Lists
             return (ImGuiNET.ImGui.IsMouseReleased(ImGuiMouseButton.Right) || ImGuiNET.ImGui.IsMouseReleased(ImGuiMouseButton.Left)) && ImGuiNET.ImGui.IsItemHovered();
         }
 
+        private void CopySelectedRows(IList<DataTableRow<TData>> rows)
+        {
+            if (_selectedIndexes.Count <= 0)
+                return;
+
+            var sb = new StringBuilder();
+            var rowValues = new System.Collections.Generic.List<LocalizedString>(Columns.Count);
+
+            for (var r = 0; r < rows.Count; r++)
+            {
+                if (!_selectedIndexes.Contains(r))
+                    continue;
+
+                foreach (DataTableColumn<TData> column in Columns)
+                    rowValues.Add(column.Get(rows[r]));
+
+                sb.AppendLine(string.Join('\t', rowValues));
+
+                rowValues.Clear();
+            }
+
+            ImGuiNET.ImGui.SetClipboardText(sb.ToString());
+        }
+
         private void OnSelectedRowsChanged()
         {
-            SelectedRowsChanged?.Invoke(this, new EventArgs());
+            SelectedRowsChanged?.Invoke(this, EventArgs.Empty);
         }
 
         private void OnDoubleClicked()
         {
-            DoubleClicked?.Invoke(this, new EventArgs());
+            DoubleClicked?.Invoke(this, EventArgs.Empty);
+        }
+
+        protected override int GetContentHeight(int parentWidth, int parentHeight, float layoutCorrection = 1)
+        {
+            var height = 0f;
+
+            float lineHeight = TextMeasurer.GetCurrentLineHeight(withDescent: true);
+            float cellPaddingY = Style.GetStyleVector2(ImGuiStyleVar.CellPadding).Y;
+            float cellHeight = lineHeight + cellPaddingY + 1;
+
+            if (ShowHeaders)
+                height += cellHeight;
+
+            height += cellHeight * _rows.Count;
+
+            return (int)Math.Ceiling(height);
         }
     }
 }

@@ -109,7 +109,7 @@ namespace ImGui.Forms.Modals
             _shouldClose = !await ShouldCancelClose();
         }
 
-        private int GetHeaderHeight()
+        private float GetHeaderHeight()
         {
             return TextMeasurer.GetCurrentLineHeight(withDescent: true) + 6;
         }

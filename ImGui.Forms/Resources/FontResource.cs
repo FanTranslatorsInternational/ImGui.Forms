@@ -59,7 +59,7 @@ namespace ImGui.Forms.Resources
         /// Gets the line height of this <see cref="FontResource"/>.
         /// </summary>
         /// <returns>The line height of this <see cref="FontResource"/>.</returns>
-        public int GetLineHeight() =>
+        public float GetLineHeight() =>
             TextMeasurer.GetCurrentLineHeight(this);
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace ImGui.Forms.Resources
         /// </summary>
         /// <param name="text">The text to measure the width for.</param>
         /// <returns>The width of <paramref name="text"/> with this <see cref="FontResource"/>.</returns>
-        public int GetLineWidth(string text) =>
+        public float GetLineWidth(string text) =>
             TextMeasurer.GetCurrentLineWidth(text, this);
 
         /// <summary>

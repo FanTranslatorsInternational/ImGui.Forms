@@ -1,5 +1,4 @@
 ﻿using ImGuiNET;
-using System;
 using System.Numerics;
 
 namespace ImGui.Forms.Resources
@@ -15,7 +14,7 @@ namespace ImGui.Forms.Resources
         public static Vector2 MeasureText(string text, bool withDescent = false)
         {
             var size = ImGuiNET.ImGui.CalcTextSize(text ?? string.Empty);
-            size = new Vector2(size.X, size.Y + (withDescent ? -ImGuiNET.ImGui.GetFont().Descent : 0));
+            size = size with { Y = size.Y + (withDescent ? -ImGuiNET.ImGui.GetFont().Descent : 0) };
 
             return size;
         }
@@ -47,14 +46,14 @@ namespace ImGui.Forms.Resources
         /// <param name="font">Optional. The font to measure the line height with.</param>
         /// <param name="withDescent">Calculate height with respect to the font descent.</param>
         /// <returns>The measured line height of the given font or the current font on the stack.</returns>
-        public static int GetCurrentLineHeight(FontResource font = null, bool withDescent = false)
+        public static float GetCurrentLineHeight(FontResource font = null, bool withDescent = false)
         {
             ImFontPtr? fontPtr = font?.GetPointer();
             if (fontPtr != null)
                 ImGuiNET.ImGui.PushFont(fontPtr.Value);
 
             var currentFont = ImGuiNET.ImGui.GetFont();
-            var lineHeight = (int)Math.Ceiling(currentFont.Ascent + (withDescent ? -currentFont.Descent : 0));
+            var lineHeight = currentFont.Ascent + (withDescent ? -currentFont.Descent : 0);
 
             if (fontPtr != null)
                 ImGuiNET.ImGui.PopFont();
@@ -68,13 +67,13 @@ namespace ImGui.Forms.Resources
         /// <param name="text">The line of text to measure.</param>
         /// <param name="font">Optional. The font to measure the width with.</param>
         /// <returns>The measured width for <paramref name="text"/> with the given font or the current font on the stack.</returns>
-        public static int GetCurrentLineWidth(string text, FontResource font = null)
+        public static float GetCurrentLineWidth(string text, FontResource font = null)
         {
             ImFontPtr? fontPtr = font?.GetPointer();
             if (fontPtr != null)
                 ImGuiNET.ImGui.PushFont(fontPtr.Value);
 
-            var lineWidth = (int)Math.Ceiling(MeasureText(text).X);
+            var lineWidth = MeasureText(text).X;
 
             if (fontPtr != null)
                 ImGuiNET.ImGui.PopFont();

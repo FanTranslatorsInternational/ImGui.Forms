@@ -61,7 +61,7 @@ namespace ImGui.Forms.Controls
             int arrowWidth = (int)(ButtonSizeX_ + ImGuiNET.ImGui.GetStyle().FramePadding.X * 2);
 
             SizeValue width = Width.IsContentAligned ? maxWidth + arrowWidth : Width;
-            var height = TextMeasurer.GetCurrentLineHeight() + (int)ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.Y * 2;
+            var height = (int)(TextMeasurer.GetCurrentLineHeight() + ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.Y * 2);
 
             return new Size(width, height);
         }

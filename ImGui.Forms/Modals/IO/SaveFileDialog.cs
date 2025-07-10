@@ -33,13 +33,15 @@ namespace ImGui.Forms.Modals.IO
         private readonly TreeView<string> _treeView;
         private readonly DataTable<FileEntry> _fileTable;
 
+        private readonly Button _cancelBtn;
         private readonly Button _saveBtn;
 
         public string InitialDirectory { get; set; }
+        public string InitialFileName { get; set; }
 
         public string SelectedPath { get; private set; }
 
-        public SaveFileDialog(string filePath = null)
+        public SaveFileDialog()
         {
             #region Controls
 
@@ -57,17 +59,16 @@ namespace ImGui.Forms.Modals.IO
             _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.Type, LocalizationResources.ItemType()));
             _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.DateModified.ToString(CultureInfo.CurrentCulture), LocalizationResources.ItemDateModified()));
 
-            var cancelBtn = new Button { Text = LocalizationResources.Cancel(), Width = 80 };
-            _saveBtn = new Button { Text = LocalizationResources.Save(), Width = 80, Enabled = !string.IsNullOrEmpty(filePath) };
+            _cancelBtn = new Button { Text = LocalizationResources.Cancel(), Width = 80 };
+            _saveBtn = new Button { Text = LocalizationResources.Save(), Width = 80, Enabled = !string.IsNullOrEmpty(InitialFileName) };
 
             #endregion
 
-            if (!string.IsNullOrEmpty(filePath))
+            if (!string.IsNullOrEmpty(InitialFileName))
             {
-                InitialDirectory = Path.GetDirectoryName(filePath);
-                SelectedPath = filePath;
+                SelectedPath = Path.Combine(GetInitialDirectory(), InitialFileName);
 
-                _selectedFileTextBox.Text = Path.GetFileName(filePath);
+                _selectedFileTextBox.Text = InitialFileName;
             }
 
             #region Events
@@ -82,7 +83,7 @@ namespace ImGui.Forms.Modals.IO
             _fileTable.DoubleClicked += _fileTable_DoubleClicked;
             _fileTable.SelectedRowsChanged += _fileTable_SelectedRowsChanged;
 
-            cancelBtn.Clicked += CnlBtn_Clicked;
+            _cancelBtn.Clicked += CnlBtn_Clicked;
             _saveBtn.Clicked += SaveBtnClicked;
 
             #endregion
@@ -144,8 +145,8 @@ namespace ImGui.Forms.Modals.IO
                         ItemSpacing = 5,
                         Items =
                         {
-                            new StackItem(_saveBtn),
-                            new StackItem(cancelBtn)
+                            _saveBtn,
+                            _cancelBtn
                         }
                     }
                 }

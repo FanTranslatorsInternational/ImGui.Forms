@@ -11,6 +11,7 @@ namespace ImGui.Forms.Modals.IO.Windows
     {
         public LocalizedString Title { get; set; }
         public string InitialDirectory { get; set; } = null;
+        public string InitialFileName { get; set; } = null;
         public IList<FileFilter> Filters { get; set; } = new List<FileFilter> { new("All Files", "*") };
         public bool ShowHidden { get; set; } = false;
         public bool Success { get; private set; }
@@ -21,7 +22,7 @@ namespace ImGui.Forms.Modals.IO.Windows
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
                 return await ShowDefaultAsync();
 
-            await Task.Run(ShowSaveFileDialog);
+            ShowSaveFileDialog();
 
             return Success ? DialogResult.Ok : DialogResult.Cancel;
         }
@@ -31,12 +32,13 @@ namespace ImGui.Forms.Modals.IO.Windows
             var sfd = new SaveFileDialog
             {
                 Caption = Title,
-                InitialDirectory = InitialDirectory
+                InitialDirectory = InitialDirectory,
+                InitialFileName = InitialFileName
             };
 
             DialogResult result = await sfd.ShowAsync();
             if (result == DialogResult.Ok)
-                Files = new[] { sfd.SelectedPath };
+                Files = [sfd.SelectedPath];
 
             Success = result == DialogResult.Ok;
             return result;
@@ -63,8 +65,16 @@ namespace ImGui.Forms.Modals.IO.Windows
             ofn.file = Marshal.AllocHGlobal(MAX_FILE_LENGTH * Marshal.SystemDefaultCharSize);
             ofn.maxFile = MAX_FILE_LENGTH;
 
-            // Initialize buffer with NULL bytes
-            for (int i = 0; i < MAX_FILE_LENGTH * Marshal.SystemDefaultCharSize; i++)
+            var initFileLength = string.IsNullOrEmpty(InitialFileName) ? 0 : InitialFileName.Length * Marshal.SystemDefaultCharSize;
+            var initFilePtr = Marshal.StringToHGlobalAuto(InitialFileName);
+
+            // Initialize file name buffer
+            for (int i = 0; i < initFileLength; i++)
+            {
+                Marshal.WriteByte(ofn.file, i, Marshal.ReadByte(initFilePtr, i));
+            }
+
+            for (int i = initFileLength; i < MAX_FILE_LENGTH * Marshal.SystemDefaultCharSize; i++)
             {
                 Marshal.WriteByte(ofn.file, i, 0);
             }
@@ -119,23 +129,31 @@ namespace ImGui.Forms.Modals.IO.Windows
             public int structSize = 0;
             public nint dlgOwner = nint.Zero;
             public nint instance = nint.Zero;
+
             public string filter;
             public string customFilter;
             public int maxCustFilter = 0;
             public int filterIndex = 0;
+
             public nint file;
             public int maxFile = 0;
+
             public string fileTitle;
             public int maxFileTitle = 0;
+
             public string initialDir;
             public string title;
+
             public int flags = 0;
             public short fileOffset = 0;
             public short fileExtension = 0;
+
             public string defExt;
+
             public nint custData = nint.Zero;
             public nint hook = nint.Zero;
             public string templateName;
+
             public nint reservedPtr = nint.Zero;
             public int reservedInt = 0;
             public int flagsEx = 0;

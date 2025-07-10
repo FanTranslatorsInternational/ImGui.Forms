@@ -117,6 +117,7 @@ namespace ImGui.Forms.Modals.IO
                             _searchTextBox
                         }
                     },
+
                     new StackItem(new StackLayout
                     {
                         Alignment = Alignment.Horizontal,
@@ -127,6 +128,7 @@ namespace ImGui.Forms.Modals.IO
                             _fileTable
                         }
                     }) {VerticalAlignment = VerticalAlignment.Top},
+
                     new StackLayout
                     {
                         Alignment = Alignment.Horizontal,
@@ -139,6 +141,7 @@ namespace ImGui.Forms.Modals.IO
                             _fileFilters
                         }
                     },
+
                     new StackLayout
                     {
                         Alignment = Alignment.Horizontal,
@@ -147,8 +150,8 @@ namespace ImGui.Forms.Modals.IO
                         ItemSpacing = 5,
                         Items =
                         {
-                            new StackItem(_openBtn),
-                            new StackItem(cancelBtn)
+                            _openBtn,
+                            cancelBtn
                         }
                     }
                 }

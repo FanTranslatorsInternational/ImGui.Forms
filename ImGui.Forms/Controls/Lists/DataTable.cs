@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
@@ -19,9 +18,10 @@ namespace ImGui.Forms.Controls.Lists
     {
         private readonly KeyCommand _copyCommand = new(ModifierKeys.Control, Key.C);
 
+        private readonly System.Collections.Generic.List<DataTableRow<TData>> _selectedRows = new();
+
         private (int, int) _clickedCell = (-1, -1);
         private int _lastSelectedRow = -1;
-        private readonly HashSet<int> _selectedIndexes = new();
 
         private IList<DataTableRow<TData>> _rows = new System.Collections.Generic.List<DataTableRow<TData>>();
 
@@ -36,12 +36,12 @@ namespace ImGui.Forms.Controls.Lists
             {
                 _rows = value;
 
-                _selectedIndexes.Clear();
+                _selectedRows.Clear();
                 OnSelectedRowsChanged();
             }
         }
 
-        public IEnumerable<DataTableRow<TData>> SelectedRows => _rows.Where((r, i) => _selectedIndexes.Contains(i));
+        public IReadOnlyList<DataTableRow<TData>> SelectedRows => _selectedRows;
 
         public bool IsResizable { get; set; }
 
@@ -87,7 +87,7 @@ namespace ImGui.Forms.Controls.Lists
                     for (var r = 0; r < localRows.Count; r++)
                     {
                         var row = localRows[r];
-                        var isRowSelected = _selectedIndexes.Contains(r);
+                        var isRowSelected = _selectedRows.Contains(row);
 
                         ImGuiNET.ImGui.TableNextRow();
 
@@ -111,12 +111,12 @@ namespace ImGui.Forms.Controls.Lists
                                     {
                                         if (isRowSelected)
                                         {
-                                            _selectedIndexes.Remove(r);
+                                            _selectedRows.Remove(row);
                                             _lastSelectedRow = -1;
                                         }
                                         else
                                         {
-                                            _selectedIndexes.Add(r);
+                                            _selectedRows.Add(row);
                                             _lastSelectedRow = r;
                                         }
                                     }
@@ -124,19 +124,19 @@ namespace ImGui.Forms.Controls.Lists
                                     {
                                         if (_lastSelectedRow >= 0 && _lastSelectedRow != r)
                                         {
-                                            _selectedIndexes.Clear();
+                                            _selectedRows.Clear();
 
-                                            var min = Math.Min(_lastSelectedRow, r);
-                                            var max = Math.Max(_lastSelectedRow, r);
+                                            var min = Math.Clamp(Math.Min(_lastSelectedRow, r), 0, localRows.Count);
+                                            var max = Math.Clamp(Math.Max(_lastSelectedRow, r), 0, localRows.Count);
 
                                             for (var i = min; i <= max; i++)
-                                                _selectedIndexes.Add(i);
+                                                _selectedRows.Add(localRows[i]);
                                         }
                                     }
                                     else
                                     {
-                                        _selectedIndexes.Clear();
-                                        _selectedIndexes.Add(r);
+                                        _selectedRows.Clear();
+                                        _selectedRows.Add(row);
 
                                         _lastSelectedRow = r;
                                     }
@@ -184,19 +184,16 @@ namespace ImGui.Forms.Controls.Lists
 
         private void CopySelectedRows(IList<DataTableRow<TData>> rows)
         {
-            if (_selectedIndexes.Count <= 0)
+            if (_selectedRows.Count <= 0)
                 return;
 
             var sb = new StringBuilder();
             var rowValues = new System.Collections.Generic.List<LocalizedString>(Columns.Count);
 
-            for (var r = 0; r < rows.Count; r++)
+            foreach (var selectedRow in _selectedRows)
             {
-                if (!_selectedIndexes.Contains(r))
-                    continue;
-
                 foreach (DataTableColumn<TData> column in Columns)
-                    rowValues.Add(column.Get(rows[r]));
+                    rowValues.Add(column.Get(selectedRow));
 
                 sb.AppendLine(string.Join('\t', rowValues));
 

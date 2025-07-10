@@ -106,7 +106,7 @@ namespace ImGui.Forms
             Instance.MainForm.Size = size;
         }
 
-        private void CreateApplication(Form form)
+        private unsafe void CreateApplication(Form form)
         {
             // Create window
             CreateWindow(form, out var window, out var gd);
@@ -116,6 +116,8 @@ namespace ImGui.Forms
             ImageFactory = new ImageFactory(gd, _executionContext.Renderer);
 
             FontFactory.Initialize(ImGuiNET.ImGui.GetIO(), _executionContext.Renderer);
+
+            ImGuiNET.ImGui.GetIO().NativePtr->IniFilename = (byte*)0;
 
             Instance = this;
         }

@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>Imgui.Forms</id>
-    <version>1.4.5</version>
+    <version>1.4.6</version>
     <description>A WinForms-inspired object-oriented framework around Dear ImGui (https://github.com/ocornut/imgui)</description>
 
     <authors>onepiecefreak</authors>

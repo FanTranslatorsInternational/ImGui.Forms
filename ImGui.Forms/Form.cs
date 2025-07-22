@@ -17,13 +17,14 @@ using Veldrid.Sdl2;
 
 namespace ImGui.Forms
 {
-    // HINT: Does not derive from Container to not be a component and therefore nestable into other containers
+    // HINT: Does not derive from Component to not be a component and therefore nestable into other containers
     public abstract class Form
     {
         private readonly IList<Modal> _modals = [];
 
         private Image<Rgba32> _icon;
         private bool _setIcon;
+        private Modal? _modalRendering;
 
         #region Properties
 
@@ -92,6 +93,24 @@ namespace ImGui.Forms
                 _modals.Last().ChildModal = null;
         }
 
+        internal bool IsActiveLayer()
+        {
+            if (_modals.Count <= 0)
+                return true;
+
+            return _modals.Last() == _modalRendering;
+        }
+
+        internal void SetRenderingModal(Modal? modal)
+        {
+            _modalRendering = modal;
+        }
+
+        internal bool HasBlockingModals()
+        {
+            return _modals.Any(x => x.BlockFormClosing);
+        }
+
         public bool HasOpenModals()
         {
             return _modals.Count > 0;
@@ -145,8 +164,10 @@ namespace ImGui.Forms
             var modal = _modals.Count > 0 ? _modals.First() : null;
             Modal.DrawModal(modal);
 
-            // Handle Drag and Drop after rendering
-            if (AllowDragDrop)
+            SetRenderingModal(null);
+
+            // Handle Drag and Drop after rendering only if form is the top active layer
+            if (AllowDragDrop && _modals.Count <= 0)
                 if (Application.Instance.TryGetDragDrop(new Veldrid.Rectangle(0, 0, (int)Size.X, (int)Size.Y), out DragDropEvent[] dragDrops))
                     OnDragDrop(dragDrops);
 
@@ -157,11 +178,6 @@ namespace ImGui.Forms
         protected void Close()
         {
             Application.Instance?.Window.Close();
-        }
-
-        internal bool HasBlockingModals()
-        {
-            return _modals.Any(x => x.BlockFormClosing);
         }
 
         #region Event Invokers

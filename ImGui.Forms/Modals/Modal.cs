@@ -13,6 +13,8 @@ namespace ImGui.Forms.Modals
 {
     public abstract class Modal : Component
     {
+        private static readonly KeyCommand CloseCommand = new(Key.Escape);
+
         private CancellationTokenSource _tokenSource;
         private bool _shouldClose;
 
@@ -48,7 +50,7 @@ namespace ImGui.Forms.Modals
 
                 if (OkAction.IsPressed())
                     Close(DialogResult.Ok);
-                else if (CancelAction.IsPressed())
+                else if (CancelAction.IsPressed() || CloseCommand.IsPressed())
                     Close(DialogResult.Cancel);
 
                 // Create content of child modal
@@ -140,6 +142,8 @@ namespace ImGui.Forms.Modals
         {
             if (modal == null)
                 return;
+
+            Application.Instance.MainForm.SetRenderingModal(modal);
 
             var form = Application.Instance.MainForm;
 

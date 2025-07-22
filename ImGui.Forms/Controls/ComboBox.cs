@@ -57,7 +57,7 @@ namespace ImGui.Forms.Controls
 
         public override Size GetSize()
         {
-            var maxWidth = Items.Select(x => TextMeasurer.GetCurrentLineWidth(x.Name)).DefaultIfEmpty(0).Max() + (int)ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.X * 2;
+            var maxWidth = (int)(Items.Select(x => TextMeasurer.GetCurrentLineWidth(x.Name)).DefaultIfEmpty(0).Max() + ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.X * 2);
             int arrowWidth = (int)(ButtonSizeX_ + ImGuiNET.ImGui.GetStyle().FramePadding.X * 2);
 
             SizeValue width = Width.IsContentAligned ? maxWidth + arrowWidth : Width;

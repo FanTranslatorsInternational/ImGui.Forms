@@ -29,12 +29,12 @@ namespace ImGui.Forms.Resources
         public static Vector2 MeasureText(string text, FontResource font, bool withDescent = false)
         {
             ImFontPtr? fontPtr = font?.GetPointer();
-            if (fontPtr != null)
+            if (fontPtr.HasValue)
                 ImGuiNET.ImGui.PushFont(fontPtr.Value);
 
             var size = MeasureText(text, withDescent);
 
-            if (fontPtr != null)
+            if (fontPtr.HasValue)
                 ImGuiNET.ImGui.PopFont();
 
             return size;
@@ -49,13 +49,13 @@ namespace ImGui.Forms.Resources
         public static float GetCurrentLineHeight(FontResource font = null, bool withDescent = false)
         {
             ImFontPtr? fontPtr = font?.GetPointer();
-            if (fontPtr != null)
+            if (fontPtr.HasValue)
                 ImGuiNET.ImGui.PushFont(fontPtr.Value);
 
             var currentFont = ImGuiNET.ImGui.GetFont();
             var lineHeight = currentFont.Ascent + (withDescent ? -currentFont.Descent : 0);
 
-            if (fontPtr != null)
+            if (fontPtr.HasValue)
                 ImGuiNET.ImGui.PopFont();
 
             return lineHeight;
@@ -70,12 +70,12 @@ namespace ImGui.Forms.Resources
         public static float GetCurrentLineWidth(string text, FontResource font = null)
         {
             ImFontPtr? fontPtr = font?.GetPointer();
-            if (fontPtr != null)
+            if (fontPtr.HasValue)
                 ImGuiNET.ImGui.PushFont(fontPtr.Value);
 
             var lineWidth = MeasureText(text).X;
 
-            if (fontPtr != null)
+            if (fontPtr.HasValue)
                 ImGuiNET.ImGui.PopFont();
 
             return lineWidth;

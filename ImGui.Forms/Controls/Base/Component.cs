@@ -78,6 +78,7 @@ namespace ImGui.Forms.Controls.Base
                 ImGuiNET.ImGui.GetWindowDrawList().AddRect(contentRect.Position, contentRect.Position + contentRect.Size, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Border));
 
             // Handle Drag and Drop after rendering, so drag drop events go from most nested to least nested control
+            // HINT: Drag and Drop only proceeds on the top active layer of form and modal windows
             // HINT: Don't handle Drag and Drop if the component either doesn't allow it or the component is marked as disabled.
             if (!AllowDragDrop || !Enabled)
             {
@@ -85,28 +86,11 @@ namespace ImGui.Forms.Controls.Base
                 return;
             }
 
-            if (Application.Instance.TryGetDragDrop(contentRect, out DragDropEvent[] dragDrops))
+            if (Application.Instance.MainForm.IsActiveLayer()
+                && Application.Instance.TryGetDragDrop(contentRect, out DragDropEvent[] dragDrops))
                 OnDragDrop(dragDrops);
 
             _tabInactive = false;
-        }
-
-        /// <summary>
-        /// Determines if the current ImGui item is hovered.
-        /// </summary>
-        /// <returns>If the current ImGui item is hovered.</returns>
-        protected bool IsHoveredCore()
-        {
-            return ImGuiNET.ImGui.IsItemHovered();
-        }
-
-        /// <summary>
-        /// Determines if the current ImGui item is active.
-        /// </summary>
-        /// <returns>If the current ImGui item is active.</returns>
-        protected bool IsActiveCore()
-        {
-            return ImGuiNET.ImGui.IsItemActive() && ImGuiNET.ImGui.IsItemHovered();
         }
 
         /// <summary>

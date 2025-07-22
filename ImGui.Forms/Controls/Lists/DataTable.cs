@@ -22,6 +22,7 @@ namespace ImGui.Forms.Controls.Lists
 
         private (int, int) _clickedCell = (-1, -1);
         private int _lastSelectedRow = -1;
+        private float _scrollY;
 
         private IList<DataTableRow<TData>> _rows = new System.Collections.Generic.List<DataTableRow<TData>>();
 
@@ -75,6 +76,16 @@ namespace ImGui.Forms.Controls.Lists
 
             if (ImGuiNET.ImGui.BeginChild($"{Id}c", contentRect.Size))
             {
+                float newScrollY = ImGuiNET.ImGui.GetScrollY();
+
+                if (_scrollY != newScrollY)
+                {
+                    if (IsTabInactiveCore())
+                        ImGuiNET.ImGui.SetScrollY(_scrollY);
+
+                    _scrollY = newScrollY;
+                }
+
                 if (ImGuiNET.ImGui.BeginTable($"{Id}t", Columns.Count, flags))
                 {
                     if (ShowHeaders)
@@ -103,7 +114,8 @@ namespace ImGui.Forms.Controls.Lists
                             if (IsSelectable && row.CanSelect && c == 0)
                             {
                                 var isSelected = ImGuiNET.ImGui.Selectable(column.Get(row), isRowSelected, ImGuiSelectableFlags.SpanAllColumns);
-                                isSelected |= ImGuiNET.ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByPopup) && ImGuiNET.ImGui.IsMouseClicked(ImGuiMouseButton.Right);
+                                isSelected |= ImGuiNET.ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByPopup)
+                                              && (ImGuiNET.ImGui.IsMouseClicked(ImGuiMouseButton.Left) || ImGuiNET.ImGui.IsMouseClicked(ImGuiMouseButton.Right));
 
                                 if (isSelected)
                                 {
@@ -127,7 +139,7 @@ namespace ImGui.Forms.Controls.Lists
                                             _selectedRows.Clear();
 
                                             var min = Math.Clamp(Math.Min(_lastSelectedRow, r), 0, localRows.Count);
-                                            var max = Math.Clamp(Math.Max(_lastSelectedRow, r), 0, localRows.Count);
+                                            var max = Math.Clamp(Math.Max(_lastSelectedRow, r), 0, localRows.Count - 1);
 
                                             for (var i = min; i <= max; i++)
                                                 _selectedRows.Add(localRows[i]);
@@ -161,16 +173,15 @@ namespace ImGui.Forms.Controls.Lists
                         }
                     }
 
+                    ImGuiNET.ImGui.EndTable();
+
                     // Handle copy data
-                    if (_copyCommand.IsPressed())
-                        CopySelectedRows(localRows);
+                    if (_copyCommand.IsPressed() && Application.Instance.MainForm.IsActiveLayer())
+                        CopySelectedRows();
 
                     // Handle double click event
-                    if (ImGuiNET.ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left))
-                        if (ImGuiNET.ImGui.IsMouseHoveringRect(contentRect.Position, contentRect.Position + contentRect.Size, false))
-                            OnDoubleClicked();
-
-                    ImGuiNET.ImGui.EndTable();
+                    if (ImGuiNET.ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left) && Application.Instance.MainForm.IsActiveLayer())
+                        OnDoubleClicked();
                 }
             }
 
@@ -182,7 +193,7 @@ namespace ImGui.Forms.Controls.Lists
             return (ImGuiNET.ImGui.IsMouseReleased(ImGuiMouseButton.Right) || ImGuiNET.ImGui.IsMouseReleased(ImGuiMouseButton.Left)) && ImGuiNET.ImGui.IsItemHovered();
         }
 
-        private void CopySelectedRows(IList<DataTableRow<TData>> rows)
+        private void CopySelectedRows()
         {
             if (_selectedRows.Count <= 0)
                 return;

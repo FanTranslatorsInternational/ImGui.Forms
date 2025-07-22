@@ -60,7 +60,7 @@ namespace ImGui.Forms.Controls
             if ((ImGuiNET.ImGui.Button(EscapeText(), contentRect.Size) || KeyAction.IsPressed()) && Enabled)
                 OnClicked();
 
-            if (Tooltip is { IsEmpty: false } && IsHoveredCore())
+            if (Tooltip is { IsEmpty: false } && ImGuiNET.ImGui.IsItemHovered())
             {
                 ImGuiNET.ImGui.BeginTooltip();
                 ImGuiNET.ImGui.Text(Tooltip);

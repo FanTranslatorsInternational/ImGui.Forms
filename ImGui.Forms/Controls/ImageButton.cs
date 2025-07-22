@@ -69,7 +69,7 @@ namespace ImGui.Forms.Controls
                     OnClicked();
             }
 
-            if (Enabled && Tooltip is { IsEmpty: false } && IsHoveredCore())
+            if (Enabled && Tooltip is { IsEmpty: false } && ImGuiNET.ImGui.IsItemHovered())
             {
                 ImGuiNET.ImGui.BeginTooltip();
                 ImGuiNET.ImGui.Text(Tooltip);

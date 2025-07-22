@@ -16,7 +16,7 @@ namespace ImGui.Forms.Controls.Base
         /// </summary>
         /// <returns></returns>
         /// <remarks>This method is preferred over <see cref="Active"/> since it reflects changes by <see cref="ToggleActive"/>.</remarks>
-        public bool IsActive() => Enabled && (Active || IsActiveCore());
+        public bool IsActive() => Enabled && (Active || (ImGuiNET.ImGui.IsItemHovered() && ImGuiNET.ImGui.IsItemActive()));
 
         /// <summary>
         /// Toggle the state of activity for the component based on <paramref name="toggleActive"/>.

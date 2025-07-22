@@ -64,7 +64,11 @@ namespace ImGui.Forms.Modals.IO.Windows
             ofn.maxFileTitle = ofn.fileTitle.Length;
             ofn.initialDir = InitialDirectory;
             ofn.title = Title;
-            ofn.flags = (int)OpenFileNameFlags.OFN_HIDEREADONLY | (int)OpenFileNameFlags.OFN_EXPLORER | (int)OpenFileNameFlags.OFN_FILEMUSTEXIST | (int)OpenFileNameFlags.OFN_PATHMUSTEXIST;
+            ofn.flags = (int)(OpenFileNameFlags.HideReadOnly
+                              | OpenFileNameFlags.Explorer
+                              | OpenFileNameFlags.FileMustExist
+                              | OpenFileNameFlags.PathMustExist
+                              | OpenFileNameFlags.LongNames);
 
             // Create buffer for file names
             ofn.file = Marshal.AllocHGlobal(MAX_FILE_LENGTH * Marshal.SystemDefaultCharSize);
@@ -86,12 +90,12 @@ namespace ImGui.Forms.Modals.IO.Windows
 
             if (ShowHidden)
             {
-                ofn.flags |= (int)OpenFileNameFlags.OFN_FORCESHOWHIDDEN;
+                ofn.flags |= (int)OpenFileNameFlags.ForceShowHidden;
             }
 
             if (Multiselect)
             {
-                ofn.flags |= (int)OpenFileNameFlags.OFN_ALLOWMULTISELECT;
+                ofn.flags |= (int)OpenFileNameFlags.AllowMultiSelect;
             }
 
             Success = GetOpenFileName(ofn);
@@ -169,14 +173,35 @@ namespace ImGui.Forms.Modals.IO.Windows
             public int flagsEx = 0;
         }
 
-        private enum OpenFileNameFlags
+        [Flags]
+        enum OpenFileNameFlags
         {
-            OFN_HIDEREADONLY = 0x4,
-            OFN_FORCESHOWHIDDEN = 0x10000000,
-            OFN_ALLOWMULTISELECT = 0x200,
-            OFN_EXPLORER = 0x80000,
-            OFN_FILEMUSTEXIST = 0x1000,
-            OFN_PATHMUSTEXIST = 0x800
+            ReadOnly = 0x00000001,
+            OverwritePrompt = 0x00000002,
+            HideReadOnly = 0x00000004,
+            NoChangeDir = 0x00000008,
+            ShowHelp = 0x00000010,
+            EnableHook = 0x00000020,
+            EnableTemplate = 0x00000040,
+            EnableTemplateHandle = 0x00000080,
+            NoValidate = 0x00000100,
+            AllowMultiSelect = 0x00000200,
+            ExtensionDifferent = 0x00000400,
+            PathMustExist = 0x00000800,
+            FileMustExist = 0x00001000,
+            CreatePrompt = 0x00002000,
+            ShareAware = 0x00004000,
+            NoReadOnlyReturn = 0x00008000,
+            NoTestFileCreate = 0x00010000,
+            NoNetworkButton = 0x00020000,
+            NoLongNames = 0x00040000,          // Deprecated
+            Explorer = 0x00080000,
+            NoDereferenceLinks = 0x00100000,
+            LongNames = 0x00200000,            // Deprecated
+            EnableIncludeNotify = 0x00400000,
+            EnableSizing = 0x00800000,
+            DontAddToRecent = 0x02000000,
+            ForceShowHidden = 0x10000000
         }
     }
 }

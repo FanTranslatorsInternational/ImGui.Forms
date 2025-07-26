@@ -35,47 +35,52 @@ namespace ImGui.Forms.Controls.Base
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            ImGuiNET.ImGui.Dummy(contentRect.Size);
-
-            var componentCenterPosition = contentRect.Position + contentRect.Size / 2;
-            var translatedComponentCenterPosition = componentCenterPosition + _transform.Translation;
-
-            var io = ImGuiNET.ImGui.GetIO();
-
-            // On mouse scroll, rescale matrix
-            if (io.MouseWheel != 0 && ImGuiNET.ImGui.IsItemHovered())
+            if (ImGuiNET.ImGui.BeginChild($"{Id}", contentRect.Size))
             {
-                var scale = Vector2.One + new Vector2(io.MouseWheel / 8);
-                var translatedMousePosition = io.MousePos + _transform.Translation;
-                _transform *= Matrix3x2.CreateScale(scale, translatedMousePosition - translatedComponentCenterPosition);
+                ImGuiNET.ImGui.Dummy(contentRect.Size);
 
-                OnMouseScrolled();
+                var componentCenterPosition = contentRect.Position + contentRect.Size / 2;
+                var translatedComponentCenterPosition = componentCenterPosition + _transform.Translation;
+
+                var io = ImGuiNET.ImGui.GetIO();
+
+                // On mouse scroll, rescale matrix
+                if (io.MouseWheel != 0 && ImGuiNET.ImGui.IsItemHovered())
+                {
+                    var scale = Vector2.One + new Vector2(io.MouseWheel / 8);
+                    var translatedMousePosition = io.MousePos + _transform.Translation;
+                    _transform *= Matrix3x2.CreateScale(scale, translatedMousePosition - translatedComponentCenterPosition);
+
+                    OnMouseScrolled();
+                }
+
+                // On mouse down, re-translate matrix
+                if (!_mouseDown && ImGuiNET.ImGui.IsItemHovered() && ImGuiNET.ImGui.IsMouseDown(ImGuiMouseButton.Right))
+                {
+                    _mouseDownPosition = ImGuiNET.ImGui.GetMousePos();
+                    _mouseDown = true;
+
+                    ImGuiNET.ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeNESW);
+                }
+
+                if (ImGuiNET.ImGui.IsMouseReleased(ImGuiMouseButton.Right))
+                {
+                    _mouseDownPosition = Vector2.Zero;
+                    _mouseDown = false;
+
+                    ImGuiNET.ImGui.SetMouseCursor(ImGuiMouseCursor.Arrow);
+                }
+
+                if (_mouseDown && ImGuiNET.ImGui.IsItemHovered())
+                {
+                    _transform *= Matrix3x2.CreateTranslation(ImGuiNET.ImGui.GetMousePos() - _mouseDownPosition);
+                    _mouseDownPosition = ImGuiNET.ImGui.GetMousePos();
+                }
+
+                DrawInternal(contentRect);
             }
 
-            // On mouse down, re-translate matrix
-            if (!_mouseDown && ImGuiNET.ImGui.IsItemHovered() && ImGuiNET.ImGui.IsMouseDown(ImGuiMouseButton.Right))
-            {
-                _mouseDownPosition = ImGuiNET.ImGui.GetMousePos();
-                _mouseDown = true;
-
-                ImGuiNET.ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeNESW);
-            }
-
-            if (ImGuiNET.ImGui.IsMouseReleased(ImGuiMouseButton.Right))
-            {
-                _mouseDownPosition = Vector2.Zero;
-                _mouseDown = false;
-
-                ImGuiNET.ImGui.SetMouseCursor(ImGuiMouseCursor.Arrow);
-            }
-
-            if (_mouseDown && ImGuiNET.ImGui.IsItemHovered())
-            {
-                _transform *= Matrix3x2.CreateTranslation(ImGuiNET.ImGui.GetMousePos() - _mouseDownPosition);
-                _mouseDownPosition = ImGuiNET.ImGui.GetMousePos();
-            }
-
-            DrawInternal(contentRect);
+            ImGuiNET.ImGui.EndChild();
         }
 
         protected virtual void DrawInternal(Rectangle contentRect) { }

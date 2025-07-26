@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
@@ -75,6 +76,9 @@ namespace ImGui.Forms.Controls.Layouts
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
+            if (Id == 0x5d63b6bd)
+                ;
+
             var localWidths = GetColumnWidths(contentRect.Width, contentRect.Height, 1f);
             var localHeights = GetRowHeights(contentRect.Width, contentRect.Height, 1f);
 
@@ -152,24 +156,24 @@ namespace ImGui.Forms.Controls.Layouts
                                     ImGuiNET.ImGui.GetWindowDrawList().AddRect(cellPosition, cellPosition + new Vector2(cellWidth, cellHeight), ImGuiNET.ImGui.GetColorU32(ImGuiCol.Border), 0);
 
                                 // Draw cell container
-                                ImGuiNET.ImGui.SetCursorPos(cellPosition);
+                                ImGuiNET.ImGui.SetCursorPos(cellPosition + new Vector2(cellXOffset, cellYOffset));
 
-                                if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}", new Vector2(cellWidth, cellHeight), ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar))
-                                {
-                                    // Draw cell content container
-                                    ImGuiNET.ImGui.SetCursorPosX(cellXOffset);
-                                    ImGuiNET.ImGui.SetCursorPosY(cellYOffset);
+                                //if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}", new Vector2(cellWidth, cellHeight), ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar))
+                                //{
+                                // Draw cell content container
+                                //ImGuiNET.ImGui.SetCursorPosX(cellXOffset);
+                                //ImGuiNET.ImGui.SetCursorPosY(cellYOffset);
 
-                                    if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}-content", new Vector2(cellInternalWidth, cellInternalHeight), ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar))
-                                    {
-                                        // Draw component
-                                        cell.Content?.Update(new Rectangle((int)(contentRect.X + initPosition.X + cellPosition.X + cellXOffset - outerScrollX - innerScrollX), (int)(contentRect.Y + initPosition.Y + cellPosition.Y + cellYOffset - outerScrollY - innerScrollY), cellInternalWidth, cellInternalHeight));
-                                    }
+                                //if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}", new Vector2(cellInternalWidth, cellInternalHeight), ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar))
+                                //{
+                                // Draw component
+                                cell.Content?.Update(new Rectangle((int)(contentRect.X + initPosition.X + cellPosition.X + cellXOffset - outerScrollX - innerScrollX), (int)(contentRect.Y + initPosition.Y + cellPosition.Y + cellYOffset - outerScrollY - innerScrollY), cellInternalWidth, cellInternalHeight));
+                                //}
 
-                                    ImGuiNET.ImGui.EndChild();
-                                }
+                                //ImGuiNET.ImGui.EndChild();
+                                //}
 
-                                ImGuiNET.ImGui.EndChild();
+                                //ImGuiNET.ImGui.EndChild();
                             }
 
                             cellPosition += new Vector2(cellWidth + (cellWidth <= 0 ? 0 : Spacing.X), 0);

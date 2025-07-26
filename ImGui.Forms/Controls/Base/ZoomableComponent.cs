@@ -21,7 +21,9 @@ namespace ImGui.Forms.Controls.Base
 
         #region Events
 
-        public event EventHandler MouseScrolled;
+        public event EventHandler ContentZoomed;
+
+        public event EventHandler ContentMoved;
 
         #endregion
 
@@ -31,6 +33,21 @@ namespace ImGui.Forms.Controls.Base
         {
             var scaleVector = Vector2.One + new Vector2(scale);
             _transform *= Matrix3x2.CreateScale(scaleVector, Vector2.Zero);
+        }
+
+        public void Reset()
+        {
+            _transform = new(1, 0, 0, 1, 0, 0);
+        }
+
+        public void CopyTransformTo(ZoomableComponent zoomable)
+        {
+            zoomable.SetTransform(_transform);
+        }
+
+        internal void SetTransform(Matrix3x2 matrix)
+        {
+            _transform = matrix;
         }
 
         protected override void UpdateInternal(Rectangle contentRect)
@@ -51,11 +68,12 @@ namespace ImGui.Forms.Controls.Base
                     var translatedMousePosition = io.MousePos + _transform.Translation;
                     _transform *= Matrix3x2.CreateScale(scale, translatedMousePosition - translatedComponentCenterPosition);
 
-                    OnMouseScrolled();
+                    OnContentZoomed();
                 }
 
                 // On mouse down, re-translate matrix
-                if (!_mouseDown && ImGuiNET.ImGui.IsItemHovered() && ImGuiNET.ImGui.IsMouseDown(ImGuiMouseButton.Right))
+                if (!_mouseDown && !ImGuiNET.ImGui.IsMouseDragging(ImGuiMouseButton.Right) &&
+                    ImGuiNET.ImGui.IsItemHovered() && ImGuiNET.ImGui.IsMouseDown(ImGuiMouseButton.Right))
                 {
                     _mouseDownPosition = ImGuiNET.ImGui.GetMousePos();
                     _mouseDown = true;
@@ -75,6 +93,8 @@ namespace ImGui.Forms.Controls.Base
                 {
                     _transform *= Matrix3x2.CreateTranslation(ImGuiNET.ImGui.GetMousePos() - _mouseDownPosition);
                     _mouseDownPosition = ImGuiNET.ImGui.GetMousePos();
+
+                    OnContentMoved();
                 }
 
                 DrawInternal(contentRect);
@@ -114,9 +134,14 @@ namespace ImGui.Forms.Controls.Base
             return absoluteContentPosition;
         }
 
-        private void OnMouseScrolled()
+        private void OnContentZoomed()
         {
-            MouseScrolled?.Invoke(this, EventArgs.Empty);
+            ContentZoomed?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void OnContentMoved()
+        {
+            ContentMoved?.Invoke(this, EventArgs.Empty);
         }
     }
 }

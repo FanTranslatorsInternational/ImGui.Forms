@@ -228,9 +228,9 @@ namespace ImGui.Forms.Controls.Lists
         {
             var height = 0f;
 
-            float lineHeight = TextMeasurer.GetCurrentLineHeight(withDescent: true);
-            float cellPaddingY = Style.GetStyleVector2(ImGuiStyleVar.CellPadding).Y;
-            float cellHeight = lineHeight + cellPaddingY + 1;
+            float lineHeight = TextMeasurer.GetCurrentLineHeight();
+            float cellPaddingY = Style.GetStyleVector2(ImGuiStyleVar.CellPadding).Y * 2;
+            float cellHeight = lineHeight + cellPaddingY;
 
             if (ShowHeaders)
                 height += cellHeight;

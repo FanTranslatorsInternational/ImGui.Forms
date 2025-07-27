@@ -47,6 +47,11 @@ namespace ImGui.Forms.Controls
         /// </summary>
         public uint MaxShowItems { get; set; } = 10;
 
+        /// <summary>
+        /// Get or set the alignment of the drop down.
+        /// </summary>
+        public ComboBoxAlignment Alignment { get; set; } = ComboBoxAlignment.Auto;
+
         #endregion
 
         #region Events
@@ -72,9 +77,11 @@ namespace ImGui.Forms.Controls
             ApplyStyles(enabled);
 
             //Check if both strings matches
-            uint maxShowItems = MaxShowItems;
-            if (maxShowItems == 0)
+            uint maxShowItems;
+            if (MaxShowItems <= 0)
                 maxShowItems = (uint)Items.Count;
+            else
+                maxShowItems = (uint)Math.Min(MaxShowItems, Items.Count);
 
             ImGuiNET.ImGui.PushID(Id);
 
@@ -109,15 +116,38 @@ namespace ImGui.Forms.Controls
             }
             ImGuiNET.ImGui.OpenPopupOnItemClick("combobox"); // Enable right-click
 
-            pos.Y += size.Y;
-            size.X += ImGuiNET.ImGui.GetItemRectSize().Y;
-            size.Y += 5 + size.Y * maxShowItems;
+            Vector2 arrowSize = ImGuiNET.ImGui.GetItemRectSize();
+            float itemSize = TextMeasurer.GetCurrentLineHeight() + Style.GetStyleVector2(ImGuiStyleVar.ItemSpacing).Y;
 
-            if (pos.Y + size.Y <= Application.Instance.MainForm.Height)
-                ImGuiNET.ImGui.SetNextWindowPos(pos);
-            else
-                ImGuiNET.ImGui.SetNextWindowPos(new Vector2(pos.X, pos.Y - size.Y - ImGuiNET.ImGui.GetItemRectSize().Y));
-            ImGuiNET.ImGui.SetNextWindowSize(size);
+            Vector2 popupPos = pos;
+            Vector2 popupSize = new Vector2(size.X + arrowSize.X,
+                Style.GetStyleVector2(ImGuiStyleVar.WindowPadding).Y + itemSize * maxShowItems);
+
+            switch (Alignment)
+            {
+                case ComboBoxAlignment.Auto:
+                    if (popupPos.Y + size.Y + popupSize.Y > Application.Instance.MainForm.Height)
+                        popupPos.Y -= popupSize.Y;
+                    else
+                        popupPos.Y += size.Y;
+
+                    break;
+
+                case ComboBoxAlignment.Bottom:
+                    popupPos.Y += size.Y;
+                    break;
+
+                case ComboBoxAlignment.Top:
+                    popupPos.Y -= popupSize.Y;
+                    break;
+
+                default:
+                    throw new InvalidOperationException($"Invalid combobox alignment {Alignment}.");
+            }
+
+            ImGuiNET.ImGui.SetNextWindowPos(popupPos);
+            ImGuiNET.ImGui.SetNextWindowSize(popupSize);
+
             if (enabled && ImGuiNET.ImGui.BeginPopup("combobox", ImGuiWindowFlags.NoMove))
             {
                 for (var i = 0; i < Items.Count; i++)
@@ -284,5 +314,12 @@ namespace ImGui.Forms.Controls
         }
 
         public static implicit operator DropDownItem<TItem>(TItem o) => new(o);
+    }
+
+    public enum ComboBoxAlignment
+    {
+        Auto,
+        Top,
+        Bottom
     }
 }

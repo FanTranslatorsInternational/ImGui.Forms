@@ -42,7 +42,7 @@ namespace ImGui.Forms.Controls
             var textSize = Vector2.Zero;
             foreach (var line in lines)
             {
-                var lineSize = TextMeasurer.MeasureText(line, true);
+                var lineSize = TextMeasurer.MeasureText(line);
                 textSize = new Vector2(Math.Max(textSize.X, lineSize.X), textSize.Y + lineSize.Y);
             }
             SizeValue width = Width.IsContentAligned ? (int)Math.Ceiling(textSize.X) : Width;
@@ -64,7 +64,7 @@ namespace ImGui.Forms.Controls
             {
                 ImGuiNET.ImGui.GetWindowDrawList().AddText(pos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), line);
 
-                var lineSize = TextMeasurer.MeasureText(line, true);
+                var lineSize = TextMeasurer.MeasureText(line);
                 pos += new Vector2(0, lineSize.Y + LineDistance);
             }
 

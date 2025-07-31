@@ -2,6 +2,7 @@
 using System.Threading;
 using System.Threading.Tasks;
 using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Controls.Menu;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Models.IO;
@@ -22,6 +23,7 @@ namespace ImGui.Forms.Modals
 
         public LocalizedString Caption { get; set; } = string.Empty;
 
+        public ModalMenuBar MenuBar { get; set; }
         public Component Content { get; set; }
 
         public bool BlockFormClosing { get; private set; }
@@ -42,11 +44,19 @@ namespace ImGui.Forms.Modals
 
             ImGuiNET.ImGui.PushStyleColor(ImGuiCol.PopupBg, ImGuiNET.ImGui.GetColorU32(ImGuiCol.WindowBg));
 
+            var flags = ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize;
+            if (MenuBar is not null)
+                flags |= ImGuiWindowFlags.MenuBar;
+
             var exists = true;
-            if (ImGuiNET.ImGui.BeginPopupModal(id, ref exists, ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize))
+            if (ImGuiNET.ImGui.BeginPopupModal(id, ref exists, flags))
             {
+                // Create menu bar of popup
+                MenuBar?.Update();
+                var menuHeight = MenuBar?.Height ?? 0;
+
                 // Create content of popup
-                Content?.Update(new Rectangle(contentRect.X, contentRect.Y, contentRect.Width, contentRect.Height));
+                Content?.Update(new Rectangle(contentRect.X, contentRect.Y + menuHeight, contentRect.Width, contentRect.Height - menuHeight));
 
                 if (OkAction.IsPressed())
                     Close(DialogResult.Ok);

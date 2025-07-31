@@ -23,41 +23,46 @@ namespace ImGui.Forms.Models.IO
             _key = key;
         }
 
-        public bool IsPressed()
+        public bool IsPressed(bool onActiveLayer = true)
         {
             if (IsEmpty)
                 return false;
 
             if (!HasModifier)
-                return ImGuiNET.ImGui.IsKeyPressed(GetImGuiKey());
+                return IsActive(onActiveLayer) && ImGuiNET.ImGui.IsKeyPressed(GetImGuiKey());
 
             if (!HasKey)
-                return ImGuiNET.ImGui.IsKeyPressed(GetImGuiModifierKey());
+                return IsActive(onActiveLayer) && ImGuiNET.ImGui.IsKeyPressed(GetImGuiModifierKey());
 
-            return ImGuiNET.ImGui.IsKeyChordPressed(GetImGuiKeyChord());
+            return IsActive(onActiveLayer) && ImGuiNET.ImGui.IsKeyChordPressed(GetImGuiKeyChord());
 
         }
 
-        public bool IsDown()
+        public bool IsDown(bool onActiveLayer = true)
         {
             if (IsEmpty)
                 return false;
 
             if (HasKey)
-                return ImGuiNET.ImGui.IsKeyDown(GetImGuiKey());
+                return IsActive(onActiveLayer) && ImGuiNET.ImGui.IsKeyDown(GetImGuiKey());
 
-            return ImGuiNET.ImGui.IsKeyDown(GetImGuiModifierKey());
+            return IsActive(onActiveLayer) && ImGuiNET.ImGui.IsKeyDown(GetImGuiModifierKey());
         }
 
-        public bool IsReleased()
+        public bool IsReleased(bool onActiveLayer = true)
         {
             if (IsEmpty)
                 return false;
 
             if (HasKey)
-                return ImGuiNET.ImGui.IsKeyReleased(GetImGuiKey());
+                return IsActive(onActiveLayer) && ImGuiNET.ImGui.IsKeyReleased(GetImGuiKey());
 
-            return ImGuiNET.ImGui.IsKeyReleased(GetImGuiModifierKey());
+            return IsActive(onActiveLayer) && ImGuiNET.ImGui.IsKeyReleased(GetImGuiModifierKey());
+        }
+
+        private bool IsActive(bool onActiveLayer)
+        {
+            return !onActiveLayer || Application.Instance.MainForm.IsActiveLayer();
         }
 
         // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags

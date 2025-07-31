@@ -40,17 +40,27 @@ namespace ImGui.Forms.Controls
                 ImGuiNET.ImGui.GetWindowDrawList().AddRectFilled(contentRect.Position, contentRect.Position + contentRect.Size, BackgroundColor.ToUInt32());
 
             // Draw image
-            if (_baseImg == null || (nint)_baseImg == nint.Zero)
+            if (!HasValidImage())
                 return;
 
-            var imageStartPosition = -(_baseImg.Size / 2);
-            var imageRect = new Rectangle((int)imageStartPosition.X, (int)imageStartPosition.Y, _baseImg.Width, _baseImg.Height);
-            imageRect = Transform(contentRect, imageRect);
+            Rectangle imageRect = GetTransformedImageRect(contentRect);
 
-            ImGuiNET.ImGui.GetWindowDrawList().AddImage((nint)_baseImg, imageRect.Position, imageRect.Position + imageRect.Size);
+            ImGuiNET.ImGui.GetWindowDrawList().AddImage((nint)_baseImg!, imageRect.Position, imageRect.Position + imageRect.Size);
 
             if (ShowImageBorder)
                 ImGuiNET.ImGui.GetWindowDrawList().AddRect(imageRect.Position, imageRect.Position + imageRect.Size, Style.GetColor(ImGuiCol.Border).ToUInt32());
+        }
+
+        protected bool HasValidImage()
+        {
+            return _baseImg != null && (nint)_baseImg != nint.Zero;
+        }
+
+        protected Rectangle GetTransformedImageRect(Rectangle contentRect)
+        {
+            var imageStartPosition = -(_baseImg!.Size / 2);
+            var imageRect = new Rectangle((int)imageStartPosition.X, (int)imageStartPosition.Y, _baseImg.Width, _baseImg.Height);
+            return Transform(contentRect, imageRect);
         }
     }
 }

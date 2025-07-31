@@ -134,6 +134,17 @@ namespace ImGui.Forms.Controls.Base
             return absoluteContentPosition;
         }
 
+        protected Vector2 UnTransform(Rectangle contentRect, Vector2 toTransform)
+        {
+            var contentCenterPosition = contentRect.Position + contentRect.Size / 2;
+
+            var scaledContentPosition = toTransform - contentCenterPosition - _transform.Translation;
+
+            var untransformedPosition = new Vector2(scaledContentPosition.X / _transform.M11, scaledContentPosition.Y / _transform.M22);
+
+            return untransformedPosition;
+        }
+
         private void OnContentZoomed()
         {
             ContentZoomed?.Invoke(this, EventArgs.Empty);

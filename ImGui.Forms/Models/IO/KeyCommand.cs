@@ -1,4 +1,5 @@
-﻿using ImGui.Forms.Support.Veldrid.ImGui;
+﻿using ImGui.Forms.Localization;
+using ImGui.Forms.Support.Veldrid.ImGui;
 using ImGuiNET;
 using Veldrid;
 
@@ -8,19 +9,23 @@ namespace ImGui.Forms.Models.IO
     {
         private readonly ModifierKeys _modifiers;
         private readonly Key _key;
+        private readonly LocalizedString _name;
 
         public bool IsEmpty => !HasModifier && !HasKey;
 
         public bool HasModifier => _modifiers != ModifierKeys.None;
         public bool HasKey => _key != Key.Unknown;
 
-        public KeyCommand(Key key) : this(ModifierKeys.None, key)
+        public string Name => _name;
+
+        public KeyCommand(Key key, LocalizedString name = default) : this(ModifierKeys.None, key, name)
         { }
 
-        public KeyCommand(ModifierKeys modifiers, Key key)
+        public KeyCommand(ModifierKeys modifiers, Key key, LocalizedString name = default)
         {
             _modifiers = modifiers;
             _key = key;
+            _name = name;
         }
 
         public bool IsPressed(bool onActiveLayer = true)

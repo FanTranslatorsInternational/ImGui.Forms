@@ -12,7 +12,7 @@ namespace ImGui.Forms.Controls
 
         public Alignment Alignment { get; set; }
 
-        public SizeValue Length { get; set; }
+        public SizeValue Length { get; set; } = SizeValue.Parent;
 
         #endregion
 

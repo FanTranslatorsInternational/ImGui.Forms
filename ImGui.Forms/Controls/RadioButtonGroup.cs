@@ -74,12 +74,12 @@ namespace ImGui.Forms.Controls
                 if (ImGuiNET.ImGui.RadioButton(item.Text, item == SelectedItem))
                     selected = item;
 
-                if (Alignment is Alignment.Horizontal)
+                if (Alignment is Alignment.Horizontal && item != Items[^1])
                     ImGuiNET.ImGui.SameLine();
             }
 
             bool isChanged = SelectedItem == selected;
-            
+
             SelectedItem = selected;
 
             if (isChanged)

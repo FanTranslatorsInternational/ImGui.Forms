@@ -19,6 +19,8 @@ namespace ImGui.Forms.Controls.Text.Editor
 
     public class TextEditor : Component
     {
+        private object _lock = new();
+
         private int _tabSize = 4;
 
         private bool _withinRender;
@@ -123,43 +125,46 @@ namespace ImGui.Forms.Controls.Text.Editor
 
         public string GetText(Coordinate aStart, Coordinate aEnd)
         {
-            int lstart = aStart.Line;
-            int lend = aEnd.Line;
-            int istart = GetCharacterIndex(aStart);
-            int iend = GetCharacterIndex(aEnd);
-            var s = 0;
-
-            for (int i = lstart; i < lend; i++)
-                s += _lines[i].Length;
-
-            StringBuilder result = new(s + s / 8);
-
-            while (istart < iend || lstart < lend)
+            lock (_lock)
             {
-                if (lstart >= _lines.Count)
-                    break;
+                int lstart = aStart.Line;
+                int lend = aEnd.Line;
+                int istart = GetCharacterIndex(aStart);
+                int iend = GetCharacterIndex(aEnd);
+                var s = 0;
 
-                GlyphLine line = _lines[lstart];
-                if (istart < line.Length)
-                {
-                    result.Append(line[istart].Character);
-                    istart++;
-                }
-                else
-                {
-                    istart = 0;
-                    ++lstart;
+                for (int i = lstart; i < lend; i++)
+                    s += _lines[i].Length;
 
-                    if (istart >= iend && (lstart >= lend || lstart >= _lines.Count))
+                StringBuilder result = new(s + s / 8);
+
+                while (istart < iend || lstart < lend)
+                {
+                    if (lstart >= _lines.Count)
                         break;
 
-                    if (line.HasCarriageReturn)
-                        result.Append('\r');
-                    result.Append('\n');
-                }
-            }
+                    GlyphLine line = _lines[lstart];
+                    if (istart < line.Length)
+                    {
+                        result.Append(line[istart].Character);
+                        istart++;
+                    }
+                    else
+                    {
+                        istart = 0;
+                        ++lstart;
 
-            return result.ToString();
+                        if (istart >= iend && (lstart >= lend || lstart >= _lines.Count))
+                            break;
+
+                        if (line.HasCarriageReturn)
+                            result.Append('\r');
+                        result.Append('\n');
+                    }
+                }
+
+                return result.ToString();
+            }
         }
 
         private Coordinate GetActualCursorCoordinates()
@@ -1234,71 +1239,78 @@ namespace ImGui.Forms.Controls.Text.Editor
 
         protected override void UpdateInternal(Rectangle contentRect)
         {
-            Render(string.Empty, contentRect.Size, false);
+            lock (_lock)
+                Render(string.Empty, contentRect.Size, false);
         }
 
         public void SetText(string aText)
         {
-            _lines.Clear();
-            _lines.Add(new GlyphLine());
-
-            foreach (char chr in aText)
+            lock (_lock)
             {
-                switch (chr)
+                _lines.Clear();
+                _lines.Add(new GlyphLine());
+
+                foreach (char chr in aText)
                 {
-                    case '\r':
-                        // ignore the carriage return character
-                        _lines[^1].HasCarriageReturn = true;
-                        break;
+                    switch (chr)
+                    {
+                        case '\r':
+                            // ignore the carriage return character
+                            _lines[^1].HasCarriageReturn = true;
+                            break;
 
-                    case '\n':
-                        _lines.Add(new GlyphLine());
-                        break;
+                        case '\n':
+                            _lines.Add(new GlyphLine());
+                            break;
 
-                    default:
-                        _lines[^1].Glyphs.Add(new Glyph(chr));
-                        break;
+                        default:
+                            _lines[^1].Glyphs.Add(new Glyph(chr));
+                            break;
+                    }
                 }
+
+                _isTextChanged = true;
+                _scrollToTop = true;
+
+                _undoBuffer.Clear();
+                _undoIndex = 0;
+
+                Colorize();
             }
-
-            _isTextChanged = true;
-            _scrollToTop = true;
-
-            _undoBuffer.Clear();
-            _undoIndex = 0;
-
-            Colorize();
         }
 
         public void SetTextLines(List<string> aLines)
         {
-            _lines.Clear();
-
-            if (aLines.Count <= 0)
+            lock (_lock)
             {
-                _lines.Add(new GlyphLine());
-            }
-            else
-            {
-                _lines = new List<GlyphLine>();
+                _lines.Clear();
 
-                for (var i = 0; i < aLines.Count; ++i)
+                if (aLines.Count <= 0)
                 {
-                    string aLine = aLines[i];
-
                     _lines.Add(new GlyphLine());
-                    foreach (char lineChar in aLine)
-                        _lines[i].Glyphs.Add(new Glyph(lineChar));
                 }
+                else
+                {
+                    _lines = new List<GlyphLine>();
+
+                    for (var i = 0; i < aLines.Count; ++i)
+                    {
+                        string aLine = aLines[i];
+
+                        _lines.Add(new GlyphLine());
+                        foreach (char lineChar in aLine)
+                            _lines[i].Glyphs.Add(new Glyph(lineChar));
+                    }
+                }
+
+                _isTextChanged = true;
+                _scrollToTop = true;
+
+                _undoBuffer.Clear();
+                _undoIndex = 0;
+
+                Colorize();
             }
-
-            _isTextChanged = true;
-            _scrollToTop = true;
-
-            _undoBuffer.Clear();
-            _undoIndex = 0;
-
-            Colorize();
         }
 
         private void EnterCharacter(char aChar, bool aShift)

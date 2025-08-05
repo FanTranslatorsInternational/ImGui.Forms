@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Reflection;
+using System.Runtime.InteropServices;
+using ImGui.Forms.Extensions;
 using ImGuiNET;
 using Veldrid;
 using Veldrid.Sdl2;
@@ -91,6 +93,7 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
             ImGuiNET.ImGui.SetCurrentContext(context);
 
             CreateDeviceResources(gd, outputDescription);
+            SetupClipboard();
 
             SetPerFrameImGuiData(1f / 60f);
 
@@ -462,6 +465,14 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
                 _windowHeight / _scaleFactor.Y);
             io.DisplayFramebufferScale = _scaleFactor;
             io.DeltaTime = deltaSeconds; // DeltaTime is in seconds.
+        }
+
+        private void SetupClipboard()
+        {
+            ImGuiIOPtr io = ImGuiNET.ImGui.GetIO();
+
+            io.GetClipboardTextFn = Marshal.GetFunctionPointerForDelegate(Sdl2NativeExtensions.GetClipboardText);
+            io.SetClipboardTextFn = Marshal.GetFunctionPointerForDelegate(Sdl2NativeExtensions.SetClipboardText);
         }
 
         private void UpdateImGuiInput(InputSnapshot snapshot)

@@ -34,14 +34,28 @@ namespace ImGui.Forms.Extensions
             SetWindowIconDelegate(window, ref surface);
         }
 
+        private static nint GetClipboardText_Wrap(nint _) => Sdl_GetClipboardText();
+
+        private static int SetClipboardText_Wrap(nint _, nint textPtr) => Sdl_SetClipboardText(textPtr);
+
+        public delegate nint ImGui_GetClipboardText(nint context);
+        public delegate int ImGui_SetClipboardText(nint context, nint textPtr);
+
+        public static ImGui_GetClipboardText GetClipboardText = GetClipboardText_Wrap;
+        public static ImGui_SetClipboardText SetClipboardText = SetClipboardText_Wrap;
+
         private delegate nint SDL_CreateRGBSurface(uint flags, int width, int height, int depth, uint rmask, uint gmask, uint bmask, uint amask);
         private delegate int SDL_LockSurface(nint surface);
         private delegate void SDL_UnlockSurface(nint surface);
         private delegate void SDL_SetWindowIcon(nint window, ref SDL_Surface icon);
+        private delegate nint SDL_GetClipboardText();
+        private delegate int SDL_SetClipboardText(nint text);
 
         private static SDL_CreateRGBSurface CreateRgbSurfaceDelegate = Sdl2Native.LoadFunction<SDL_CreateRGBSurface>("SDL_CreateRGBSurface");
         private static SDL_LockSurface LockSurfaceDelegate = Sdl2Native.LoadFunction<SDL_LockSurface>("SDL_LockSurface");
         private static SDL_UnlockSurface UnlockSurfaceDelegate = Sdl2Native.LoadFunction<SDL_UnlockSurface>("SDL_UnlockSurface");
         private static SDL_SetWindowIcon SetWindowIconDelegate = Sdl2Native.LoadFunction<SDL_SetWindowIcon>("SDL_SetWindowIcon");
+        private static SDL_GetClipboardText Sdl_GetClipboardText = Sdl2Native.LoadFunction<SDL_GetClipboardText>("SDL_GetClipboardText");
+        private static SDL_SetClipboardText Sdl_SetClipboardText = Sdl2Native.LoadFunction<SDL_SetClipboardText>("SDL_SetClipboardText");
     }
 }

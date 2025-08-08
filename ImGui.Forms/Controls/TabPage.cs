@@ -13,6 +13,8 @@ namespace ImGui.Forms.Controls
         
         public bool HasChanges { get; set; }
 
+        public bool ShowBorder { get; set; }
+
         #endregion
 
         public TabPage(Component content)

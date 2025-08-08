@@ -98,8 +98,16 @@ namespace ImGui.Forms.Controls
                             var pageWidth = page.Content.GetWidth(contentRect.Width, contentRect.Height - yPos);
                             var pageHeight = page.Content.GetHeight(contentRect.Width, contentRect.Height - yPos);
 
-                            if (ImGuiNET.ImGui.BeginChild($"##{Id}-in", new Vector2(pageWidth, pageHeight), ImGuiChildFlags.None, ImGuiWindowFlags.None))
-                                page.Content.Update(new Rectangle(contentRect.X, contentRect.Y + yPos, pageWidth, pageHeight));
+                            var pageSize = new Vector2(pageWidth, pageHeight);
+                            if (ImGuiNET.ImGui.BeginChild($"##{Id}-in", pageSize, ImGuiChildFlags.None, ImGuiWindowFlags.None))
+                            {
+                                var pagePos = ImGuiNET.ImGui.GetWindowPos();
+
+                                if (page.ShowBorder)
+                                    ImGuiNET.ImGui.GetWindowDrawList().AddRect(pagePos, pagePos + pageSize, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Border));
+
+                                page.Content.Update(new Rectangle((int)pagePos.X, (int)pagePos.Y, pageWidth, pageHeight));
+                            }
 
                             ImGuiNET.ImGui.EndChild();
 

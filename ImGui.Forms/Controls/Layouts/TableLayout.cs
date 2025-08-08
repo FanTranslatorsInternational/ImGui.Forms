@@ -147,33 +147,25 @@ namespace ImGui.Forms.Controls.Layouts
                                     break;
                             }
 
+                            var cellOffset = new Vector2(cellXOffset, cellYOffset);
+                            var outerScroll = new Vector2(outerScrollX, outerScrollY);
+                            var innerScroll = new Vector2(innerScrollX, innerScrollY);
+
                             // Rendering
                             // HINT: Make child container as big as the component returned
                             if (cell != null && cellWidth > 0 && cellHeight > 0)
                             {
+                                var cellPos = contentRect.Position + initPosition + cellPosition + cellOffset - outerScroll - innerScroll;
+
                                 // Draw cell border
                                 if (cell.ShowBorder)
-                                    ImGuiNET.ImGui.GetWindowDrawList().AddRect(cellPosition, cellPosition + new Vector2(cellWidth, cellHeight), ImGuiNET.ImGui.GetColorU32(ImGuiCol.Border), 0);
+                                    ImGuiNET.ImGui.GetWindowDrawList().AddRect(cellPos, cellPos + new Vector2(cellWidth, cellHeight), ImGuiNET.ImGui.GetColorU32(ImGuiCol.Border), 0);
 
                                 // Draw cell container
-                                ImGuiNET.ImGui.SetCursorPos(cellPosition + new Vector2(cellXOffset, cellYOffset));
+                                ImGuiNET.ImGui.SetCursorPos(cellPosition + cellOffset);
 
-                                //if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}", new Vector2(cellWidth, cellHeight), ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar))
-                                //{
-                                // Draw cell content container
-                                //ImGuiNET.ImGui.SetCursorPosX(cellXOffset);
-                                //ImGuiNET.ImGui.SetCursorPosY(cellYOffset);
-
-                                //if (ImGuiNET.ImGui.BeginChild($"{Id}-{r}-{c}", new Vector2(cellInternalWidth, cellInternalHeight), ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar))
-                                //{
                                 // Draw component
-                                cell.Content?.Update(new Rectangle((int)(contentRect.X + initPosition.X + cellPosition.X + cellXOffset - outerScrollX - innerScrollX), (int)(contentRect.Y + initPosition.Y + cellPosition.Y + cellYOffset - outerScrollY - innerScrollY), cellInternalWidth, cellInternalHeight));
-                                //}
-
-                                //ImGuiNET.ImGui.EndChild();
-                                //}
-
-                                //ImGuiNET.ImGui.EndChild();
+                                cell.Content?.Update(new Rectangle((int)cellPos.X, (int)cellPos.Y, cellInternalWidth, cellInternalHeight));
                             }
 
                             cellPosition += new Vector2(cellWidth + (cellWidth <= 0 ? 0 : Spacing.X), 0);

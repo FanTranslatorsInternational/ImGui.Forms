@@ -52,6 +52,8 @@ namespace ImGui.Forms.Modals.IO.Windows
             Success = false;
             Files = null;
 
+            string currentDir = Environment.CurrentDirectory;
+
             OpenFileName ofn = new OpenFileName();
 
             ofn.structSize = Marshal.SizeOf(ofn);
@@ -124,6 +126,8 @@ namespace ImGui.Forms.Modals.IO.Windows
             }
 
             Marshal.FreeHGlobal(ofn.file);
+
+            Environment.CurrentDirectory = currentDir;
         }
 
         [DllImport("comdlg32.dll", SetLastError = true, CharSet = CharSet.Auto)]

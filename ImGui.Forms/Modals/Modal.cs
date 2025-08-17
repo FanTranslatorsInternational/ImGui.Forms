@@ -157,8 +157,8 @@ namespace ImGui.Forms.Modals
 
             var form = Application.Instance.MainForm;
 
-            var modalWidth = GetDimension(modal.Size.Width, form.Width);
-            var modalHeight = GetDimension(modal.Size.Height, form.Height);
+            var modalWidth = modal.Size.Width.IsContentAligned ? modal.Content.GetWidth(form.Width, form.Height) : GetDimension(modal.Size.Width, form.Width);
+            var modalHeight = modal.Size.Height.IsContentAligned ? modal.Content.GetHeight(form.Width, form.Height) : GetDimension(modal.Size.Height, form.Height);
 
             var modalPos = new Vector2((form.Width - modalWidth) / 2f, (form.Height - modalHeight - modal.GetHeaderHeight()) / 2f);
             var contentPos = modalPos + new Vector2(form.Padding.X, modal.GetHeaderHeight() + form.Padding.Y);

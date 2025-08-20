@@ -28,9 +28,20 @@ namespace ImGui.Forms.Extensions
             return new Vector4(pixel.R / 255f, pixel.G / 255f, pixel.B / 255f, pixel.A / 255f);
         }
 
+        public static Vector3 ToVector3(this Color c)
+        {
+            var pixel = c.ToPixel<Rgba32>();
+            return new Vector3(pixel.R / 255f, pixel.G / 255f, pixel.B / 255f);
+        }
+
         public static Color ToColor(this Vector4 value)
         {
             return Color.FromRgba((byte)(value.X * 255), (byte)(value.Y * 255), (byte)(value.Z * 255), (byte)(value.W * 255));
+        }
+
+        public static Color ToColor(this Vector3 value)
+        {
+            return Color.FromRgba((byte)(value.X * 255), (byte)(value.Y * 255), (byte)(value.Z * 255), 255);
         }
     }
 }

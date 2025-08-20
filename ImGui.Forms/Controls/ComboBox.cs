@@ -4,11 +4,14 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
 using ImGui.Forms.Controls.Base;
+using ImGui.Forms.Extensions;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 using ImGuiNET;
-using Veldrid;
+using SixLabors.ImageSharp;
+using Rectangle = Veldrid.Rectangle;
+using Size = ImGui.Forms.Models.Size;
 
 // Initial code: https://github.com/ocornut/imgui/issues/2057
 
@@ -24,6 +27,8 @@ namespace ImGui.Forms.Controls
         #region Properties
 
         public IList<DropDownItem<TItem>> Items { get; } = new List<DropDownItem<TItem>>();
+
+        public IList<DropDownItem<TItem>> PreferredItems { get; } = new List<DropDownItem<TItem>>();
 
         public DropDownItem<TItem> SelectedItem
         {
@@ -150,14 +155,24 @@ namespace ImGui.Forms.Controls
 
             if (enabled && ImGuiNET.ImGui.BeginPopup("combobox", ImGuiWindowFlags.NoMove))
             {
+                Vector2 itemPos = popupPos;
                 for (var i = 0; i < Items.Count; i++)
                 {
                     DropDownItem<TItem> item = Items[i];
+                    bool isPreferred = PreferredItems.Contains(item);
 
                     // Set selectable with item name
                     ImGuiNET.ImGui.PushID($"{Id}_item{i}");
 
-                    if (!ImGuiNET.ImGui.Selectable(item.Name))
+                    bool isSelected = ImGuiNET.ImGui.Selectable(item.Name);
+                    if (isPreferred)
+                    {
+                        var markerPos = new Vector2(size.X + arrowSize.X / 2, arrowSize.Y / 2);
+                        ImGuiNET.ImGui.GetWindowDrawList().AddCircleFilled(itemPos + markerPos, 3f, Color.White.ToUInt32());
+                    }
+
+                    itemPos += size with { X = 0 };
+                    if (!isSelected)
                         continue;
 
                     ImGuiNET.ImGui.PopID();

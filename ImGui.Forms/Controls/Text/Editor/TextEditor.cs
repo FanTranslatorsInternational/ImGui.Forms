@@ -1589,7 +1589,7 @@ namespace ImGui.Forms.Controls.Text.Editor
                     }
                 }
                 else
-                    _interactiveStart = _interactiveEnd = mState.CursorPosition;
+                    _interactiveStart = _interactiveEnd = oldPos;
 
                 SetSelection(_interactiveStart, _interactiveEnd);
 
@@ -1622,7 +1622,7 @@ namespace ImGui.Forms.Controls.Text.Editor
                     }
                 }
                 else
-                    _interactiveStart = _interactiveEnd = mState.CursorPosition;
+                    _interactiveStart = _interactiveEnd = oldPos;
 
                 SetSelection(_interactiveStart, _interactiveEnd);
 

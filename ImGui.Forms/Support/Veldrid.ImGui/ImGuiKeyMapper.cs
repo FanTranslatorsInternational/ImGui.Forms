@@ -364,5 +364,19 @@ namespace ImGui.Forms.Support.Veldrid.ImGui
 
             return true;
         }
+
+        public static bool TryMapMouseButton(MouseButton mouse, out ImGuiMouseButton? result)
+        {
+            result = null;
+
+            if (mouse == MouseButton.Left)
+                result = ImGuiMouseButton.Left;
+            else if (mouse == MouseButton.Right)
+                result = ImGuiMouseButton.Right;
+            else if (mouse == MouseButton.Middle)
+                result = ImGuiMouseButton.Middle;
+
+            return result.HasValue;
+        }
     }
 }

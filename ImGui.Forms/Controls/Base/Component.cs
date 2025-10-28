@@ -191,6 +191,11 @@ namespace ImGui.Forms.Controls.Base
         }
 
         /// <summary>
+        /// Used by 3rd-party code and components to destroy resources.
+        /// </summary>
+        public virtual void Destroy() { }
+
+        /// <summary>
         /// Propagate the inactivity state from a <see cref="TabControl"/>
         /// </summary>
         protected virtual void SetTabInactiveCore() { }

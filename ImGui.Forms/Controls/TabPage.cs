@@ -9,7 +9,7 @@ namespace ImGui.Forms.Controls
 
         public LocalizedString Title { get; set; }
 
-        public Component Content { get; }
+        public Component Content { get; set; }
         
         public bool HasChanges { get; set; }
 

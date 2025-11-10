@@ -80,8 +80,4 @@
     <PackageReference Include="Veldrid.StartupUtilities" Version="4.9.0" />
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\Kuriimu2\src\lib\Kryptography\Kryptography.csproj" />
-  </ItemGroup>
-
 </Project>

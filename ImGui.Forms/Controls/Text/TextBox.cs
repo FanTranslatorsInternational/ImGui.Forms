@@ -14,6 +14,7 @@ namespace ImGui.Forms.Controls.Text
     {
         private bool _activePreviousFrame;
         private string _text = string.Empty;
+        private bool _currentFrameChanged;
 
         #region Properties
 
@@ -26,6 +27,7 @@ namespace ImGui.Forms.Controls.Text
             set
             {
                 _text = value ?? string.Empty;
+                _currentFrameChanged = true;
                 OnTextChanged();
             }
         }
@@ -122,15 +124,16 @@ namespace ImGui.Forms.Controls.Text
                 ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
             }
 
-            if (!string.IsNullOrEmpty(Placeholder))
+            string currentText = _text;
+
+            bool isChanged = !string.IsNullOrEmpty(Placeholder)
+                ? ImGuiNET.ImGui.InputTextWithHint($"##{Id}", Placeholder, ref currentText, MaxCharacters, flags)
+                : ImGuiNET.ImGui.InputText($"##{Id}", ref currentText, MaxCharacters, flags);
+
+            if (isChanged && !_currentFrameChanged)
             {
-                if (ImGuiNET.ImGui.InputTextWithHint($"##{Id}", Placeholder, ref _text, MaxCharacters, flags))
-                    OnTextChanged();
-            }
-            else
-            {
-                if (ImGuiNET.ImGui.InputText($"##{Id}", ref _text, MaxCharacters, flags))
-                    OnTextChanged();
+                _text = currentText;
+                OnTextChanged();
             }
 
             // Check if item is active and lost focus
@@ -141,6 +144,8 @@ namespace ImGui.Forms.Controls.Text
 
             if (isReadonly || !enabled)
                 ImGuiNET.ImGui.PopStyleColor(3);
+
+            _currentFrameChanged = false;
         }
 
         protected override void ApplyStyles()

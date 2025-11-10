@@ -4,9 +4,10 @@ using System.Numerics;
 using ImGui.Forms.Factories;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Support.Veldrid.ImGui;
+using ImGui.Forms.Support.Veldrid.StartupUtilities;
 using Veldrid;
 using Veldrid.Sdl2;
-using Veldrid.StartupUtilities;
+using Sdl2Window = ImGui.Forms.Support.Veldrid.Sdl2.Sdl2Window;
 
 namespace ImGui.Forms
 {
@@ -207,8 +208,8 @@ namespace ImGui.Forms
 
         private void UpdateApplicationEvents()
         {
-            _dragDropEvents = Array.Empty<DragDropEventEx>();
-            _frameHandledDragDrops = Array.Empty<bool>();
+            _dragDropEvents = [];
+            _frameHandledDragDrops = [];
         }
 
         #region Window events

@@ -1,8 +1,7 @@
-﻿namespace ImGui.Forms.Models
+﻿namespace ImGui.Forms.Models;
+
+public enum Theme
 {
-    public enum Theme
-    {
-        Light,
-        Dark
-    }
+    Light,
+    Dark
 }

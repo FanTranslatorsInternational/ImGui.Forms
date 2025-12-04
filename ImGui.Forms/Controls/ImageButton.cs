@@ -8,105 +8,104 @@ using ImGui.Forms.Resources;
 using ImGuiNET;
 using Veldrid;
 
-namespace ImGui.Forms.Controls
+namespace ImGui.Forms.Controls;
+
+public class ImageButton : Component
 {
-    public class ImageButton : Component
+    private ThemedImageResource _baseImg;
+
+    #region Properties
+
+    public LocalizedString? Tooltip { get; set; }
+
+    public KeyCommand KeyAction { get; set; }
+
+    public ThemedImageResource Image
     {
-        private ThemedImageResource _baseImg;
-
-        #region Properties
-
-        public LocalizedString? Tooltip { get; set; }
-
-        public KeyCommand KeyAction { get; set; }
-
-        public ThemedImageResource Image
+        get => _baseImg;
+        set
         {
-            get => _baseImg;
-            set
-            {
-                _baseImg?.Destroy();
-                _baseImg = value;
-            }
+            _baseImg?.Destroy();
+            _baseImg = value;
+        }
+    }
+
+    public Vector2 ImageSize { get; set; } = Vector2.Zero;
+
+    public Vector2 Padding { get; set; } = new(2, 2);
+
+    #endregion
+
+    #region Events
+
+    public event EventHandler Clicked;
+
+    #endregion
+
+    public ImageButton(ThemedImageResource image = default)
+    {
+        Image = image;
+    }
+
+    public override Size GetSize()
+    {
+        var size = GetImageSize();
+        return new Size((int)size.X + (int)Padding.X * 2, (int)size.Y + (int)Padding.Y * 2);
+    }
+
+    protected override void UpdateInternal(Rectangle contentRect)
+    {
+        var enabled = Enabled;
+        ApplyStyles(enabled);
+
+        if (Image != null && (nint)Image != nint.Zero)
+        {
+            if ((ImGuiNET.ImGui.ImageButton($"##{Id}", (nint)Image, GetImageSize()) || KeyAction.IsPressed()) && Enabled)
+                OnClicked();
+        }
+        else
+        {
+            if ((ImGuiNET.ImGui.Button(string.Empty, GetImageSize() + Padding * 2) || KeyAction.IsPressed()) && Enabled)
+                OnClicked();
         }
 
-        public Vector2 ImageSize { get; set; } = Vector2.Zero;
-
-        public Vector2 Padding { get; set; } = new(2, 2);
-
-        #endregion
-
-        #region Events
-
-        public event EventHandler Clicked;
-
-        #endregion
-
-        public ImageButton(ThemedImageResource image = default)
+        if (Enabled && Tooltip is { IsEmpty: false } && ImGuiNET.ImGui.IsItemHovered())
         {
-            Image = image;
+            ImGuiNET.ImGui.BeginTooltip();
+            ImGuiNET.ImGui.Text(Tooltip);
+            ImGuiNET.ImGui.EndTooltip();
         }
 
-        public override Size GetSize()
+        RemoveStyles(enabled);
+    }
+
+    private void ApplyStyles(bool enabled)
+    {
+        if (!enabled)
         {
-            var size = GetImageSize();
-            return new Size((int)size.X + (int)Padding.X * 2, (int)size.Y + (int)Padding.Y * 2);
+            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Button, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonHovered, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
         }
 
-        protected override void UpdateInternal(Rectangle contentRect)
-        {
-            var enabled = Enabled;
-            ApplyStyles(enabled);
+        ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Padding);
+    }
 
-            if (Image != null && (nint)Image != nint.Zero)
-            {
-                if ((ImGuiNET.ImGui.ImageButton($"##{Id}", (nint)Image, GetImageSize()) || KeyAction.IsPressed()) && Enabled)
-                    OnClicked();
-            }
-            else
-            {
-                if ((ImGuiNET.ImGui.Button(string.Empty, GetImageSize() + Padding * 2) || KeyAction.IsPressed()) && Enabled)
-                    OnClicked();
-            }
+    private void RemoveStyles(bool enabled)
+    {
+        ImGuiNET.ImGui.PopStyleVar();
 
-            if (Enabled && Tooltip is { IsEmpty: false } && ImGuiNET.ImGui.IsItemHovered())
-            {
-                ImGuiNET.ImGui.BeginTooltip();
-                ImGuiNET.ImGui.Text(Tooltip);
-                ImGuiNET.ImGui.EndTooltip();
-            }
+        if (!enabled)
+            ImGuiNET.ImGui.PopStyleColor(3);
+    }
 
-            RemoveStyles(enabled);
-        }
+    private Vector2 GetImageSize()
+    {
+        return ImageSize != Vector2.Zero ? ImageSize : Image?.Size ?? Vector2.Zero;
+    }
 
-        private void ApplyStyles(bool enabled)
-        {
-            if (!enabled)
-            {
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Button, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonHovered, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-            }
-
-            ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Padding);
-        }
-
-        private void RemoveStyles(bool enabled)
-        {
-            ImGuiNET.ImGui.PopStyleVar();
-
-            if (!enabled)
-                ImGuiNET.ImGui.PopStyleColor(3);
-        }
-
-        private Vector2 GetImageSize()
-        {
-            return ImageSize != Vector2.Zero ? ImageSize : Image?.Size ?? Vector2.Zero;
-        }
-
-        private void OnClicked()
-        {
-            Clicked?.Invoke(this, new EventArgs());
-        }
+    private void OnClicked()
+    {
+        Clicked?.Invoke(this, new EventArgs());
     }
 }

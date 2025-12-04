@@ -1,25 +1,24 @@
 ﻿using ImGui.Forms.Controls.Base;
 
-namespace ImGui.Forms.Controls.Layouts
+namespace ImGui.Forms.Controls.Layouts;
+
+public class StackItem : TableCell
 {
-    public class StackItem : TableCell
-    {
-        public StackItem(Component component) : base(component) { }
+    public StackItem(Component component) : base(component) { }
 
-        public static implicit operator StackItem(Component c) => new(c);
-    }
+    public static implicit operator StackItem(Component c) => new(c);
+}
 
-    public enum VerticalAlignment
-    {
-        Top,
-        Center,
-        Bottom
-    }
+public enum VerticalAlignment
+{
+    Top,
+    Center,
+    Bottom
+}
 
-    public enum HorizontalAlignment
-    {
-        Left,
-        Center,
-        Right
-    }
+public enum HorizontalAlignment
+{
+    Left,
+    Center,
+    Right
 }

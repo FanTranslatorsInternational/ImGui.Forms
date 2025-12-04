@@ -3,67 +3,66 @@ using System.Linq;
 using ImGui.Forms.Resources;
 using ImGuiNET;
 
-namespace ImGui.Forms.Controls.Menu
+namespace ImGui.Forms.Controls.Menu;
+
+public abstract class MenuBar
 {
-    public abstract class MenuBar
+    private readonly bool _isMain;
+
+    public IList<MenuBarItem> Items { get; } = new List<MenuBarItem>();
+
+    public FontResource Font { get; set; }
+
+    public int Height => GetHeight();
+
+    protected MenuBar(bool isMain)
     {
-        private readonly bool _isMain;
+        _isMain = isMain;
+    }
 
-        public IList<MenuBarItem> Items { get; } = new List<MenuBarItem>();
+    public void Update()
+    {
+        ImFontPtr? fontPtr = Font?.GetPointer();
+        if (fontPtr != null)
+            ImGuiNET.ImGui.PushFont(fontPtr.Value);
 
-        public FontResource Font { get; set; }
-
-        public int Height => GetHeight();
-
-        protected MenuBar(bool isMain)
+        // Begin menu bar
+        bool isMenuOpen = _isMain ?
+            ImGuiNET.ImGui.BeginMainMenuBar() :
+            ImGuiNET.ImGui.BeginMenuBar();
+        if (isMenuOpen)
         {
-            _isMain = isMain;
+            // Add content to menu bar
+            foreach (var child in Items)
+                child.Update();
+
+            if (_isMain) ImGuiNET.ImGui.EndMainMenuBar();
+            else ImGuiNET.ImGui.EndMenuBar();
+        }
+        else
+        {
+            foreach (var child in Items)
+                child.UpdateEvents();
         }
 
-        public void Update()
-        {
-            ImFontPtr? fontPtr = Font?.GetPointer();
-            if (fontPtr != null)
-                ImGuiNET.ImGui.PushFont(fontPtr.Value);
+        if (fontPtr != null)
+            ImGuiNET.ImGui.PopFont();
+    }
 
-            // Begin menu bar
-            bool isMenuOpen = _isMain ?
-                ImGuiNET.ImGui.BeginMainMenuBar() :
-                ImGuiNET.ImGui.BeginMenuBar();
-            if (isMenuOpen)
-            {
-                // Add content to menu bar
-                foreach (var child in Items)
-                    child.Update();
+    private int GetHeight()
+    {
+        ImFontPtr? fontPtr = Font?.GetPointer();
+        if (fontPtr != null)
+            ImGuiNET.ImGui.PushFont(fontPtr.Value);
 
-                if (_isMain) ImGuiNET.ImGui.EndMainMenuBar();
-                else ImGuiNET.ImGui.EndMenuBar();
-            }
-            else
-            {
-                foreach (var child in Items)
-                    child.UpdateEvents();
-            }
+        var height = Items.Count > 0
+            ? Items.Max(x => x.Height) :
+            // HINT: It's currently unknown where those 3 pixels come from, but they have to be added to get the correct size of the menu
+            (int)(TextMeasurer.GetCurrentLineHeight() + ImGuiNET.ImGui.GetStyle().FramePadding.Y * 2) + 3;
 
-            if (fontPtr != null)
-                ImGuiNET.ImGui.PopFont();
-        }
+        if (fontPtr != null)
+            ImGuiNET.ImGui.PopFont();
 
-        private int GetHeight()
-        {
-            ImFontPtr? fontPtr = Font?.GetPointer();
-            if (fontPtr != null)
-                ImGuiNET.ImGui.PushFont(fontPtr.Value);
-
-            var height = Items.Count > 0
-                ? Items.Max(x => x.Height) :
-                // HINT: It's currently unknown where those 3 pixels come from, but they have to be added to get the correct size of the menu
-                (int)(TextMeasurer.GetCurrentLineHeight() + ImGuiNET.ImGui.GetStyle().FramePadding.Y * 2) + 3;
-
-            if (fontPtr != null)
-                ImGuiNET.ImGui.PopFont();
-
-            return height;
-        }
+        return height;
     }
 }

@@ -2,46 +2,45 @@
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 
-namespace ImGui.Forms.Extensions
+namespace ImGui.Forms.Extensions;
+
+public static class ColorExtensions
 {
-    public static class ColorExtensions
+    public static uint ToUInt32(this ThemedColor c)
     {
-        public static uint ToUInt32(this ThemedColor c)
-        {
-            return ((Color)c).ToUInt32();
-        }
+        return ((Color)c).ToUInt32();
+    }
 
-        public static uint ToUInt32(this Color c)
-        {
-            var pixel = c.ToPixel<Rgba32>();
-            return (uint)((pixel.A << 24) | (pixel.B << 16) | (pixel.G << 8) | pixel.R);
-        }
+    public static uint ToUInt32(this Color c)
+    {
+        var pixel = c.ToPixel<Rgba32>();
+        return (uint)((pixel.A << 24) | (pixel.B << 16) | (pixel.G << 8) | pixel.R);
+    }
 
-        public static Color ToColor(this uint value)
-        {
-            return Color.FromRgba((byte)value, (byte)(value >> 8), (byte)(value >> 16), (byte)(value >> 24));
-        }
+    public static Color ToColor(this uint value)
+    {
+        return Color.FromRgba((byte)value, (byte)(value >> 8), (byte)(value >> 16), (byte)(value >> 24));
+    }
 
-        public static Vector4 ToVector4(this Color c)
-        {
-            var pixel = c.ToPixel<Rgba32>();
-            return new Vector4(pixel.R / 255f, pixel.G / 255f, pixel.B / 255f, pixel.A / 255f);
-        }
+    public static Vector4 ToVector4(this Color c)
+    {
+        var pixel = c.ToPixel<Rgba32>();
+        return new Vector4(pixel.R / 255f, pixel.G / 255f, pixel.B / 255f, pixel.A / 255f);
+    }
 
-        public static Vector3 ToVector3(this Color c)
-        {
-            var pixel = c.ToPixel<Rgba32>();
-            return new Vector3(pixel.R / 255f, pixel.G / 255f, pixel.B / 255f);
-        }
+    public static Vector3 ToVector3(this Color c)
+    {
+        var pixel = c.ToPixel<Rgba32>();
+        return new Vector3(pixel.R / 255f, pixel.G / 255f, pixel.B / 255f);
+    }
 
-        public static Color ToColor(this Vector4 value)
-        {
-            return Color.FromRgba((byte)(value.X * 255), (byte)(value.Y * 255), (byte)(value.Z * 255), (byte)(value.W * 255));
-        }
+    public static Color ToColor(this Vector4 value)
+    {
+        return Color.FromRgba((byte)(value.X * 255), (byte)(value.Y * 255), (byte)(value.Z * 255), (byte)(value.W * 255));
+    }
 
-        public static Color ToColor(this Vector3 value)
-        {
-            return Color.FromRgba((byte)(value.X * 255), (byte)(value.Y * 255), (byte)(value.Z * 255), 255);
-        }
+    public static Color ToColor(this Vector3 value)
+    {
+        return Color.FromRgba((byte)(value.X * 255), (byte)(value.Y * 255), (byte)(value.Z * 255), 255);
     }
 }

@@ -9,90 +9,89 @@ using ImGuiNET;
 using Rectangle = Veldrid.Rectangle;
 using Size = ImGui.Forms.Models.Size;
 
-namespace ImGui.Forms.Controls
+namespace ImGui.Forms.Controls;
+
+public class Label : Component
 {
-    public class Label : Component
+    #region Properties
+
+    public LocalizedString Text { get; set; }
+
+    public FontResource Font { get; set; }
+
+    public int LineDistance { get; set; }
+
+    public ThemedColor TextColor { get; set; }
+
+    public SizeValue Width { get; set; } = SizeValue.Content;
+
+    #endregion
+
+    public Label(LocalizedString text = default)
     {
-        #region Properties
+        Text = text;
+    }
 
-        public LocalizedString Text { get; set; }
+    public override Size GetSize()
+    {
+        ApplyStyles();
 
-        public FontResource Font { get; set; }
+        var escapedText = EscapeText();
+        var lines = escapedText.Split(Environment.NewLine);
 
-        public int LineDistance { get; set; }
-
-        public ThemedColor TextColor { get; set; }
-
-        public SizeValue Width { get; set; } = SizeValue.Content;
-
-        #endregion
-
-        public Label(LocalizedString text = default)
+        var textSize = Vector2.Zero;
+        foreach (var line in lines)
         {
-            Text = text;
+            var lineSize = TextMeasurer.MeasureText(line);
+            textSize = new Vector2(Math.Max(textSize.X, lineSize.X), textSize.Y + lineSize.Y);
+        }
+        SizeValue width = Width.IsContentAligned ? (int)Math.Ceiling(textSize.X) : Width;
+        var height = (int)Math.Ceiling(textSize.Y + (lines.Length - 1) * LineDistance);
+
+        RemoveStyles();
+
+        return new Size(width, height);
+    }
+
+    protected override void UpdateInternal(Rectangle contentRect)
+    {
+        ApplyStyles();
+
+        var escapedText = EscapeText();
+
+        var pos = contentRect.Position;
+        foreach (var line in escapedText.Split(Environment.NewLine))
+        {
+            ImGuiNET.ImGui.GetWindowDrawList().AddText(pos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), line);
+
+            var lineSize = TextMeasurer.MeasureText(line);
+            pos += new Vector2(0, lineSize.Y + LineDistance);
         }
 
-        public override Size GetSize()
-        {
-            ApplyStyles();
+        RemoveStyles();
+    }
 
-            var escapedText = EscapeText();
-            var lines = escapedText.Split(Environment.NewLine);
+    protected override void ApplyStyles()
+    {
+        if (!TextColor.IsEmpty)
+            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Text, TextColor.ToUInt32());
 
-            var textSize = Vector2.Zero;
-            foreach (var line in lines)
-            {
-                var lineSize = TextMeasurer.MeasureText(line);
-                textSize = new Vector2(Math.Max(textSize.X, lineSize.X), textSize.Y + lineSize.Y);
-            }
-            SizeValue width = Width.IsContentAligned ? (int)Math.Ceiling(textSize.X) : Width;
-            var height = (int)Math.Ceiling(textSize.Y + (lines.Length - 1) * LineDistance);
+        ImFontPtr? fontPtr = Font?.GetPointer();
+        if (fontPtr != null)
+            ImGuiNET.ImGui.PushFont(fontPtr.Value);
+    }
 
-            RemoveStyles();
+    protected override void RemoveStyles()
+    {
+        if (Font?.GetPointer() != null)
+            ImGuiNET.ImGui.PopFont();
 
-            return new Size(width, height);
-        }
+        if (!TextColor.IsEmpty)
+            ImGuiNET.ImGui.PopStyleColor();
+    }
 
-        protected override void UpdateInternal(Rectangle contentRect)
-        {
-            ApplyStyles();
-
-            var escapedText = EscapeText();
-
-            var pos = contentRect.Position;
-            foreach (var line in escapedText.Split(Environment.NewLine))
-            {
-                ImGuiNET.ImGui.GetWindowDrawList().AddText(pos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), line);
-
-                var lineSize = TextMeasurer.MeasureText(line);
-                pos += new Vector2(0, lineSize.Y + LineDistance);
-            }
-
-            RemoveStyles();
-        }
-
-        protected override void ApplyStyles()
-        {
-            if (!TextColor.IsEmpty)
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Text, TextColor.ToUInt32());
-
-            ImFontPtr? fontPtr = Font?.GetPointer();
-            if (fontPtr != null)
-                ImGuiNET.ImGui.PushFont(fontPtr.Value);
-        }
-
-        protected override void RemoveStyles()
-        {
-            if (Font?.GetPointer() != null)
-                ImGuiNET.ImGui.PopFont();
-
-            if (!TextColor.IsEmpty)
-                ImGuiNET.ImGui.PopStyleColor();
-        }
-
-        protected string EscapeText()
-        {
-            return Text.ToString().Replace("\n", Environment.NewLine);
-        }
+    protected string EscapeText()
+    {
+        return Text.ToString().Replace("\n", Environment.NewLine);
     }
 }

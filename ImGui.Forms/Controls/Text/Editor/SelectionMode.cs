@@ -1,9 +1,8 @@
-﻿namespace ImGui.Forms.Controls.Text.Editor
+﻿namespace ImGui.Forms.Controls.Text.Editor;
+
+public enum SelectionMode
 {
-    public enum SelectionMode
-    {
-        Normal,
-        Word,
-        Line
-    }
+    Normal,
+    Word,
+    Line
 }

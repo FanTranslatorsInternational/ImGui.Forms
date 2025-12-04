@@ -1,41 +1,40 @@
 ﻿using System.Collections.Generic;
 
-namespace ImGui.Forms.Controls.Layouts
+namespace ImGui.Forms.Controls.Layouts;
+
+public class TableRow
 {
-    public class TableRow
+    internal TableLayout _parent;
+
+    private readonly ObservableList<TableCell> _cells = new();
+
+    public IList<TableCell> Cells => _cells;
+
+    public TableRow()
     {
-        internal TableLayout _parent;
+        _cells.ItemAdded += _cells_ItemAdded;
+        _cells.ItemRemoved += _cells_ItemRemoved;
+        _cells.ItemSet += _cells_ItemSet;
+        _cells.ItemInserted += _cells_ItemInserted;
+    }
 
-        private readonly ObservableList<TableCell> _cells = new();
+    private void _cells_ItemAdded(object sender, ItemEventArgs<TableCell> e)
+    {
+        _parent?.Cells_ItemAdded();
+    }
 
-        public IList<TableCell> Cells => _cells;
+    private void _cells_ItemRemoved(object sender, ItemEventArgs<TableCell> e)
+    {
+        _parent?.Cells_ItemRemoved();
+    }
 
-        public TableRow()
-        {
-            _cells.ItemAdded += _cells_ItemAdded;
-            _cells.ItemRemoved += _cells_ItemRemoved;
-            _cells.ItemSet += _cells_ItemSet;
-            _cells.ItemInserted += _cells_ItemInserted;
-        }
+    private void _cells_ItemInserted(object sender, ItemEventArgs<TableCell> e)
+    {
+        _parent?.Cells_ItemInserted();
+    }
 
-        private void _cells_ItemAdded(object sender, ItemEventArgs<TableCell> e)
-        {
-            _parent?.Cells_ItemAdded();
-        }
-
-        private void _cells_ItemRemoved(object sender, ItemEventArgs<TableCell> e)
-        {
-            _parent?.Cells_ItemRemoved();
-        }
-
-        private void _cells_ItemInserted(object sender, ItemEventArgs<TableCell> e)
-        {
-            _parent?.Cells_ItemInserted();
-        }
-
-        private void _cells_ItemSet(object sender, ItemEventArgs<TableCell> e)
-        {
-            _parent?.Cells_ItemSet();
-        }
+    private void _cells_ItemSet(object sender, ItemEventArgs<TableCell> e)
+    {
+        _parent?.Cells_ItemSet();
     }
 }

@@ -2,59 +2,58 @@
 using System.Numerics;
 using ImGui.Forms.Models;
 
-namespace ImGui.Forms.Resources
+namespace ImGui.Forms.Resources;
+
+public class ThemedImageResource
 {
-    public class ThemedImageResource
+    private readonly ImageResource _lightImage;
+    private readonly ImageResource _darkImage;
+
+    /// <summary>
+    /// The size of the <see cref="ThemedImageResource"/> as a <see cref="Vector2"/>.
+    /// </summary>
+    public Vector2 Size => new(GetImage().Width, GetImage().Height);
+
+    /// <summary>
+    /// The width of the <see cref="ThemedImageResource"/>.
+    /// </summary>
+    public int Width => GetImage().Width;
+
+    /// <summary>
+    /// The height of the <see cref="ThemedImageResource"/>.
+    /// </summary>
+    public int Height => GetImage().Height;
+
+    public ThemedImageResource(ImageResource lightImage, ImageResource darkImage)
     {
-        private readonly ImageResource _lightImage;
-        private readonly ImageResource _darkImage;
+        _lightImage = lightImage;
+        _darkImage = darkImage;
+    }
 
-        /// <summary>
-        /// The size of the <see cref="ThemedImageResource"/> as a <see cref="Vector2"/>.
-        /// </summary>
-        public Vector2 Size => new(GetImage().Width, GetImage().Height);
+    public void Destroy()
+    {
+        if (_lightImage != null)
+            _lightImage.Destroy();
+        if (_darkImage != null)
+            _darkImage.Destroy();
+    }
 
-        /// <summary>
-        /// The width of the <see cref="ThemedImageResource"/>.
-        /// </summary>
-        public int Width => GetImage().Width;
+    public static explicit operator nint(ThemedImageResource ir) => ir == null ? nint.Zero : (nint)ir.GetImage();
 
-        /// <summary>
-        /// The height of the <see cref="ThemedImageResource"/>.
-        /// </summary>
-        public int Height => GetImage().Height;
+    public static implicit operator ThemedImageResource(ImageResource ir) => new(ir, ir);
 
-        public ThemedImageResource(ImageResource lightImage, ImageResource darkImage)
+    public ImageResource GetImage()
+    {
+        switch (Style.Theme)
         {
-            _lightImage = lightImage;
-            _darkImage = darkImage;
-        }
+            case Theme.Light:
+                return _lightImage;
 
-        public void Destroy()
-        {
-            if (_lightImage != null)
-                _lightImage.Destroy();
-            if (_darkImage != null)
-                _darkImage.Destroy();
-        }
+            case Theme.Dark:
+                return _darkImage;
 
-        public static explicit operator nint(ThemedImageResource ir) => ir == null ? nint.Zero : (nint)ir.GetImage();
-
-        public static implicit operator ThemedImageResource(ImageResource ir) => new(ir, ir);
-
-        private ImageResource GetImage()
-        {
-            switch (Style.Theme)
-            {
-                case Theme.Light:
-                    return _lightImage;
-
-                case Theme.Dark:
-                    return _darkImage;
-
-                default:
-                    throw new InvalidOperationException($"Unknown theme {Style.Theme}.");
-            }
+            default:
+                throw new InvalidOperationException($"Unknown theme {Style.Theme}.");
         }
     }
 }

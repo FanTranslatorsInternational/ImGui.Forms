@@ -4,80 +4,79 @@ using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
 using Veldrid;
 
-namespace ImGui.Forms.Controls.Layouts
+namespace ImGui.Forms.Controls.Layouts;
+
+public class ZLayout : Component
 {
-    public class ZLayout : Component
+    #region Properties
+
+    public IList<Component> Items { get; } = new List<Component>();
+
+    public Vector2 ItemSpacing { get; set; }
+
+    public Size Size { get; set; } = Size.Parent;
+
+    #endregion
+
+    public override Size GetSize()
     {
-        #region Properties
+        return Size;
+    }
 
-        public IList<Component> Items { get; } = new List<Component>();
-
-        public Vector2 ItemSpacing { get; set; }
-
-        public Size Size { get; set; } = Size.Parent;
-
-        #endregion
-
-        public override Size GetSize()
+    protected override void UpdateInternal(Rectangle contentRect)
+    {
+        if (ImGuiNET.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height)))
         {
-            return Size;
-        }
+            var largestHeight = 0;
 
-        protected override void UpdateInternal(Rectangle contentRect)
-        {
-            if (ImGuiNET.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height)))
+            var (x, y) = (0, 0);
+            for (var i = 0; i < Items.Count; i++)
             {
-                var largestHeight = 0;
+                var item = Items[i];
+                if (!(item?.Visible ?? false))
+                    continue;
 
-                var (x, y) = (0, 0);
-                for (var i = 0; i < Items.Count; i++)
+                var itemWidth = item.GetWidth(contentRect.Width, contentRect.Height);
+                var itemHeight = item.GetHeight(contentRect.Width, contentRect.Height);
+
+                // Wrap positions
+                if (x + itemWidth + ItemSpacing.X >= contentRect.Width)
                 {
-                    var item = Items[i];
-                    if (!(item?.Visible ?? false))
-                        continue;
+                    x = 0;
+                    y += largestHeight + (int)ItemSpacing.Y;
 
-                    var itemWidth = item.GetWidth(contentRect.Width, contentRect.Height);
-                    var itemHeight = item.GetHeight(contentRect.Width, contentRect.Height);
-
-                    // Wrap positions
-                    if (x + itemWidth + ItemSpacing.X >= contentRect.Width)
-                    {
-                        x = 0;
-                        y += largestHeight + (int)ItemSpacing.Y;
-
-                        largestHeight = 0;
-                    }
-
-                    if (itemHeight > largestHeight)
-                        largestHeight = itemHeight;
-
-                    if (itemWidth == 0 || itemHeight == 0)
-                        continue;
-
-                    var scrollY = -(int)ImGuiNET.ImGui.GetScrollY();
-
-                    ImGuiNET.ImGui.SetCursorPosX(x);
-                    ImGuiNET.ImGui.SetCursorPosY(y);
-
-                    // Draw component container
-                    if (ImGuiNET.ImGui.BeginChild($"{Id}-{i}", new Vector2(itemWidth, itemHeight)))
-                        // Draw component
-                        item.Update(new Rectangle(contentRect.X + x, contentRect.Y + y + scrollY, itemWidth, itemHeight));
-
-                    ImGuiNET.ImGui.EndChild();
-
-                    // Advance component position
-                    x += itemWidth + (int)ItemSpacing.X;
+                    largestHeight = 0;
                 }
+
+                if (itemHeight > largestHeight)
+                    largestHeight = itemHeight;
+
+                if (itemWidth == 0 || itemHeight == 0)
+                    continue;
+
+                var scrollY = -(int)ImGuiNET.ImGui.GetScrollY();
+
+                ImGuiNET.ImGui.SetCursorPosX(x);
+                ImGuiNET.ImGui.SetCursorPosY(y);
+
+                // Draw component container
+                if (ImGuiNET.ImGui.BeginChild($"{Id}-{i}", new Vector2(itemWidth, itemHeight)))
+                    // Draw component
+                    item.Update(new Rectangle(contentRect.X + x, contentRect.Y + y + scrollY, itemWidth, itemHeight));
+
+                ImGuiNET.ImGui.EndChild();
+
+                // Advance component position
+                x += itemWidth + (int)ItemSpacing.X;
             }
-
-            ImGuiNET.ImGui.EndChild();
         }
 
-        protected override void SetTabInactiveCore()
-        {
-            foreach (Component item in Items)
-                item?.SetTabInactiveInternal();
-        }
+        ImGuiNET.ImGui.EndChild();
+    }
+
+    protected override void SetTabInactiveCore()
+    {
+        foreach (Component item in Items)
+            item?.SetTabInactiveInternal();
     }
 }

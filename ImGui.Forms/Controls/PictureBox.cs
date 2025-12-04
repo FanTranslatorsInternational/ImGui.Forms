@@ -3,52 +3,49 @@ using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 using Veldrid;
 
-namespace ImGui.Forms.Controls
+namespace ImGui.Forms.Controls;
+
+public class PictureBox : Component
 {
-    public class PictureBox : Component
+    #region Properties
+
+    public Size Size { get; set; } = Size.Content;
+
+    public ThemedImageResource Image { get; private set; }
+
+    #endregion
+
+    public PictureBox(ThemedImageResource image = default)
     {
-        private ThemedImageResource _baseImg;
+        Image = image;
+    }
 
-        #region Properties
+    public void SetImage(ThemedImageResource imagResource, bool releaseOldImage = true)
+    {
+        if (releaseOldImage)
+            Image?.Destroy();
 
-        public Size Size { get; set; } = Size.Content;
+        Image = imagResource;
+    }
 
-        public ThemedImageResource Image
-        {
-            get => _baseImg;
-            set
-            {
-                _baseImg?.Destroy();
-                _baseImg = value;
-            }
-        }
+    public override Size GetSize()
+    {
+        SizeValue width = Size.Width.IsContentAligned
+            ? SizeValue.Absolute(Image?.Width ?? 0)
+            : Size.Width;
 
-        #endregion
+        SizeValue height = Size.Height.IsContentAligned
+            ? SizeValue.Absolute(Image?.Height ?? 0)
+            : Size.Height;
 
-        public PictureBox(ThemedImageResource image = default)
-        {
-            Image = image;
-        }
+        return new Size(width, height);
+    }
 
-        public override Size GetSize()
-        {
-            SizeValue width = Size.Width.IsContentAligned
-                ? SizeValue.Absolute(_baseImg?.Width ?? 0)
-                : Size.Width;
+    protected override void UpdateInternal(Rectangle contentRect)
+    {
+        if (Image == null || (nint)Image == nint.Zero)
+            return;
 
-            SizeValue height = Size.Height.IsContentAligned
-                ? SizeValue.Absolute(_baseImg?.Height ?? 0)
-                : Size.Height;
-
-            return new Size(width, height);
-        }
-
-        protected override void UpdateInternal(Rectangle contentRect)
-        {
-            if (_baseImg == null || (nint)_baseImg == nint.Zero)
-                return;
-
-            ImGuiNET.ImGui.Image((nint)Image, contentRect.Size);
-        }
+        ImGuiNET.ImGui.Image((nint)Image, contentRect.Size);
     }
 }

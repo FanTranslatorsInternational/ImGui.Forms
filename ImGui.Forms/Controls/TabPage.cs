@@ -1,25 +1,24 @@
 ﻿using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Localization;
 
-namespace ImGui.Forms.Controls
+namespace ImGui.Forms.Controls;
+
+public class TabPage
 {
-    public class TabPage
-    {
-        #region Properties
+    #region Properties
 
-        public LocalizedString Title { get; set; }
+    public LocalizedString Title { get; set; }
 
-        public Component Content { get; set; }
+    public Component Content { get; set; }
         
-        public bool HasChanges { get; set; }
+    public bool HasChanges { get; set; }
 
-        public bool ShowBorder { get; set; }
+    public bool ShowBorder { get; set; }
 
-        #endregion
+    #endregion
 
-        public TabPage(Component content)
-        {
-            Content = content;
-        }
+    public TabPage(Component content)
+    {
+        Content = content;
     }
 }

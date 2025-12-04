@@ -7,109 +7,108 @@ using ImGui.Forms.Resources;
 using ImGuiNET;
 using Veldrid;
 
-namespace ImGui.Forms.Controls
+namespace ImGui.Forms.Controls;
+
+public class Expander : Component
 {
-    public class Expander : Component
+    #region Properties
+
+    public LocalizedString Caption { get; set; }
+    public Size Size { get; set; } = Size.WidthAlign;
+
+    public int WidthIndent { get; set; } = 5;
+
+    public Component Content { get; set; }
+
+    public bool Expanded { get; set; }
+
+    #endregion
+
+    #region Events
+
+    public event EventHandler ExpandedChanged;
+
+    #endregion
+
+    public Expander(Component content, LocalizedString caption = default)
     {
-        #region Properties
+        Content = content;
+        Caption = caption;
+    }
 
-        public LocalizedString Caption { get; set; }
-        public Size Size { get; set; } = Size.WidthAlign;
+    public override Size GetSize()
+    {
+        SizeValue height = Size.Height.IsContentAligned
+            ? SizeValue.Content
+            : Size.Height;
 
-        public int WidthIndent { get; set; } = 5;
+        return new Size(Size.Width, height);
+    }
 
-        public Component Content { get; set; }
+    protected override void UpdateInternal(Rectangle contentRect)
+    {
+        var expanded = Expanded;
+        var flags = expanded ? ImGuiTreeNodeFlags.DefaultOpen : ImGuiTreeNodeFlags.None;
 
-        public bool Expanded { get; set; }
-
-        #endregion
-
-        #region Events
-
-        public event EventHandler ExpandedChanged;
-
-        #endregion
-
-        public Expander(Component content, LocalizedString caption = default)
+        expanded = ImGuiNET.ImGui.CollapsingHeader(Caption, flags);
+        if (expanded)
         {
-            Content = content;
-            Caption = caption;
-        }
-
-        public override Size GetSize()
-        {
-            SizeValue height = Size.Height.IsContentAligned
-                    ? SizeValue.Content
-                    : Size.Height;
-
-            return new Size(Size.Width, height);
-        }
-
-        protected override void UpdateInternal(Rectangle contentRect)
-        {
-            var expanded = Expanded;
-            var flags = expanded ? ImGuiTreeNodeFlags.DefaultOpen : ImGuiTreeNodeFlags.None;
-
-            expanded = ImGuiNET.ImGui.CollapsingHeader(Caption, flags);
-            if (expanded)
+            int contentPosY = GetContentPosY();
+            if (contentPosY <= contentRect.Height)
             {
-                int contentPosY = GetContentPosY();
-                if (contentPosY <= contentRect.Height)
+                if (ImGuiNET.ImGui.BeginChild($"{Id}-in"))
                 {
-                    if (ImGuiNET.ImGui.BeginChild($"{Id}-in"))
-                    {
-                        ImGuiNET.ImGui.SetCursorPos(new Vector2(WidthIndent, 0));
-                        Content?.Update(new Rectangle(contentRect.X + WidthIndent, contentRect.Y + contentPosY, contentRect.Width, contentRect.Height - contentPosY));
-                    }
-
-                    ImGuiNET.ImGui.EndChild();
+                    ImGuiNET.ImGui.SetCursorPos(new Vector2(WidthIndent, 0));
+                    Content?.Update(new Rectangle(contentRect.X + WidthIndent, contentRect.Y + contentPosY, contentRect.Width, contentRect.Height - contentPosY));
                 }
-            }
 
-            if (Expanded != expanded)
-            {
-                Expanded = expanded;
-                OnExpandedChanged();
+                ImGuiNET.ImGui.EndChild();
             }
         }
 
-        protected override void SetTabInactiveCore()
+        if (Expanded != expanded)
         {
-            Content?.SetTabInactiveInternal();
+            Expanded = expanded;
+            OnExpandedChanged();
         }
+    }
 
-        protected override int GetContentHeight(int parentWidth, int parentHeight, float layoutCorrection = 1)
-        {
-            if (!Expanded)
-                return GetHeaderHeight();
+    protected override void SetTabInactiveCore()
+    {
+        Content?.SetTabInactiveInternal();
+    }
 
-            int height = Content.GetHeight(parentWidth, parentHeight, layoutCorrection);
-            if (height <= 0)
-                return GetHeaderHeight();
+    protected override int GetContentHeight(int parentWidth, int parentHeight, float layoutCorrection = 1)
+    {
+        if (!Expanded)
+            return GetHeaderHeight();
 
-            return height + GetHeaderHeight() + (int)ImGuiNET.ImGui.GetStyle().ItemSpacing.Y;
-        }
+        int height = Content.GetHeight(parentWidth, parentHeight, layoutCorrection);
+        if (height <= 0)
+            return GetHeaderHeight();
 
-        private void OnExpandedChanged()
-        {
-            ExpandedChanged?.Invoke(this, EventArgs.Empty);
-        }
+        return height + GetHeaderHeight() + (int)ImGuiNET.ImGui.GetStyle().ItemSpacing.Y;
+    }
 
-        private int GetContentPosY()
-        {
-            int height = GetHeaderHeight();
+    private void OnExpandedChanged()
+    {
+        ExpandedChanged?.Invoke(this, EventArgs.Empty);
+    }
 
-            if (Expanded)
-                height += (int)ImGuiNET.ImGui.GetStyle().ItemSpacing.Y;
+    private int GetContentPosY()
+    {
+        int height = GetHeaderHeight();
 
-            return height;
-        }
+        if (Expanded)
+            height += (int)ImGuiNET.ImGui.GetStyle().ItemSpacing.Y;
 
-        private int GetHeaderHeight()
-        {
-            var size = TextMeasurer.MeasureText(Caption);
-            var framePadding = ImGuiNET.ImGui.GetStyle().FramePadding;
-            return (int)Math.Ceiling(size.Y + framePadding.Y * 2);
-        }
+        return height;
+    }
+
+    private int GetHeaderHeight()
+    {
+        var size = TextMeasurer.MeasureText(Caption);
+        var framePadding = ImGuiNET.ImGui.GetStyle().FramePadding;
+        return (int)Math.Ceiling(size.Y + framePadding.Y * 2);
     }
 }

@@ -1,13 +1,12 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace ImGui.Forms.Support.Sdl2
+namespace ImGui.Forms.Support.Sdl2;
+
+[StructLayout(LayoutKind.Sequential)]
+struct SDL_Rect
 {
-    [StructLayout(LayoutKind.Sequential)]
-    struct SDL_Rect
-    {
 
-        public int x, y;
-        public int w, h;
+    public int x, y;
+    public int w, h;
 
-    }
 }

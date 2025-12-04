@@ -14,417 +14,416 @@ using ImGui.Forms.Resources;
 using ImGui.Forms.Support;
 using ImGuiNET;
 
-namespace ImGui.Forms.Modals.IO
+namespace ImGui.Forms.Modals.IO;
+
+public class SaveFileDialog : Modal
 {
-    public class SaveFileDialog : Modal
+    private const string ItemTypeDirectory_ = "D";
+    private const string ItemTypeFile_ = "F";
+
+    private History<string> _dictHistory;
+    private string _currentDir;
+
+    private readonly ArrowButton _backBtn;
+    private readonly ArrowButton _forBtn;
+    private readonly TextBox _dirTextBox;
+    private readonly TextBox _searchTextBox;
+    private readonly TextBox _selectedFileTextBox;
+
+    private readonly TreeView<string> _treeView;
+    private readonly DataTable<FileEntry> _fileTable;
+
+    private readonly Button _cancelBtn;
+    private readonly Button _saveBtn;
+
+    public string InitialDirectory { get; set; }
+    public string InitialFileName { get; set; }
+
+    public string SelectedPath { get; private set; }
+
+    public SaveFileDialog()
     {
-        private const string ItemTypeDirectory_ = "D";
-        private const string ItemTypeFile_ = "F";
+        #region Controls
 
-        private History<string> _dictHistory;
-        private string _currentDir;
+        _backBtn = new ArrowButton { Direction = ImGuiDir.Left, Enabled = false };
+        _forBtn = new ArrowButton { Direction = ImGuiDir.Right, Enabled = false };
+        _dirTextBox = new TextBox { Width = .7f };
+        _searchTextBox = new TextBox { Width = .3f, Placeholder = LocalizationResources.Search() };
+        _selectedFileTextBox = new TextBox { Width = 1f };
 
-        private readonly ArrowButton _backBtn;
-        private readonly ArrowButton _forBtn;
-        private readonly TextBox _dirTextBox;
-        private readonly TextBox _searchTextBox;
-        private readonly TextBox _selectedFileTextBox;
+        _treeView = new TreeView<string> { Size = new Size(.3f, 1f) };
+        _treeView.NodeExpanded += _treeView_NodeExpanded;
 
-        private readonly TreeView<string> _treeView;
-        private readonly DataTable<FileEntry> _fileTable;
+        _fileTable = new DataTable<FileEntry> { Size = new Size(.7f, 1f) };
+        _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.Name, LocalizationResources.ItemName()));
+        _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.Type, LocalizationResources.ItemType()));
+        _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.DateModified.ToString(CultureInfo.CurrentCulture), LocalizationResources.ItemDateModified()));
 
-        private readonly Button _cancelBtn;
-        private readonly Button _saveBtn;
-
-        public string InitialDirectory { get; set; }
-        public string InitialFileName { get; set; }
-
-        public string SelectedPath { get; private set; }
-
-        public SaveFileDialog()
-        {
-            #region Controls
-
-            _backBtn = new ArrowButton { Direction = ImGuiDir.Left, Enabled = false };
-            _forBtn = new ArrowButton { Direction = ImGuiDir.Right, Enabled = false };
-            _dirTextBox = new TextBox { Width = .7f };
-            _searchTextBox = new TextBox { Width = .3f, Placeholder = LocalizationResources.Search() };
-            _selectedFileTextBox = new TextBox { Width = 1f };
-
-            _treeView = new TreeView<string> { Size = new Size(.3f, 1f) };
-            _treeView.NodeExpanded += _treeView_NodeExpanded;
-
-            _fileTable = new DataTable<FileEntry> { Size = new Size(.7f, 1f) };
-            _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.Name, LocalizationResources.ItemName()));
-            _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.Type, LocalizationResources.ItemType()));
-            _fileTable.Columns.Add(new DataTableColumn<FileEntry>(x => x.DateModified.ToString(CultureInfo.CurrentCulture), LocalizationResources.ItemDateModified()));
-
-            _cancelBtn = new Button { Text = LocalizationResources.Cancel(), Width = 80 };
-            _saveBtn = new Button { Text = LocalizationResources.Save(), Width = 80, Enabled = !string.IsNullOrEmpty(InitialFileName) };
-
-            #endregion
-
-            if (!string.IsNullOrEmpty(InitialFileName))
-            {
-                SelectedPath = Path.Combine(GetInitialDirectory(), InitialFileName);
-
-                _selectedFileTextBox.Text = InitialFileName;
-            }
-
-            #region Events
-
-            _backBtn.Clicked += _backBtn_Clicked;
-            _forBtn.Clicked += _forBtn_Clicked;
-            _dirTextBox.FocusLost += _dirTextBox_FocusLost;
-            _searchTextBox.TextChanged += _searchTextBox_TextChanged;
-            _selectedFileTextBox.TextChanged += _selectedFileTextBox_TextChanged;
-
-            _treeView.SelectedNodeChanged += _treeView_SelectedNodeChanged;
-            _fileTable.DoubleClicked += _fileTable_DoubleClicked;
-            _fileTable.SelectedRowsChanged += _fileTable_SelectedRowsChanged;
-
-            _cancelBtn.Clicked += CnlBtn_Clicked;
-            _saveBtn.Clicked += SaveBtnClicked;
-
-            #endregion
-
-            Size = new Size(SizeValue.Relative(.9f), SizeValue.Relative(.8f));
-
-            Content = new StackLayout
-            {
-                Alignment = Alignment.Vertical,
-                ItemSpacing = 5,
-                Items =
-                {
-                    // Top bar with arrow buttons, directory text box, and search bar
-                    new StackLayout
-                    {
-                        Alignment = Alignment.Horizontal,
-                        Size = Size.WidthAlign,
-                        ItemSpacing = 5,
-                        Items =
-                        {
-                            _backBtn,
-                            _forBtn,
-                            _dirTextBox,
-                            _searchTextBox
-                        }
-                    },
-
-                    // File tree and file view table
-                    new StackItem(new StackLayout
-                    {
-                        Alignment = Alignment.Horizontal,
-                        ItemSpacing = 5,
-                        Items =
-                        {
-                            _treeView,
-                            _fileTable
-                        }
-                    }) {VerticalAlignment = VerticalAlignment.Top},
-
-                    // Selected file name
-                    new StackLayout
-                    {
-                        Alignment = Alignment.Horizontal,
-                        Size = Size.WidthAlign,
-                        ItemSpacing = 5,
-                        Items =
-                        {
-                            new Label {Text = LocalizationResources.SelectedFile()},
-                            _selectedFileTextBox
-                        }
-                    },
-
-                    // Dialog buttons
-                    new StackLayout
-                    {
-                        Alignment = Alignment.Horizontal,
-                        HorizontalAlignment = HorizontalAlignment.Right,
-                        Size = Size.WidthAlign,
-                        ItemSpacing = 5,
-                        Items =
-                        {
-                            _saveBtn,
-                            _cancelBtn
-                        }
-                    }
-                }
-            };
-        }
-
-        protected override void ShowInternal()
-        {
-            // Initialize fields
-            _currentDir = GetInitialDirectory();
-            _dictHistory = new History<string>(_currentDir);
-
-            _dirTextBox.Text = _currentDir;
-
-            // Initialize file tree and file view
-            var desktopDir = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-            var userDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-
-            _treeView.Nodes.Add(new TreeNode<string> { Text = Path.GetFileName(desktopDir), Data = desktopDir, Nodes = { new TreeNode<string>() } });
-            _treeView.Nodes.Add(new TreeNode<string> { Text = Path.GetFileName(userDir), Data = userDir, Nodes = { new TreeNode<string>() } });
-
-
-            UpdateFileView();
-        }
-
-        #region Support
-
-        private string GetInitialDirectory()
-        {
-            if (!string.IsNullOrEmpty(InitialDirectory) && Directory.Exists(InitialDirectory))
-                return InitialDirectory;
-
-            return Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-        }
-
-        private string GetNodePath(TreeNode<string> node)
-        {
-            if (node.Parent != null)
-                return Path.Combine(GetNodePath(node.Parent), node.Data ?? string.Empty);
-
-            return node.Data ?? string.Empty;
-        }
-
-        private IEnumerable<FileEntry> GetDirectories(string dir)
-        {
-            return Directory.EnumerateDirectories(dir).Select(x => new FileEntry
-            { Name = Path.GetFileName(x), Type = ItemTypeDirectory_, DateModified = Directory.GetLastAccessTime(x) });
-        }
-
-        private IEnumerable<FileEntry> GetFiles(string dir)
-        {
-            // Get files in directory
-            var searchTerm = string.IsNullOrEmpty(_searchTextBox.Text) ? "*" : _searchTextBox.Text;
-            var files = Directory.EnumerateFiles(dir, searchTerm);
-
-            return files.Select(x => new FileEntry { Name = Path.GetFileName(x), Type = ItemTypeFile_, DateModified = File.GetLastWriteTime(x) });
-        }
-
-        private async Task<bool> ShouldOverwrite(string path)
-        {
-            if (!File.Exists(path))
-                return true;
-
-            return await MessageBox.ShowYesNoAsync(LocalizationResources.ReplaceFileCaption(), LocalizationResources.ReplaceFileText(Path.GetFileName(path))) != DialogResult.No;
-        }
+        _cancelBtn = new Button { Text = LocalizationResources.Cancel(), Width = 80 };
+        _saveBtn = new Button { Text = LocalizationResources.Save(), Width = 80, Enabled = !string.IsNullOrEmpty(InitialFileName) };
 
         #endregion
 
-        #region Updates
-
-        private void UpdateFileView()
+        if (!string.IsNullOrEmpty(InitialFileName))
         {
-            _fileTable.Rows = GetDirectories(_currentDir).Concat(GetFiles(_currentDir)).Select(fe => new DataTableRow<FileEntry>(fe)).ToArray();
-        }
+            SelectedPath = Path.Combine(GetInitialDirectory(), InitialFileName);
 
-        private void UpdateButtonEnablement()
-        {
-            _backBtn.Enabled = !_dictHistory.IsFirstItem();
-            _forBtn.Enabled = !_dictHistory.IsLastItem();
+            _selectedFileTextBox.Text = InitialFileName;
         }
-
-        #endregion
 
         #region Events
 
-        #region File Table
+        _backBtn.Clicked += _backBtn_Clicked;
+        _forBtn.Clicked += _forBtn_Clicked;
+        _dirTextBox.FocusLost += _dirTextBox_FocusLost;
+        _searchTextBox.TextChanged += _searchTextBox_TextChanged;
+        _selectedFileTextBox.TextChanged += _selectedFileTextBox_TextChanged;
 
-        private void _fileTable_SelectedRowsChanged(object sender, EventArgs e)
-        {
-            if (!_fileTable.SelectedRows.Any())
-                return;
+        _treeView.SelectedNodeChanged += _treeView_SelectedNodeChanged;
+        _fileTable.DoubleClicked += _fileTable_DoubleClicked;
+        _fileTable.SelectedRowsChanged += _fileTable_SelectedRowsChanged;
 
-            _selectedFileTextBox.Text = _fileTable.SelectedRows.First().Data.Name;
-        }
-
-        private async void _fileTable_DoubleClicked(object sender, EventArgs e)
-        {
-            if (!_fileTable.SelectedRows.Any())
-                return;
-
-            if (Directory.Exists(SelectedPath))
-            {
-                // Set current directory
-                _currentDir = _dirTextBox.Text = SelectedPath;
-
-                // Push given directory to history
-                _dictHistory.PushItem(SelectedPath);
-
-                // Update file view
-                UpdateFileView();
-
-                // Update button enablement
-                UpdateButtonEnablement();
-
-                return;
-            }
-
-            if (!await ShouldOverwrite(SelectedPath))
-                return;
-
-            Result = DialogResult.Ok;
-            Close();
-        }
+        _cancelBtn.Clicked += CnlBtn_Clicked;
+        _saveBtn.Clicked += SaveBtnClicked;
 
         #endregion
 
-        #region Tree View
+        Size = new Size(SizeValue.Relative(.9f), SizeValue.Relative(.8f));
 
-        private void _treeView_SelectedNodeChanged(object sender, EventArgs e)
+        Content = new StackLayout
         {
-            var node = _treeView.SelectedNode;
-            var path = GetNodePath(node);
+            Alignment = Alignment.Vertical,
+            ItemSpacing = 5,
+            Items =
+            {
+                // Top bar with arrow buttons, directory text box, and search bar
+                new StackLayout
+                {
+                    Alignment = Alignment.Horizontal,
+                    Size = Size.WidthAlign,
+                    ItemSpacing = 5,
+                    Items =
+                    {
+                        _backBtn,
+                        _forBtn,
+                        _dirTextBox,
+                        _searchTextBox
+                    }
+                },
 
-            if (_currentDir == path || !Directory.Exists(path))
-                return;
+                // File tree and file view table
+                new StackItem(new StackLayout
+                {
+                    Alignment = Alignment.Horizontal,
+                    ItemSpacing = 5,
+                    Items =
+                    {
+                        _treeView,
+                        _fileTable
+                    }
+                }) {VerticalAlignment = VerticalAlignment.Top},
 
+                // Selected file name
+                new StackLayout
+                {
+                    Alignment = Alignment.Horizontal,
+                    Size = Size.WidthAlign,
+                    ItemSpacing = 5,
+                    Items =
+                    {
+                        new Label {Text = LocalizationResources.SelectedFile()},
+                        _selectedFileTextBox
+                    }
+                },
+
+                // Dialog buttons
+                new StackLayout
+                {
+                    Alignment = Alignment.Horizontal,
+                    HorizontalAlignment = HorizontalAlignment.Right,
+                    Size = Size.WidthAlign,
+                    ItemSpacing = 5,
+                    Items =
+                    {
+                        _saveBtn,
+                        _cancelBtn
+                    }
+                }
+            }
+        };
+    }
+
+    protected override void ShowInternal()
+    {
+        // Initialize fields
+        _currentDir = GetInitialDirectory();
+        _dictHistory = new History<string>(_currentDir);
+
+        _dirTextBox.Text = _currentDir;
+
+        // Initialize file tree and file view
+        var desktopDir = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+        var userDir = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+
+        _treeView.Nodes.Add(new TreeNode<string> { Text = Path.GetFileName(desktopDir), Data = desktopDir, Nodes = { new TreeNode<string>() } });
+        _treeView.Nodes.Add(new TreeNode<string> { Text = Path.GetFileName(userDir), Data = userDir, Nodes = { new TreeNode<string>() } });
+
+
+        UpdateFileView();
+    }
+
+    #region Support
+
+    private string GetInitialDirectory()
+    {
+        if (!string.IsNullOrEmpty(InitialDirectory) && Directory.Exists(InitialDirectory))
+            return InitialDirectory;
+
+        return Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+    }
+
+    private string GetNodePath(TreeNode<string> node)
+    {
+        if (node.Parent != null)
+            return Path.Combine(GetNodePath(node.Parent), node.Data ?? string.Empty);
+
+        return node.Data ?? string.Empty;
+    }
+
+    private IEnumerable<FileEntry> GetDirectories(string dir)
+    {
+        return Directory.EnumerateDirectories(dir).Select(x => new FileEntry
+            { Name = Path.GetFileName(x), Type = ItemTypeDirectory_, DateModified = Directory.GetLastAccessTime(x) });
+    }
+
+    private IEnumerable<FileEntry> GetFiles(string dir)
+    {
+        // Get files in directory
+        var searchTerm = string.IsNullOrEmpty(_searchTextBox.Text) ? "*" : _searchTextBox.Text;
+        var files = Directory.EnumerateFiles(dir, searchTerm);
+
+        return files.Select(x => new FileEntry { Name = Path.GetFileName(x), Type = ItemTypeFile_, DateModified = File.GetLastWriteTime(x) });
+    }
+
+    private async Task<bool> ShouldOverwrite(string path)
+    {
+        if (!File.Exists(path))
+            return true;
+
+        return await MessageBox.ShowYesNoAsync(LocalizationResources.ReplaceFileCaption(), LocalizationResources.ReplaceFileText(Path.GetFileName(path))) != DialogResult.No;
+    }
+
+    #endregion
+
+    #region Updates
+
+    private void UpdateFileView()
+    {
+        _fileTable.Rows = GetDirectories(_currentDir).Concat(GetFiles(_currentDir)).Select(fe => new DataTableRow<FileEntry>(fe)).ToArray();
+    }
+
+    private void UpdateButtonEnablement()
+    {
+        _backBtn.Enabled = !_dictHistory.IsFirstItem();
+        _forBtn.Enabled = !_dictHistory.IsLastItem();
+    }
+
+    #endregion
+
+    #region Events
+
+    #region File Table
+
+    private void _fileTable_SelectedRowsChanged(object sender, EventArgs e)
+    {
+        if (!_fileTable.SelectedRows.Any())
+            return;
+
+        _selectedFileTextBox.Text = _fileTable.SelectedRows.First().Data.Name;
+    }
+
+    private async void _fileTable_DoubleClicked(object sender, EventArgs e)
+    {
+        if (!_fileTable.SelectedRows.Any())
+            return;
+
+        if (Directory.Exists(SelectedPath))
+        {
             // Set current directory
-            _currentDir = _dirTextBox.Text = path;
+            _currentDir = _dirTextBox.Text = SelectedPath;
 
             // Push given directory to history
-            _dictHistory.PushItem(path);
+            _dictHistory.PushItem(SelectedPath);
 
             // Update file view
             UpdateFileView();
 
             // Update button enablement
             UpdateButtonEnablement();
+
+            return;
         }
 
-        private void _treeView_NodeExpanded(object sender, NodeEventArgs<string> e)
+        if (!await ShouldOverwrite(SelectedPath))
+            return;
+
+        Result = DialogResult.Ok;
+        Close();
+    }
+
+    #endregion
+
+    #region Tree View
+
+    private void _treeView_SelectedNodeChanged(object sender, EventArgs e)
+    {
+        var node = _treeView.SelectedNode;
+        var path = GetNodePath(node);
+
+        if (_currentDir == path || !Directory.Exists(path))
+            return;
+
+        // Set current directory
+        _currentDir = _dirTextBox.Text = path;
+
+        // Push given directory to history
+        _dictHistory.PushItem(path);
+
+        // Update file view
+        UpdateFileView();
+
+        // Update button enablement
+        UpdateButtonEnablement();
+    }
+
+    private void _treeView_NodeExpanded(object sender, NodeEventArgs<string> e)
+    {
+        var node = e.Node;
+
+        // Remove old nodes, if directory no longer exists
+        foreach (var currentNode in node.Nodes.ToArray())
         {
-            var node = e.Node;
-
-            // Remove old nodes, if directory no longer exists
-            foreach (var currentNode in node.Nodes.ToArray())
-            {
-                // HINT: This line is also used to remove the dud node, that is placed to make the tree view arrow visible; Necessary to achieve lazy loading in a tree
-                if (!Directory.Exists(GetNodePath(currentNode)) || string.IsNullOrEmpty(currentNode.Data))
-                    node.Nodes.Remove(currentNode);
-            }
-
-            // Add new nodes, if new directories are encountered
-            var nodePath = GetNodePath(node);
-            foreach (var dirName in Directory.EnumerateDirectories(nodePath).Select(Path.GetFileName))
-            {
-                var existingNode = node.Nodes.FirstOrDefault(x => x.Data == dirName);
-                if (existingNode == null)
-                    node.Nodes.Add(new TreeNode<string> { Text = dirName, Data = dirName, Nodes = { new TreeNode<string>() } });
-            }
+            // HINT: This line is also used to remove the dud node, that is placed to make the tree view arrow visible; Necessary to achieve lazy loading in a tree
+            if (!Directory.Exists(GetNodePath(currentNode)) || string.IsNullOrEmpty(currentNode.Data))
+                node.Nodes.Remove(currentNode);
         }
 
-        #endregion
-
-        #region Buttons
-
-        private void _backBtn_Clicked(object sender, EventArgs e)
+        // Add new nodes, if new directories are encountered
+        var nodePath = GetNodePath(node);
+        foreach (var dirName in Directory.EnumerateDirectories(nodePath).Select(Path.GetFileName))
         {
-            // Get previous path
-            _dictHistory.MoveBackward();
-            _currentDir = _dictHistory.GetCurrentItem();
+            var existingNode = node.Nodes.FirstOrDefault(x => x.Data == dirName);
+            if (existingNode == null)
+                node.Nodes.Add(new TreeNode<string> { Text = dirName, Data = dirName, Nodes = { new TreeNode<string>() } });
+        }
+    }
 
-            // Update path text box
+    #endregion
+
+    #region Buttons
+
+    private void _backBtn_Clicked(object sender, EventArgs e)
+    {
+        // Get previous path
+        _dictHistory.MoveBackward();
+        _currentDir = _dictHistory.GetCurrentItem();
+
+        // Update path text box
+        _dirTextBox.Text = _currentDir;
+
+        // Update file view
+        UpdateFileView();
+
+        // Update button enablement
+        UpdateButtonEnablement();
+    }
+
+    private void _forBtn_Clicked(object sender, EventArgs e)
+    {
+        // Get next path
+        _dictHistory.MoveForward();
+        _currentDir = _dictHistory.GetCurrentItem();
+
+        // Update path text box
+        _dirTextBox.Text = _currentDir;
+
+        // Update file view
+        UpdateFileView();
+
+        // Update button enablement
+        UpdateButtonEnablement();
+    }
+
+    private async void SaveBtnClicked(object sender, EventArgs e)
+    {
+        // TODO: Rethink usage and setting of SelectedPath throughout control
+        SelectedPath = Path.Combine(_currentDir, _selectedFileTextBox.Text);
+
+        if (!await ShouldOverwrite(SelectedPath))
+            return;
+
+        Result = DialogResult.Ok;
+        Close();
+    }
+
+    private void CnlBtn_Clicked(object sender, EventArgs e)
+    {
+        SelectedPath = null;
+
+        Result = DialogResult.Cancel;
+        Close();
+    }
+
+    #endregion
+
+    #region Textboxes
+
+    private void _dirTextBox_FocusLost(object sender, EventArgs e)
+    {
+        if (_currentDir == _dirTextBox.Text)
+            return;
+
+        // Check if given directory is valid
+        if (!Directory.Exists(_dirTextBox.Text))
+        {
+            // Restore current directory, if given directory is invalid
             _dirTextBox.Text = _currentDir;
-
-            // Update file view
-            UpdateFileView();
-
-            // Update button enablement
-            UpdateButtonEnablement();
+            return;
         }
 
-        private void _forBtn_Clicked(object sender, EventArgs e)
-        {
-            // Get next path
-            _dictHistory.MoveForward();
-            _currentDir = _dictHistory.GetCurrentItem();
+        // Push given directory to history
+        _dictHistory.PushItem(_dirTextBox.Text);
 
-            // Update path text box
-            _dirTextBox.Text = _currentDir;
+        // Update current directory
+        _currentDir = _dirTextBox.Text;
 
-            // Update file view
-            UpdateFileView();
+        // Update file view
+        UpdateFileView();
 
-            // Update button enablement
-            UpdateButtonEnablement();
-        }
+        // Update button enablement
+        UpdateButtonEnablement();
+    }
 
-        private async void SaveBtnClicked(object sender, EventArgs e)
-        {
-            // TODO: Rethink usage and setting of SelectedPath throughout control
-            SelectedPath = Path.Combine(_currentDir, _selectedFileTextBox.Text);
+    private void _selectedFileTextBox_TextChanged(object sender, EventArgs e)
+    {
+        SelectedPath = Path.Combine(_currentDir, _selectedFileTextBox.Text);
 
-            if (!await ShouldOverwrite(SelectedPath))
-                return;
+        _saveBtn.Enabled = !string.IsNullOrEmpty(_selectedFileTextBox.Text);
+    }
 
-            Result = DialogResult.Ok;
-            Close();
-        }
+    private void _searchTextBox_TextChanged(object sender, EventArgs e)
+    {
+        UpdateFileView();
+    }
 
-        private void CnlBtn_Clicked(object sender, EventArgs e)
-        {
-            SelectedPath = null;
+    #endregion
 
-            Result = DialogResult.Cancel;
-            Close();
-        }
+    #endregion
 
-        #endregion
-
-        #region Textboxes
-
-        private void _dirTextBox_FocusLost(object sender, EventArgs e)
-        {
-            if (_currentDir == _dirTextBox.Text)
-                return;
-
-            // Check if given directory is valid
-            if (!Directory.Exists(_dirTextBox.Text))
-            {
-                // Restore current directory, if given directory is invalid
-                _dirTextBox.Text = _currentDir;
-                return;
-            }
-
-            // Push given directory to history
-            _dictHistory.PushItem(_dirTextBox.Text);
-
-            // Update current directory
-            _currentDir = _dirTextBox.Text;
-
-            // Update file view
-            UpdateFileView();
-
-            // Update button enablement
-            UpdateButtonEnablement();
-        }
-
-        private void _selectedFileTextBox_TextChanged(object sender, EventArgs e)
-        {
-            SelectedPath = Path.Combine(_currentDir, _selectedFileTextBox.Text);
-
-            _saveBtn.Enabled = !string.IsNullOrEmpty(_selectedFileTextBox.Text);
-        }
-
-        private void _searchTextBox_TextChanged(object sender, EventArgs e)
-        {
-            UpdateFileView();
-        }
-
-        #endregion
-
-        #endregion
-
-        private class FileEntry
-        {
-            public string Name { get; set; }
-            public string Type { get; set; }
-            public DateTime DateModified { get; set; }
-        }
+    private class FileEntry
+    {
+        public string Name { get; set; }
+        public string Type { get; set; }
+        public DateTime DateModified { get; set; }
     }
 }

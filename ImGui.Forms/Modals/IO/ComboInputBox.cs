@@ -9,103 +9,102 @@ using ImGui.Forms.Models.IO;
 using ImGui.Forms.Resources;
 using Veldrid;
 
-namespace ImGui.Forms.Modals.IO
+namespace ImGui.Forms.Modals.IO;
+
+public class ComboInputBox : Modal
 {
-    public class ComboInputBox : Modal
+    private const int ButtonWidth_ = 75;
+
+    private readonly ComboBox<LocalizedString> _comboBox;
+
+    public LocalizedString SelectedItem { get; private set; }
+
+    private ComboInputBox(LocalizedString caption, LocalizedString text, LocalizedString[] items, LocalizedString? preset)
     {
-        private const int ButtonWidth_ = 75;
+        #region Controls
 
-        private readonly ComboBox<LocalizedString> _comboBox;
+        var okButton = new Button { Text = LocalizationResources.Ok(), Width = ButtonWidth_ };
+        var cancelButton = new Button { Text = LocalizationResources.Cancel(), Width = ButtonWidth_ };
 
-        public LocalizedString SelectedItem { get; private set; }
+        var label = new Label { Text = text };
 
-        private ComboInputBox(LocalizedString caption, LocalizedString text, LocalizedString[] items, LocalizedString? preset)
-        {
-            #region Controls
+        _comboBox = new ComboBox<LocalizedString> { MaxShowItems = 2 };
+        foreach (LocalizedString item in items)
+            _comboBox.Items.Add(item);
 
-            var okButton = new Button { Text = LocalizationResources.Ok(), Width = ButtonWidth_ };
-            var cancelButton = new Button { Text = LocalizationResources.Cancel(), Width = ButtonWidth_ };
+        var buttonLayout = new StackLayout { Alignment = Alignment.Horizontal, Size = Size.Content, ItemSpacing = 5 };
+        buttonLayout.Items.Add(okButton);
+        buttonLayout.Items.Add(cancelButton);
 
-            var label = new Label { Text = text };
+        var mainLayout = new StackLayout { Alignment = Alignment.Vertical, Size = Size.Content, ItemSpacing = 5 };
+        mainLayout.Items.Add(label);
+        mainLayout.Items.Add(_comboBox);
+        mainLayout.Items.Add(new StackItem(buttonLayout) { HorizontalAlignment = HorizontalAlignment.Right });
 
-            _comboBox = new ComboBox<LocalizedString> { MaxShowItems = 2 };
-            foreach (LocalizedString item in items)
-                _comboBox.Items.Add(item);
+        #endregion
 
-            var buttonLayout = new StackLayout { Alignment = Alignment.Horizontal, Size = Size.Content, ItemSpacing = 5 };
-            buttonLayout.Items.Add(okButton);
-            buttonLayout.Items.Add(cancelButton);
+        #region Events
 
-            var mainLayout = new StackLayout { Alignment = Alignment.Vertical, Size = Size.Content, ItemSpacing = 5 };
-            mainLayout.Items.Add(label);
-            mainLayout.Items.Add(_comboBox);
-            mainLayout.Items.Add(new StackItem(buttonLayout) { HorizontalAlignment = HorizontalAlignment.Right });
+        okButton.Clicked += OkButton_Clicked;
+        cancelButton.Clicked += CancelButton_Clicked;
 
-            #endregion
+        _comboBox.SelectedItemChanged += ComboBox_SelectedItemChanged;
 
-            #region Events
+        #endregion
 
-            okButton.Clicked += OkButton_Clicked;
-            cancelButton.Clicked += CancelButton_Clicked;
+        #region Keys
 
-            _comboBox.SelectedItemChanged += ComboBox_SelectedItemChanged;
+        OkAction = new KeyCommand(ModifierKeys.None, Key.Enter);
+        CancelAction = new KeyCommand(ModifierKeys.None, Key.Escape);
 
-            #endregion
+        #endregion
 
-            #region Keys
+        _comboBox.SelectedItem = _comboBox.Items.FirstOrDefault(i => i.Content == preset);
+        SelectedItem = _comboBox.SelectedItem!.Content;
 
-            OkAction = new KeyCommand(ModifierKeys.None, Key.Enter);
-            CancelAction = new KeyCommand(ModifierKeys.None, Key.Escape);
+        Result = DialogResult.Cancel;
+        Caption = caption;
 
-            #endregion
+        Content = mainLayout;
 
-            _comboBox.SelectedItem = _comboBox.Items.FirstOrDefault(i => i.Content == preset);
-            SelectedItem = _comboBox.SelectedItem!.Content;
+        var mainSize = Application.Instance.MainForm.Size;
 
-            Result = DialogResult.Cancel;
-            Caption = caption;
+        var width = mainLayout.GetWidth((int)mainSize.X, (int)mainSize.Y);
+        var height = mainLayout.GetHeight((int)mainSize.X, (int)mainSize.Y);
 
-            Content = mainLayout;
+        Size = new Size(SizeValue.Absolute(width), SizeValue.Absolute(height));
+    }
 
-            var mainSize = Application.Instance.MainForm.Size;
+    private void ComboBox_SelectedItemChanged(object sender, EventArgs e)
+    {
+        SelectedItem = _comboBox.SelectedItem.Content;
+    }
 
-            var width = mainLayout.GetWidth((int)mainSize.X, (int)mainSize.Y);
-            var height = mainLayout.GetHeight((int)mainSize.X, (int)mainSize.Y);
+    private void CancelButton_Clicked(object sender, EventArgs e)
+    {
+        Result = DialogResult.Cancel;
+        Close();
+    }
 
-            Size = new Size(SizeValue.Absolute(width), SizeValue.Absolute(height));
-        }
+    private void OkButton_Clicked(object sender, EventArgs e)
+    {
+        Result = DialogResult.Ok;
+        Close();
+    }
 
-        private void ComboBox_SelectedItemChanged(object sender, EventArgs e)
-        {
-            SelectedItem = _comboBox.SelectedItem.Content;
-        }
+    public static async Task<LocalizedString?> ShowAsync(LocalizedString caption, LocalizedString text, LocalizedString[] items, LocalizedString? preset = null)
+    {
+        if (items.Length <= 0)
+            return null;
 
-        private void CancelButton_Clicked(object sender, EventArgs e)
-        {
-            Result = DialogResult.Cancel;
-            Close();
-        }
+        if (preset == null || !items.Contains(preset.Value))
+            preset = items.First();
 
-        private void OkButton_Clicked(object sender, EventArgs e)
-        {
-            Result = DialogResult.Ok;
-            Close();
-        }
+        var inputBox = new ComboInputBox(caption, text, items, preset);
+        DialogResult result = await inputBox.ShowAsync();
+        if (result != DialogResult.Ok)
+            return null;
 
-        public static async Task<LocalizedString?> ShowAsync(LocalizedString caption, LocalizedString text, LocalizedString[] items, LocalizedString? preset = null)
-        {
-            if (items.Length <= 0)
-                return null;
-
-            if (preset == null || !items.Contains(preset.Value))
-                preset = items.First();
-
-            var inputBox = new ComboInputBox(caption, text, items, preset);
-            DialogResult result = await inputBox.ShowAsync();
-            if (result != DialogResult.Ok)
-                return null;
-
-            return inputBox.SelectedItem;
-        }
+        return inputBox.SelectedItem;
     }
 }

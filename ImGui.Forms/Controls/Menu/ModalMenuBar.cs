@@ -1,9 +1,8 @@
-﻿namespace ImGui.Forms.Controls.Menu
+﻿namespace ImGui.Forms.Controls.Menu;
+
+public class ModalMenuBar : MenuBar
 {
-    public class ModalMenuBar : MenuBar
+    public ModalMenuBar() : base(false)
     {
-        public ModalMenuBar() : base(false)
-        {
-        }
     }
 }

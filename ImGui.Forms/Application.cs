@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.SDL3;
 using Hexa.NET.SDL3;
@@ -107,7 +107,7 @@ public class Application
         io.ConfigDpiScaleViewports = true;
 
         _executionContext = new ExecutionContext(form, window, new ImageFactory(gpuDevice), new IdFactory());
-        //FontFactory.Initialize(io);
+        FontFactory.Initialize(io);
 
         ImGuiImplSDL3.SetCurrentContext(ctx);
         ImGuiImplSDL3.InitForSDLGPU((ImSDLWindow*)window);
@@ -160,7 +160,9 @@ public class Application
 
             SDLGPUCommandBuffer* commandBuffer = SDL.AcquireGPUCommandBuffer(gpuDevice);
             SDLGPUTexture* swapTexture;
-            SDL.AcquireGPUSwapchainTexture(commandBuffer, window, &swapTexture, null, null);
+
+            if (!SDL.WaitAndAcquireGPUSwapchainTexture(commandBuffer, window, &swapTexture, null, null))
+                continue;
 
             if (swapTexture != null && !isMinimized)
             {

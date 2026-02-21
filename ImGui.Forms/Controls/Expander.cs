@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Numerics;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
-using ImGuiNET;
-using Veldrid;
+using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls;
 
@@ -50,19 +50,19 @@ public class Expander : Component
         var expanded = Expanded;
         var flags = expanded ? ImGuiTreeNodeFlags.DefaultOpen : ImGuiTreeNodeFlags.None;
 
-        expanded = ImGuiNET.ImGui.CollapsingHeader(Caption, flags);
+        expanded = Hexa.NET.ImGui.ImGui.CollapsingHeader(Caption, flags);
         if (expanded)
         {
             int contentPosY = GetContentPosY();
             if (contentPosY <= contentRect.Height)
             {
-                if (ImGuiNET.ImGui.BeginChild($"{Id}-in"))
+                if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}-in"))
                 {
-                    ImGuiNET.ImGui.SetCursorPos(new Vector2(WidthIndent, 0));
-                    Content?.Update(new Rectangle(contentRect.X + WidthIndent, contentRect.Y + contentPosY, contentRect.Width, contentRect.Height - contentPosY));
+                    Hexa.NET.ImGui.ImGui.SetCursorPos(new Vector2(WidthIndent, 0));
+                    Content?.Update(new Rectangle(contentRect.Position + new Vector2(WidthIndent, contentPosY), contentRect.Size - new Vector2(0, contentPosY)));
                 }
 
-                ImGuiNET.ImGui.EndChild();
+                Hexa.NET.ImGui.ImGui.EndChild();
             }
         }
 
@@ -87,7 +87,7 @@ public class Expander : Component
         if (height <= 0)
             return GetHeaderHeight();
 
-        return height + GetHeaderHeight() + (int)ImGuiNET.ImGui.GetStyle().ItemSpacing.Y;
+        return height + GetHeaderHeight() + (int)Hexa.NET.ImGui.ImGui.GetStyle().ItemSpacing.Y;
     }
 
     private void OnExpandedChanged()
@@ -100,7 +100,7 @@ public class Expander : Component
         int height = GetHeaderHeight();
 
         if (Expanded)
-            height += (int)ImGuiNET.ImGui.GetStyle().ItemSpacing.Y;
+            height += (int)Hexa.NET.ImGui.ImGui.GetStyle().ItemSpacing.Y;
 
         return height;
     }
@@ -108,7 +108,7 @@ public class Expander : Component
     private int GetHeaderHeight()
     {
         var size = TextMeasurer.MeasureText(Caption);
-        var framePadding = ImGuiNET.ImGui.GetStyle().FramePadding;
+        var framePadding = Hexa.NET.ImGui.ImGui.GetStyle().FramePadding;
         return (int)Math.Ceiling(size.Y + framePadding.Y * 2);
     }
 }

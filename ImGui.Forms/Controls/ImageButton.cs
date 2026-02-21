@@ -1,18 +1,18 @@
 ﻿using System;
 using System.Numerics;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Models.IO;
 using ImGui.Forms.Resources;
-using ImGuiNET;
-using Veldrid;
+using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls;
 
 public class ImageButton : Component
 {
-    private ThemedImageResource _baseImg;
+    private ThemedImageResource? _baseImg;
 
     #region Properties
 
@@ -20,7 +20,7 @@ public class ImageButton : Component
 
     public KeyCommand KeyAction { get; set; }
 
-    public ThemedImageResource Image
+    public ThemedImageResource? Image
     {
         get => _baseImg;
         set
@@ -42,7 +42,7 @@ public class ImageButton : Component
 
     #endregion
 
-    public ImageButton(ThemedImageResource image = default)
+    public ImageButton(ThemedImageResource? image = null)
     {
         Image = image;
     }
@@ -58,22 +58,22 @@ public class ImageButton : Component
         var enabled = Enabled;
         ApplyStyles(enabled);
 
-        if (Image != null && (nint)Image != nint.Zero)
+        if (Image != null && Image.IsValid())
         {
-            if ((ImGuiNET.ImGui.ImageButton($"##{Id}", (nint)Image, GetImageSize()) || KeyAction.IsPressed()) && Enabled)
+            if ((Hexa.NET.ImGui.ImGui.ImageButton($"##{Id}", Image.GetTextureRef(), GetImageSize()) || KeyAction.IsPressed()) && Enabled)
                 OnClicked();
         }
         else
         {
-            if ((ImGuiNET.ImGui.Button(string.Empty, GetImageSize() + Padding * 2) || KeyAction.IsPressed()) && Enabled)
+            if ((Hexa.NET.ImGui.ImGui.Button(string.Empty, GetImageSize() + Padding * 2) || KeyAction.IsPressed()) && Enabled)
                 OnClicked();
         }
 
-        if (Enabled && Tooltip is { IsEmpty: false } && ImGuiNET.ImGui.IsItemHovered())
+        if (Enabled && Tooltip is { IsEmpty: false } && Hexa.NET.ImGui.ImGui.IsItemHovered())
         {
-            ImGuiNET.ImGui.BeginTooltip();
-            ImGuiNET.ImGui.Text(Tooltip);
-            ImGuiNET.ImGui.EndTooltip();
+            Hexa.NET.ImGui.ImGui.BeginTooltip();
+            Hexa.NET.ImGui.ImGui.Text(Tooltip);
+            Hexa.NET.ImGui.ImGui.EndTooltip();
         }
 
         RemoveStyles(enabled);
@@ -83,20 +83,20 @@ public class ImageButton : Component
     {
         if (!enabled)
         {
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Button, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonHovered, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.Button, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.ButtonActive, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
         }
 
-        ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Padding);
+        Hexa.NET.ImGui.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Padding);
     }
 
     private void RemoveStyles(bool enabled)
     {
-        ImGuiNET.ImGui.PopStyleVar();
+        Hexa.NET.ImGui.ImGui.PopStyleVar();
 
         if (!enabled)
-            ImGuiNET.ImGui.PopStyleColor(3);
+            Hexa.NET.ImGui.ImGui.PopStyleColor(3);
     }
 
     private Vector2 GetImageSize()
@@ -106,6 +106,6 @@ public class ImageButton : Component
 
     private void OnClicked()
     {
-        Clicked?.Invoke(this, new EventArgs());
+        Clicked?.Invoke(this, EventArgs.Empty);
     }
 }

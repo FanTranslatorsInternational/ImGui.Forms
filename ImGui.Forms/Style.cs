@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Extensions;
 using ImGui.Forms.Models;
-using ImGuiNET;
 using SixLabors.ImageSharp;
 
 namespace ImGui.Forms;
@@ -86,7 +86,7 @@ public static class Style
             && styles.TryGetValue(style, out object? value))
             return value;
 
-        ImGuiStylePtr stylePtr = ImGuiNET.ImGui.GetStyle();
+        ImGuiStylePtr stylePtr = Hexa.NET.ImGui.ImGui.GetStyle();
         return style switch
         {
             ImGuiStyleVar.Alpha => stylePtr.Alpha,
@@ -156,7 +156,7 @@ public static class Style
             && colors.TryGetValue(colorIndex, out Color color))
             return color;
 
-        ImGuiStylePtr style = ImGuiNET.ImGui.GetStyle();
+        ImGuiStylePtr style = Hexa.NET.ImGui.ImGui.GetStyle();
         return style.Colors[(int)colorIndex].ToColor();
     }
 
@@ -170,18 +170,18 @@ public static class Style
         switch (Theme)
         {
             case Theme.Light:
-                ImGuiNET.ImGui.StyleColorsLight();
+                Hexa.NET.ImGui.ImGui.StyleColorsLight();
                 break;
 
             case Theme.Dark:
-                ImGuiNET.ImGui.StyleColorsDark();
+                Hexa.NET.ImGui.ImGui.StyleColorsDark();
                 break;
 
             default:
                 throw new InvalidOperationException($"Unknown theme {Theme}.");
         }
 
-        ImGuiStylePtr stylePtr = ImGuiNET.ImGui.GetStyle();
+        ImGuiStylePtr stylePtr = Hexa.NET.ImGui.ImGui.GetStyle();
 
         if (Colors.TryGetValue(Theme, out Dictionary<ImGuiCol, Color>? themeColors))
         {

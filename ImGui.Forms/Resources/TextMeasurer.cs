@@ -1,5 +1,5 @@
-﻿using ImGuiNET;
-using System.Numerics;
+﻿using System.Numerics;
+using Hexa.NET.ImGui;
 
 namespace ImGui.Forms.Resources;
 
@@ -12,7 +12,7 @@ public static class TextMeasurer
     /// <returns>The measured size of <paramref name="text"/>.</returns>
     public static Vector2 MeasureText(string? text)
     {
-        return ImGuiNET.ImGui.CalcTextSize(text ?? string.Empty);
+        return Hexa.NET.ImGui.ImGui.CalcTextSize(text ?? string.Empty);
     }
 
     /// <summary>
@@ -21,16 +21,16 @@ public static class TextMeasurer
     /// <param name="text">The text to measure.</param>
     /// <param name="font">The font to measure the text with.</param>
     /// <returns>The measured size of <paramref name="text"/>.</returns>
-    public static Vector2 MeasureText(string? text, FontResource font)
+    public static Vector2 MeasureText(string? text, FontResource? font)
     {
         ImFontPtr? fontPtr = font?.GetPointer();
         if (fontPtr.HasValue)
-            ImGuiNET.ImGui.PushFont(fontPtr.Value);
+            Hexa.NET.ImGui.ImGui.PushFont(fontPtr.Value, font!.Data.Size);
 
         var size = MeasureText(text);
 
         if (fontPtr.HasValue)
-            ImGuiNET.ImGui.PopFont();
+            Hexa.NET.ImGui.ImGui.PopFont();
 
         return size;
     }
@@ -44,13 +44,13 @@ public static class TextMeasurer
     {
         ImFontPtr? fontPtr = font?.GetPointer();
         if (fontPtr.HasValue)
-            ImGuiNET.ImGui.PushFont(fontPtr.Value);
+            Hexa.NET.ImGui.ImGui.PushFont(fontPtr.Value, font!.Data.Size);
 
-        var currentFont = ImGuiNET.ImGui.GetFont();
-        var lineHeight = currentFont.FontSize;
+        var currentFont = Hexa.NET.ImGui.ImGui.GetFont();
+        var lineHeight = currentFont.LegacySize;
 
         if (fontPtr.HasValue)
-            ImGuiNET.ImGui.PopFont();
+            Hexa.NET.ImGui.ImGui.PopFont();
 
         return lineHeight;
     }
@@ -65,12 +65,12 @@ public static class TextMeasurer
     {
         ImFontPtr? fontPtr = font?.GetPointer();
         if (fontPtr.HasValue)
-            ImGuiNET.ImGui.PushFont(fontPtr.Value);
+            Hexa.NET.ImGui.ImGui.PushFont(fontPtr.Value, font!.Data.Size);
 
         var lineWidth = MeasureText(text).X;
 
         if (fontPtr.HasValue)
-            ImGuiNET.ImGui.PopFont();
+            Hexa.NET.ImGui.ImGui.PopFont();
 
         return lineWidth;
     }

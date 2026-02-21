@@ -31,54 +31,13 @@
       <LogicalName>error.png</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
-  
-  <ItemGroup>
-    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/GLSL/imgui-vertex.glsl">
-      <LogicalName>imgui-vertex.glsl</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/GLSL/imgui-vertex-legacy.glsl">
-      <LogicalName>imgui-vertex-legacy.glsl</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/GLSL/imgui-frag.glsl">
-      <LogicalName>imgui-frag.glsl</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/GLSLES/imgui-vertex.glsles">
-      <LogicalName>imgui-vertex.glsles</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/GLSLES/imgui-vertex-legacy.glsles">
-      <LogicalName>imgui-vertex-legacy.glsles</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/GLSLES/imgui-frag.glsles">
-      <LogicalName>imgui-frag.glsles</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/HLSL/imgui-vertex.hlsl.bytes">
-      <LogicalName>imgui-vertex.hlsl.bytes</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Support\Veldrid.ImGui\Assets\HLSL\imgui-vertex-legacy.hlsl.bytes">
-      <LogicalName>imgui-vertex-legacy.hlsl.bytes</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/HLSL/imgui-frag.hlsl.bytes">
-      <LogicalName>imgui-frag.hlsl.bytes</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/SPIR-V/imgui-vertex.spv">
-      <LogicalName>imgui-vertex.spv</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/SPIR-V/imgui-frag.spv">
-      <LogicalName>imgui-frag.spv</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/Metal/imgui-vertex.metallib">
-      <LogicalName>imgui-vertex.metallib</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Support/Veldrid.ImGui/Assets/Metal/imgui-frag.metallib">
-      <LogicalName>imgui-frag.metallib</LogicalName>
-    </EmbeddedResource>
-  </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="ImGui.NET" Version="1.91.0.1" />
+    <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" />
+    <PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.18" />
+    <PackageReference Include="Hexa.NET.ImGui.Backends.SDL3" Version="1.0.18" />
+    <PackageReference Include="Hexa.NET.SDL3" Version="1.2.17" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
-    <PackageReference Include="Veldrid" Version="4.9.0" />
-    <PackageReference Include="Veldrid.SDL2" Version="4.9.0" />
   </ItemGroup>
 
 </Project>

@@ -1,10 +1,7 @@
 ﻿using System;
-using ImGui.Forms.Factories;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Models;
-using ImGuiNET;
-using Veldrid.Sdl2;
-using Rectangle = Veldrid.Rectangle;
-using Size = ImGui.Forms.Models.Size;
+using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls.Base;
 
@@ -17,7 +14,7 @@ public abstract class Component
     /// <summary>
     /// The Id for this component.
     /// </summary>
-    public int Id => IdFactory.Get(this);
+    public int Id => Application.Instance.Ids.Get(this);
 
     /// <summary>
     /// Declares if a component is visible and should be drawn with its content.
@@ -47,7 +44,7 @@ public abstract class Component
     /// <summary>
     /// The event to intercept DragDrop actions.
     /// </summary>
-    public event EventHandler<DragDropEvent[]> DragDrop;
+    //public event EventHandler<DragDropEvent[]> DragDrop;
 
     #endregion
 
@@ -64,17 +61,17 @@ public abstract class Component
         }
 
         // Handle drawing of component
-        ImGuiNET.ImGui.PushID(Id);
+        Hexa.NET.ImGui.ImGui.PushID(Id);
 
         ApplyStyles();
         UpdateInternal(contentRect);
         RemoveStyles();
 
-        ImGuiNET.ImGui.PopID();
+        Hexa.NET.ImGui.ImGui.PopID();
 
         // Draw border
         if (ShowBorder)
-            ImGuiNET.ImGui.GetWindowDrawList().AddRect(contentRect.Position, contentRect.Position + contentRect.Size, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Border));
+            Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddRect(contentRect.Position, contentRect.Position + contentRect.Size, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.Border));
 
         // Handle Drag and Drop after rendering, so drag drop events go from most nested to least nested control
         // HINT: Drag and Drop only proceeds on the top active layer of form and modal windows
@@ -85,9 +82,8 @@ public abstract class Component
             return;
         }
 
-        if (Application.Instance.MainForm.IsActiveLayer()
-            && Application.Instance.TryGetDragDrop(contentRect, out DragDropEvent[] dragDrops))
-            OnDragDrop(dragDrops);
+        //if (Application.Instance.MainForm.IsActiveLayer() && Application.Instance.TryGetDragDrop(contentRect, out DragDropEvent[] dragDrops))
+        //    OnDragDrop(dragDrops);
 
         _tabInactive = false;
     }
@@ -203,10 +199,10 @@ public abstract class Component
     /// Invoke the DragDrop event of this component.
     /// </summary>
     /// <param name="events">The drag drop objects received.</param>
-    private void OnDragDrop(DragDropEvent[] events)
-    {
-        DragDrop?.Invoke(this, events);
-    }
+    //private void OnDragDrop(DragDropEvent[] events)
+    //{
+    //    DragDrop?.Invoke(this, events);
+    //}
 
     /// <summary>
     /// Calculates the integer value of a <see cref="SizeValue"/>.

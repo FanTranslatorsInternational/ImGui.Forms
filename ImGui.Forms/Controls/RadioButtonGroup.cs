@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Numerics;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Layouts;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
-using ImGuiNET;
-using Rectangle = Veldrid.Rectangle;
+using ImGui.Forms.Support;
 using Size = ImGui.Forms.Models.Size;
 
 namespace ImGui.Forms.Controls;
@@ -29,7 +29,7 @@ public class RadioButtonGroup : Component
         float totalWidth = 0;
         float totalHeight = 0;
 
-        Vector2 itemSpacing = ImGuiNET.ImGui.GetStyle().ItemSpacing;
+        Vector2 itemSpacing = Hexa.NET.ImGui.ImGui.GetStyle().ItemSpacing;
 
         switch (Alignment)
         {
@@ -70,11 +70,11 @@ public class RadioButtonGroup : Component
 
         foreach (RadioButtonItem item in Items)
         {
-            if (ImGuiNET.ImGui.RadioButton(item.Text, item == SelectedItem))
+            if (Hexa.NET.ImGui.ImGui.RadioButton(item.Text, item == SelectedItem))
                 selected = item;
 
             if (Alignment is Alignment.Horizontal && item != Items[^1])
-                ImGuiNET.ImGui.SameLine();
+                Hexa.NET.ImGui.ImGui.SameLine();
         }
 
         bool isChanged = SelectedItem == selected;

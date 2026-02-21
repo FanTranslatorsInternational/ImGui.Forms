@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Numerics;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
-using ImGuiNET;
-using Rectangle = Veldrid.Rectangle;
+using ImGui.Forms.Support;
 using Size = ImGui.Forms.Models.Size;
 
 namespace ImGui.Forms.Controls.Text;
@@ -45,7 +45,7 @@ public class TextBox : Component
     /// <summary>
     /// The font to use for the text. Uses the default font, if not set explicitly.
     /// </summary>
-    public FontResource Font { get; set; }
+    public FontResource? Font { get; set; }
 
     /// <summary>
     /// Masks the input text, for security reasons. Eg passwords.
@@ -115,20 +115,20 @@ public class TextBox : Component
                 break;
         }
 
-        ImGuiNET.ImGui.SetNextItemWidth(contentRect.Width);
+        Hexa.NET.ImGui.ImGui.SetNextItemWidth(contentRect.Width);
 
         if (isReadonly || !enabled)
         {
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBg, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
         }
 
         string currentText = _text;
 
         bool isChanged = !string.IsNullOrEmpty(Placeholder)
-            ? ImGuiNET.ImGui.InputTextWithHint($"##{Id}", Placeholder, ref currentText, MaxCharacters, flags)
-            : ImGuiNET.ImGui.InputText($"##{Id}", ref currentText, MaxCharacters, flags);
+            ? Hexa.NET.ImGui.ImGui.InputTextWithHint($"##{Id}", Placeholder, ref currentText, MaxCharacters, flags)
+            : Hexa.NET.ImGui.ImGui.InputText($"##{Id}", ref currentText, MaxCharacters, flags);
 
         if (isChanged && !_currentFrameChanged)
         {
@@ -137,13 +137,13 @@ public class TextBox : Component
         }
 
         // Check if item is active and lost focus
-        if (!ImGuiNET.ImGui.IsItemActive() && _activePreviousFrame)
+        if (!Hexa.NET.ImGui.ImGui.IsItemActive() && _activePreviousFrame)
             OnFocusLost();
 
-        _activePreviousFrame = ImGuiNET.ImGui.IsItemActive();
+        _activePreviousFrame = Hexa.NET.ImGui.ImGui.IsItemActive();
 
         if (isReadonly || !enabled)
-            ImGuiNET.ImGui.PopStyleColor(3);
+            Hexa.NET.ImGui.ImGui.PopStyleColor(3);
 
         _currentFrameChanged = false;
     }
@@ -152,17 +152,17 @@ public class TextBox : Component
     {
         ImFontPtr? fontPtr = Font?.GetPointer();
         if (fontPtr != null)
-            ImGuiNET.ImGui.PushFont(fontPtr.Value);
+            Hexa.NET.ImGui.ImGui.PushFont(fontPtr.Value, Font!.Data.Size);
 
-        ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Padding);
+        Hexa.NET.ImGui.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Padding);
     }
 
     protected override void RemoveStyles()
     {
-        ImGuiNET.ImGui.PopStyleVar();
+        Hexa.NET.ImGui.ImGui.PopStyleVar();
 
         if (Font?.GetPointer() != null)
-            ImGuiNET.ImGui.PopFont();
+            Hexa.NET.ImGui.ImGui.PopFont();
     }
 
     private void OnTextChanged()

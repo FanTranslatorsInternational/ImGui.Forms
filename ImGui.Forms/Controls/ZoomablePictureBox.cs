@@ -1,8 +1,9 @@
-﻿using ImGui.Forms.Controls.Base;
+﻿using System.Numerics;
+using Hexa.NET.ImGui;
+using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Extensions;
 using ImGui.Forms.Resources;
-using ImGuiNET;
-using Veldrid;
+using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls;
 
@@ -35,7 +36,7 @@ public class ZoomablePictureBox : ZoomableComponent
     {
         // Draw background color
         if (!BackgroundColor.IsEmpty)
-            ImGuiNET.ImGui.GetWindowDrawList().AddRectFilled(contentRect.Position, contentRect.Position + contentRect.Size, BackgroundColor.ToUInt32());
+            Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddRectFilled(contentRect.Position, contentRect.Position + contentRect.Size, BackgroundColor.ToUInt32());
 
         // Draw image
         if (!HasValidImage())
@@ -43,21 +44,21 @@ public class ZoomablePictureBox : ZoomableComponent
 
         Rectangle imageRect = GetTransformedImageRect(contentRect);
 
-        ImGuiNET.ImGui.GetWindowDrawList().AddImage((nint)Image!, imageRect.Position, imageRect.Position + imageRect.Size);
+        Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddImage(Image!.GetTextureRef(), imageRect.Position, imageRect.Position + imageRect.Size);
 
         if (ShowImageBorder)
-            ImGuiNET.ImGui.GetWindowDrawList().AddRect(imageRect.Position, imageRect.Position + imageRect.Size, Style.GetColor(ImGuiCol.Border).ToUInt32());
+            Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddRect(imageRect.Position, imageRect.Position + imageRect.Size, Style.GetColor(ImGuiCol.Border).ToUInt32());
     }
 
     protected bool HasValidImage()
     {
-        return Image != null && (nint)Image != nint.Zero;
+        return Image != null && Image.IsValid();
     }
 
     protected Rectangle GetTransformedImageRect(Rectangle contentRect)
     {
         var imageStartPosition = -(Image!.Size / 2);
-        var imageRect = new Rectangle((int)imageStartPosition.X, (int)imageStartPosition.Y, Image.Width, Image.Height);
+        var imageRect = new Rectangle(imageStartPosition, new Vector2(Image.Width, Image.Height));
         return Transform(contentRect, imageRect);
     }
 }

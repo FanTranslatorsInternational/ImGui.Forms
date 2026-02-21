@@ -1,8 +1,8 @@
 ﻿using System;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
-using ImGuiNET;
-using Veldrid;
+using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls.Text;
 
@@ -60,16 +60,16 @@ public class MultiLineTextBox : Component
 
         if (isReadonly || !enabled)
         {
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBg, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
         }
 
-        if (ImGuiNET.ImGui.InputTextMultiline($"##{Id}", ref _text, MaxCharacters, contentRect.Size, flags))
+        if (Hexa.NET.ImGui.ImGui.InputTextMultiline($"##{Id}", ref _text, MaxCharacters, contentRect.Size, flags))
             OnTextChanged();
 
         if (isReadonly || !enabled)
-            ImGuiNET.ImGui.PopStyleColor(3);
+            Hexa.NET.ImGui.ImGui.PopStyleColor(3);
     }
 
     private void OnTextChanged()

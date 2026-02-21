@@ -1,10 +1,10 @@
 ﻿using System;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Extensions;
-using ImGuiNET;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using Rectangle = Veldrid.Rectangle;
+using Rectangle = ImGui.Forms.Support.Rectangle;
 using Size = ImGui.Forms.Models.Size;
 
 namespace ImGui.Forms.Controls;
@@ -28,7 +28,7 @@ public class ColorPicker : Component
             flags |= ImGuiColorEditFlags.AlphaBar;
 
             var pickedColor = ((Color)PickedColor).ToVector4();
-            if (ImGuiNET.ImGui.ColorPicker4($"##{Id}", ref pickedColor, flags))
+            if (Hexa.NET.ImGui.ImGui.ColorPicker4($"##{Id}", ref pickedColor, flags))
             {
                 PickedColor = pickedColor.ToColor();
                 OnColorChanged();
@@ -37,7 +37,7 @@ public class ColorPicker : Component
         else
         {
             var pickedColor = ((Color)PickedColor).ToVector3();
-            if (ImGuiNET.ImGui.ColorPicker3($"##{Id}", ref pickedColor, flags))
+            if (Hexa.NET.ImGui.ImGui.ColorPicker3($"##{Id}", ref pickedColor, flags))
             {
                 PickedColor = pickedColor.ToColor();
                 OnColorChanged();

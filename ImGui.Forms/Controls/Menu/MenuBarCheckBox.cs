@@ -1,7 +1,7 @@
 ﻿using System;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Resources;
-using ImGuiNET;
 
 namespace ImGui.Forms.Controls.Menu;
 
@@ -13,7 +13,7 @@ public class MenuBarCheckBox : MenuBarItem
 
     public LocalizedString Text { get; set; }
 
-    public FontResource Font { get; set; }
+    public FontResource? Font { get; set; }
 
     public override int Height => GetHeight();
 
@@ -43,7 +43,7 @@ public class MenuBarCheckBox : MenuBarItem
     protected override void UpdateInternal()
     {
         // Add menu check box
-        if (ImGuiNET.ImGui.MenuItem(Text, null, Checked, Enabled))
+        if (Hexa.NET.ImGui.ImGui.MenuItem(Text, Checked, Enabled))
             // Invert checked value, if clicked
             Checked = !Checked;
     }
@@ -57,7 +57,7 @@ public class MenuBarCheckBox : MenuBarItem
         ApplyStyles();
 
         var textSize = TextMeasurer.MeasureText(Text);
-        var height = (int)(textSize.Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y * 2);
+        var height = (int)(textSize.Y + Hexa.NET.ImGui.ImGui.GetStyle().FramePadding.Y * 2);
 
         RemoveStyles();
 
@@ -68,13 +68,13 @@ public class MenuBarCheckBox : MenuBarItem
     {
         ImFontPtr? fontPtr = Font?.GetPointer();
         if (fontPtr != null)
-            ImGuiNET.ImGui.PushFont(fontPtr.Value);
+            Hexa.NET.ImGui.ImGui.PushFont(fontPtr.Value, Font!.Data.Size);
     }
 
     protected override void RemoveStyles()
     {
         if (Font?.GetPointer() != null)
-            ImGuiNET.ImGui.PopFont();
+            Hexa.NET.ImGui.ImGui.PopFont();
     }
 
     private void OnCheckedChanged()

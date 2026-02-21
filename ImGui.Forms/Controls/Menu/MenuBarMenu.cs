@@ -1,8 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Numerics;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Resources;
-using ImGuiNET;
 
 namespace ImGui.Forms.Controls.Menu;
 
@@ -12,7 +12,7 @@ public class MenuBarMenu : MenuBarItem
 
     public LocalizedString Text { get; set; }
 
-    public FontResource Font { get; set; }
+    public FontResource? Font { get; set; }
 
     public Vector2 Padding { get; set; } = new(8, 8);
 
@@ -29,12 +29,12 @@ public class MenuBarMenu : MenuBarItem
 
     protected override void UpdateInternal()
     {
-        if (ImGuiNET.ImGui.BeginMenu(Text, Enabled))
+        if (Hexa.NET.ImGui.ImGui.BeginMenu(Text, Enabled))
         {
             foreach (var item in Items)
                 item.Update();
 
-            ImGuiNET.ImGui.EndMenu();
+            Hexa.NET.ImGui.ImGui.EndMenu();
         }
         else
             UpdateEventsInternal();
@@ -54,7 +54,7 @@ public class MenuBarMenu : MenuBarItem
         ApplyStyles();
 
         var textSize = TextMeasurer.MeasureText(Text);
-        var height = (int)(textSize.Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y * 2);
+        var height = (int)(textSize.Y + Hexa.NET.ImGui.ImGui.GetStyle().FramePadding.Y * 2);
 
         RemoveStyles();
 
@@ -63,19 +63,19 @@ public class MenuBarMenu : MenuBarItem
 
     protected override void ApplyStyles()
     {
-        ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(4, 5));
-        ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Padding);
+        Hexa.NET.ImGui.ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(4, 5));
+        Hexa.NET.ImGui.ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Padding);
 
         ImFontPtr? fontPtr = Font?.GetPointer();
         if (fontPtr != null)
-            ImGuiNET.ImGui.PushFont(fontPtr.Value);
+            Hexa.NET.ImGui.ImGui.PushFont(fontPtr.Value, Font!.Data.Size);
     }
 
     protected override void RemoveStyles()
     {
         if (Font?.GetPointer() != null)
-            ImGuiNET.ImGui.PopFont();
+            Hexa.NET.ImGui.ImGui.PopFont();
 
-        ImGuiNET.ImGui.PopStyleVar(2);
+        Hexa.NET.ImGui.ImGui.PopStyleVar(2);
     }
 }

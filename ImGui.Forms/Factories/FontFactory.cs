@@ -1,12 +1,10 @@
 ﻿using ImGui.Forms.Models;
-using ImGui.Forms.Providers;
 using ImGui.Forms.Resources;
-using ImGui.Forms.Support.Veldrid.ImGui;
-using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using Hexa.NET.ImGui;
 
 namespace ImGui.Forms.Factories;
 
@@ -79,7 +77,7 @@ public static class FontFactory
     public static FontResource Get(string name, int size, FontResource fallbackFont)
     {
         // If font with that name is already loaded, return
-        if (!_fontCache.TryGetValue(name, out FontMetaData metadata))
+        if (!_fontCache.TryGetValue(name, out FontMetaData? metadata))
             throw new InvalidOperationException($"Unregistered font {name}.");
 
         return new FontResource(new FontData(metadata, size, fallbackFont.Data));
@@ -88,7 +86,7 @@ public static class FontFactory
     public static FontResource Get(string name, int size)
     {
         // If font with that name is already loaded, return
-        if (!_fontCache.TryGetValue(name, out FontMetaData metadata))
+        if (!_fontCache.TryGetValue(name, out FontMetaData? metadata))
             throw new InvalidOperationException($"Unregistered font {name}.");
 
         return new FontResource(new FontData(metadata, size));
@@ -99,13 +97,7 @@ public static class FontFactory
         if (_fontPointers.TryGetValue(data, out ImFontPtr fontPtr))
             return fontPtr;
 
-        if (_controller != null)
-            return InitializeFont(data, true);
-
-        if (!_fontRegistrationQueue.Contains(data))
-            _fontRegistrationQueue.Enqueue(data);
-
-        return null;
+        return InitializeFont(data);
     }
 
     #endregion
@@ -113,12 +105,10 @@ public static class FontFactory
     #region Initialization
 
     private static ImGuiIOPtr _io;
-    private static ImGuiRenderer _controller;
 
-    internal static void Initialize(ImGuiIOPtr io, ImGuiRenderer controller)
+    internal static void Initialize(ImGuiIOPtr io)
     {
         _io = io;
-        _controller = controller;
 
         InitializeFonts();
     }
@@ -131,18 +121,13 @@ public static class FontFactory
         while (_fontRegistrationQueue.Count > 0)
         {
             FontData newFontData = _fontRegistrationQueue.Dequeue();
-            _ = InitializeFont(newFontData, false);
+            _ = InitializeFont(newFontData);
         }
-
-        _controller.RecreateFontDeviceTexture();
     }
 
-    private static ImFontPtr InitializeFont(FontData data, bool recreateDevice)
+    private static ImFontPtr InitializeFont(FontData data)
     {
         _fontPointers[data] = AddFont(_io, data);
-
-        if (recreateDevice)
-            _controller.RecreateFontDeviceTexture();
 
         return _fontPointers[data];
     }
@@ -155,42 +140,11 @@ public static class FontFactory
         {
             _ = AddFont(io, fontData.Fallback);
 
-            config = ImGuiNative.ImFontConfig_ImFontConfig();
+            config = Hexa.NET.ImGui.ImGui.ImFontConfig();
             config->MergeMode = 1;
         }
 
-        ImVector ranges = GetGlyphRanges(fontData.Metadata.GlyphRanges, fontData.Metadata.AdditionalCharacters);
-        return io.Fonts.AddFontFromFileTTF(fontData.Metadata.Path, fontData.Size, config, ranges.Data);
-    }
-
-    private static unsafe ImVector GetGlyphRanges(FontGlyphRange rangeFlags, string additionalCharacters)
-    {
-        var builder = new ImFontGlyphRangesBuilderPtr(ImGuiNative.ImFontGlyphRangesBuilder_ImFontGlyphRangesBuilder());
-        builder.Clear();
-
-        if (rangeFlags.HasFlag(FontGlyphRange.Latin))
-            builder.AddRanges(GlyphRangeProvider.GetLatinRange());
-        if (rangeFlags.HasFlag(FontGlyphRange.Cyrillic))
-            builder.AddRanges(GlyphRangeProvider.GetCyrillicRange());
-        if (rangeFlags.HasFlag(FontGlyphRange.ChineseJapanese))
-            builder.AddRanges(GlyphRangeProvider.GetCjRange());
-        if (rangeFlags.HasFlag(FontGlyphRange.Korean))
-            builder.AddRanges(GlyphRangeProvider.GetKoreanRange());
-        if (rangeFlags.HasFlag(FontGlyphRange.Greek))
-            builder.AddRanges(GlyphRangeProvider.GetGreekRange());
-        if (rangeFlags.HasFlag(FontGlyphRange.Thai))
-            builder.AddRanges(GlyphRangeProvider.GetThaiRange());
-        if (rangeFlags.HasFlag(FontGlyphRange.Vietnamese))
-            builder.AddRanges(GlyphRangeProvider.GetVietnameseRange());
-        if (rangeFlags.HasFlag(FontGlyphRange.Symbols))
-            builder.AddRanges(GlyphRangeProvider.GetSymbolRange());
-
-        if (!string.IsNullOrEmpty(additionalCharacters))
-            builder.AddText(additionalCharacters);
-
-        builder.BuildRanges(out ImVector ranges);
-
-        return ranges;
+        return io.Fonts.AddFontFromFileTTF(fontData.Metadata.Path, fontData.Size, config);
     }
 
     #endregion

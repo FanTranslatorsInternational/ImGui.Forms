@@ -3,6 +3,7 @@ using SixLabors.ImageSharp;
 using System.IO;
 using System.Numerics;
 using System.Reflection;
+using Hexa.NET.ImGui;
 
 namespace ImGui.Forms.Resources;
 
@@ -106,18 +107,21 @@ public class ImageResource
     public void Destroy()
     {
         if (_ptr != nint.Zero)
-            Application.Instance?.ImageFactory.UnloadImage(_ptr);
+            Application.Instance.Images.UnloadImage(_ptr);
 
         _ptr = nint.Zero;
     }
 
-    public static explicit operator nint(ImageResource ir) => ir?.GetPointer() ?? nint.Zero;
+    public unsafe ImTextureRef GetTextureRef()
+    {
+        return new ImTextureRef(null, GetPointer());
+    }
 
     private nint GetPointer()
     {
         if (_ptr != nint.Zero)
             return _ptr;
 
-        return _ptr = Application.Instance?.ImageFactory.LoadImage(Image) ?? nint.Zero;
+        return _ptr = Application.Instance.Images.LoadImage(Image);
     }
 }

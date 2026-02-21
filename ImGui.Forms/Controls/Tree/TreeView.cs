@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
+﻿using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
 using ImGui.Forms.Extensions;
 using ImGui.Forms.Factories;
 using ImGui.Forms.Models.IO;
-using ImGuiNET;
-using Veldrid;
-using Rectangle = Veldrid.Rectangle;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls.Tree;
 
@@ -18,8 +17,8 @@ public class TreeView<TNodeData> : Component
     private const int FirstArrowSelectionDelta_ = 30;
     private const int ArrowSelectionFrameDelta_ = 5;
 
-    private static readonly KeyCommand PreviousNodeKey = new(Key.Up);
-    private static readonly KeyCommand NextNodeKey = new(Key.Down);
+    private static readonly KeyCommand PreviousNodeKey = new(ImGuiKey.UpArrow);
+    private static readonly KeyCommand NextNodeKey = new(ImGuiKey.DownArrow);
 
     private readonly TreeNode<TNodeData> _rootNode;
     private TreeNode<TNodeData> _selectedNode;
@@ -79,14 +78,14 @@ public class TreeView<TNodeData> : Component
             return;
 
         var anyNodeHovered = false;
-        if (ImGuiNET.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
+        if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
         {
-            float newScrollY = ImGuiNET.ImGui.GetScrollY();
+            float newScrollY = Hexa.NET.ImGui.ImGui.GetScrollY();
 
             if (_scrollY != newScrollY)
             {
                 if (IsTabInactiveCore())
-                    ImGuiNET.ImGui.SetScrollY(_scrollY);
+                    Hexa.NET.ImGui.ImGui.SetScrollY(_scrollY);
 
                 _scrollY = newScrollY;
             }
@@ -99,7 +98,7 @@ public class TreeView<TNodeData> : Component
             UpdateNodeFocusState(isAnyNodeFocused);
         }
 
-        ImGuiNET.ImGui.EndChild();
+        Hexa.NET.ImGui.ImGui.EndChild();
     }
 
     private bool UpdateNodes(IList<TreeNode<TNodeData>> nodes, ref bool nodeHovered)
@@ -113,40 +112,40 @@ public class TreeView<TNodeData> : Component
             if (SelectedNode == node) flags |= ImGuiTreeNodeFlags.Selected;
 
             // Add node
-            int nodeId = IdFactory.Get(node);
+            int nodeId = Application.Instance.Ids.Get(node);
 
-            ImGuiNET.ImGui.PushID(nodeId);
-            ImGuiNET.ImGui.SetNextItemOpen(node.IsExpanded);
+            Hexa.NET.ImGui.ImGui.PushID(nodeId);
+            Hexa.NET.ImGui.ImGui.SetNextItemOpen(node.IsExpanded);
 
             if (!node.TextColor.IsEmpty)
-                ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Text, node.TextColor.ToUInt32());
+                Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.Text, node.TextColor.ToUInt32());
 
             ImFontPtr? nodeFontPtr = node.Font?.GetPointer();
             if (nodeFontPtr != null)
-                ImGuiNET.ImGui.PushFont(nodeFontPtr.Value);
+                Hexa.NET.ImGui.ImGui.PushFont(nodeFontPtr.Value, node.Font!.Data.Size);
 
-            ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
-            ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0, 2));
+            Hexa.NET.ImGui.ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
+            Hexa.NET.ImGui.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, new Vector2(0, 2));
 
-            bool expanded = ImGuiNET.ImGui.TreeNodeEx(node.Text, flags);
-            isAnyNodeFocused |= ImGuiNET.ImGui.IsItemFocused();
+            bool expanded = Hexa.NET.ImGui.ImGui.TreeNodeEx(node.Text, flags);
+            isAnyNodeFocused |= Hexa.NET.ImGui.ImGui.IsItemFocused();
 
-            ImGuiNET.ImGui.PopStyleVar(2);
+            Hexa.NET.ImGui.ImGui.PopStyleVar(2);
 
             bool changedExpansion = expanded != node.IsExpanded;
             if (changedExpansion && Enabled)
                 node.IsExpanded = expanded;
 
             if (nodeFontPtr != null)
-                ImGuiNET.ImGui.PopFont();
+                Hexa.NET.ImGui.ImGui.PopFont();
 
             if (!node.TextColor.IsEmpty)
-                ImGuiNET.ImGui.PopStyleColor();
+                Hexa.NET.ImGui.ImGui.PopStyleColor();
 
-            ImGuiNET.ImGui.PopID();
+            Hexa.NET.ImGui.ImGui.PopID();
 
             // Check if tree node is hovered
-            nodeHovered |= ImGuiNET.ImGui.IsItemHovered();
+            nodeHovered |= Hexa.NET.ImGui.ImGui.IsItemHovered();
 
             // Change selected node, if expansion of node did not change, and mouse is over node
             if (!changedExpansion && IsTreeNodeClicked() && SelectedNode != node && Enabled)
@@ -161,7 +160,7 @@ public class TreeView<TNodeData> : Component
                 isAnyNodeFocused |= UpdateNodes(node.Nodes, ref nodeHovered);
 
             if (expanded)
-                ImGuiNET.ImGui.TreePop();
+                Hexa.NET.ImGui.ImGui.TreePop();
         }
 
         return isAnyNodeFocused;
@@ -286,7 +285,7 @@ public class TreeView<TNodeData> : Component
 
     private bool IsTreeNodeClicked()
     {
-        return (ImGuiNET.ImGui.IsMouseClicked(ImGuiMouseButton.Right) || ImGuiNET.ImGui.IsMouseClicked(ImGuiMouseButton.Left)) && ImGuiNET.ImGui.IsItemHovered();
+        return (Hexa.NET.ImGui.ImGui.IsMouseClicked(ImGuiMouseButton.Right) || Hexa.NET.ImGui.ImGui.IsMouseClicked(ImGuiMouseButton.Left)) && Hexa.NET.ImGui.ImGui.IsItemHovered();
     }
 
     private void OnSelectedNodeChanged()

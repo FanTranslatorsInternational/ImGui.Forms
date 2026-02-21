@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading.Tasks;
+﻿using Hexa.NET.ImGui;
 using ImGui.Forms.Controls;
 using ImGui.Forms.Controls.Layouts;
 using ImGui.Forms.Controls.Text;
@@ -7,7 +6,8 @@ using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Models.IO;
 using ImGui.Forms.Resources;
-using Veldrid;
+using System;
+using System.Threading.Tasks;
 
 namespace ImGui.Forms.Modals.IO;
 
@@ -47,8 +47,8 @@ public class InputBox : Modal
 
         #region Keys
 
-        OkAction = new KeyCommand(ModifierKeys.None, Key.Enter);
-        CancelAction = new KeyCommand(ModifierKeys.None, Key.Escape);
+        OkAction = new KeyCommand(ImGuiKey.None, ImGuiKey.Enter);
+        CancelAction = new KeyCommand(ImGuiKey.None, ImGuiKey.Escape);
 
         #endregion
 

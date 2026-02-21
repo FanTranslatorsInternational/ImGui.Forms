@@ -3,13 +3,14 @@ using System.Collections.Generic;
 
 namespace ImGui.Forms.Factories;
 
-public static class IdFactory
+public class IdFactory
 {
     private static readonly Random _random = new();
-    private static readonly HashSet<int> _ids = new();
-    private static readonly Dictionary<object, (int, bool)> _idDictionary = new();
 
-    public static int Get(object item)
+    private readonly HashSet<int> _ids = new();
+    private readonly Dictionary<object, (int, bool)> _idDictionary = new();
+
+    public int Get(object item)
     {
         if (_idDictionary.ContainsKey(item))
         {
@@ -25,7 +26,7 @@ public static class IdFactory
         return id;
     }
 
-    internal static void FreeIds()
+    internal void FreeUnused()
     {
         // Remove unused Id's
         var objToDelete = new List<object>();
@@ -46,7 +47,7 @@ public static class IdFactory
             _idDictionary.Remove(obj);
     }
 
-    private static int Create()
+    private int Create()
     {
         var id = _random.Next(int.MaxValue);
         while (_ids.Contains(id))

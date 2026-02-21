@@ -1,7 +1,7 @@
 ﻿using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
-using Veldrid;
+using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls;
 
@@ -11,11 +11,11 @@ public class PictureBox : Component
 
     public Size Size { get; set; } = Size.Content;
 
-    public ThemedImageResource Image { get; private set; }
+    public ThemedImageResource? Image { get; private set; }
 
     #endregion
 
-    public PictureBox(ThemedImageResource image = default)
+    public PictureBox(ThemedImageResource? image = null)
     {
         Image = image;
     }
@@ -43,9 +43,9 @@ public class PictureBox : Component
 
     protected override void UpdateInternal(Rectangle contentRect)
     {
-        if (Image == null || (nint)Image == nint.Zero)
+        if (Image == null || !Image.IsValid())
             return;
 
-        ImGuiNET.ImGui.Image((nint)Image, contentRect.Size);
+        Hexa.NET.ImGui.ImGui.Image(Image.GetTextureRef(), contentRect.Size);
     }
 }

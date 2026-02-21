@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Factories;
-using ImGuiNET;
 
 namespace ImGui.Forms.Controls.Menu;
 
@@ -12,7 +12,7 @@ public class ContextMenu
     /// <summary>
     /// The Id for this component.
     /// </summary>
-    public int Id => IdFactory.Get(this);
+    public int Id => Application.Instance.Ids.Get(this);
 
     public IList<MenuBarItem> Items { get; } = new List<MenuBarItem>();
 
@@ -24,10 +24,10 @@ public class ContextMenu
 
     public void Update()
     {
-        ImGuiNET.ImGui.PushID(Id);
+        Hexa.NET.ImGui.ImGui.PushID(Id);
 
         var isOpenLocal = false;
-        if (ImGuiNET.ImGui.BeginPopupContextItem(Id.ToString(), ImGuiPopupFlags.NoOpenOverExistingPopup | ImGuiPopupFlags.MouseButtonRight))
+        if (Hexa.NET.ImGui.ImGui.BeginPopupContextItem(Id.ToString(), ImGuiPopupFlags.NoOpenOverExistingPopup | ImGuiPopupFlags.MouseButtonRight))
         {
             isOpenLocal = true;
 
@@ -40,13 +40,13 @@ public class ContextMenu
             foreach (var item in Items)
                 item.Update();
 
-            ImGuiNET.ImGui.EndPopup();
+            Hexa.NET.ImGui.ImGui.EndPopup();
         }
 
         if (_isOpen && !isOpenLocal)
             _isOpen = false;
 
-        ImGuiNET.ImGui.PopID();
+        Hexa.NET.ImGui.ImGui.PopID();
     }
 
     private void OnShow()

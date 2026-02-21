@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Numerics;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
-using ImGui.Forms.Models;
 using ImGui.Forms.Models.IO;
-using ImGuiNET;
-using Veldrid;
+using ImGui.Forms.Support;
+using Size = ImGui.Forms.Models.Size;
 
 namespace ImGui.Forms.Controls;
 
@@ -43,22 +43,22 @@ public class ArrowButton : Component
     {
         var enabled = Enabled;
 
-        ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Padding);
+        Hexa.NET.ImGui.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Padding);
 
         if (!enabled)
         {
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Button, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonHovered, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.Button, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.ButtonActive, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
         }
 
-        if ((ImGuiNET.ImGui.ArrowButton($"##{Id}", Direction) || KeyAction.IsPressed()) && Enabled)
+        if ((Hexa.NET.ImGui.ImGui.ArrowButton($"##{Id}", Direction) || KeyAction.IsPressed()) && Enabled)
             OnClicked();
 
         if (!enabled)
-            ImGuiNET.ImGui.PopStyleColor(3);
+            Hexa.NET.ImGui.ImGui.PopStyleColor(3);
 
-        ImGuiNET.ImGui.PopStyleVar();
+        Hexa.NET.ImGui.ImGui.PopStyleVar();
     }
 
     private void OnClicked()

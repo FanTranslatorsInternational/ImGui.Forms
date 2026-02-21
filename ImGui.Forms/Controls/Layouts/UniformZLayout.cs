@@ -3,7 +3,7 @@ using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
 using System.Collections.Generic;
 using System.Numerics;
-using Veldrid;
+using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls.Layouts;
 
@@ -42,7 +42,7 @@ public class UniformZLayout : Component
 
     protected override void UpdateInternal(Rectangle contentRect)
     {
-        if (ImGuiNET.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height)))
+        if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height)))
         {
             var columns = (int)Math.Floor(contentRect.Width / (_elementSize.X + ItemSpacing.X));
             if ((_elementSize.X + ItemSpacing.X) * columns + _elementSize.X <= contentRect.Width)
@@ -60,13 +60,13 @@ public class UniformZLayout : Component
 
             float currentScroll = UpdateScroll(fixedScroll);
             float height = rows * _elementSize.Y + (rows - 1) * ItemSpacing.Y;
-            if (ImGuiNET.ImGui.BeginChild($"{Id}_inner", new Vector2(contentRect.Width, height)))
+            if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}_inner", new Vector2(contentRect.Width, height)))
                 UpdateContent(contentRect, currentScroll, columns, rows);
 
-            ImGuiNET.ImGui.EndChild();
+            Hexa.NET.ImGui.ImGui.EndChild();
         }
 
-        ImGuiNET.ImGui.EndChild();
+        Hexa.NET.ImGui.ImGui.EndChild();
     }
 
     private void UpdateContent(Rectangle contentRect, float currentScroll, int columns, int rows)
@@ -89,15 +89,15 @@ public class UniformZLayout : Component
                 var x = column * (_elementSize.X + ItemSpacing.X);
                 var y = row * (_elementSize.Y + ItemSpacing.Y);
 
-                ImGuiNET.ImGui.SetCursorPosX(x);
-                ImGuiNET.ImGui.SetCursorPosY(y);
+                Hexa.NET.ImGui.ImGui.SetCursorPosX(x);
+                Hexa.NET.ImGui.ImGui.SetCursorPosY(y);
 
                 // Draw component container
-                if (ImGuiNET.ImGui.BeginChild($"{Id}_inner-{itemIndex}", _elementSize))
+                if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}_inner-{itemIndex}", _elementSize))
                     // Draw component
-                    item.Update(new Rectangle((int)(contentRect.X + x), (int)(contentRect.Y + y - currentScroll), (int)_elementSize.X, (int)_elementSize.Y));
+                    item.Update(new Rectangle(new Vector2(contentRect.X + x,contentRect.Y + y - currentScroll), _elementSize));
 
-                ImGuiNET.ImGui.EndChild();
+                Hexa.NET.ImGui.ImGui.EndChild();
             }
         }
     }
@@ -106,18 +106,18 @@ public class UniformZLayout : Component
     {
         if (fixedScroll >= 0)
         {
-            ImGuiNET.ImGui.SetScrollY(fixedScroll);
+            Hexa.NET.ImGui.ImGui.SetScrollY(fixedScroll);
 
             return fixedScroll;
         }
 
-        float newScrollY = ImGuiNET.ImGui.GetScrollY();
+        float newScrollY = Hexa.NET.ImGui.ImGui.GetScrollY();
 
         if (_scrollY == newScrollY)
             return _scrollY;
 
         if (IsTabInactiveCore())
-            ImGuiNET.ImGui.SetScrollY(_scrollY);
+            Hexa.NET.ImGui.ImGui.SetScrollY(_scrollY);
 
         return _scrollY = newScrollY;
     }

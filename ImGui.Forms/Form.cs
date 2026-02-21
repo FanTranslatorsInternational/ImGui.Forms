@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Threading.Tasks;
+﻿using Hexa.NET.ImGui;
+using Hexa.NET.SDL3;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
 using ImGui.Forms.Extensions;
@@ -10,10 +7,14 @@ using ImGui.Forms.Factories;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Modals;
 using ImGui.Forms.Resources;
-using ImGuiNET;
-using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using Veldrid.Sdl2;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Numerics;
+using System.Threading.Tasks;
+using SixLabors.ImageSharp;
+using Rectangle = ImGui.Forms.Support.Rectangle;
 
 namespace ImGui.Forms;
 
@@ -22,13 +23,13 @@ public abstract class Form
 {
     private readonly IList<Modal> _modals = [];
 
-    private Image<Rgba32> _icon;
+    private Image<Rgba32>? _icon;
     private bool _setIcon;
     private Modal? _modalRendering;
 
     #region Properties
 
-    public int Id => IdFactory.Get(this);
+    public int Id => Application.Instance.Ids.Get(this);
 
     public LocalizedString Title { get; set; } = string.Empty;
     public Vector2 Size { get; set; } = new(700, 400);
@@ -41,7 +42,7 @@ public abstract class Form
     /// Gets and sets the applications icon.
     /// </summary>
     /// <remarks>The icon dimensions need to be a power of 2 (eg. 32, 64, 128, etc)</remarks>
-    public Image<Rgba32> Icon
+    public Image<Rgba32>? Icon
     {
         get => _icon;
         protected set
@@ -51,9 +52,9 @@ public abstract class Form
         }
     }
 
-    public MainMenuBar MenuBar { get; protected set; }
+    public MainMenuBar? MenuBar { get; protected set; }
 
-    public Component Content { get; protected set; }
+    public Component? Content { get; protected set; }
 
     public Vector2 Padding
     {
@@ -67,7 +68,7 @@ public abstract class Form
 
     #region Events
 
-    public event EventHandler<DragDropEvent[]> DragDrop;
+    //public event EventHandler<DragDropEvent[]> DragDrop;
     public event EventHandler Load;
     public event EventHandler Resized;
     public event Func<object, ClosingEventArgs, Task> Closing;
@@ -121,42 +122,47 @@ public abstract class Form
         // Set icon
         if (_setIcon)
         {
-            Sdl2NativeExtensions.SetWindowIcon(Application.Instance.Window.SdlWindowHandle, Icon);
+            Sdl2NativeExtensions.SetWindowIcon(Application.Instance.Window, Icon);
             _setIcon = false;
         }
 
-        // Set window title
-        Application.Instance.Window.Title = Title;
+        float mainScale = SDL.GetDisplayContentScale(SDL.GetPrimaryDisplay());
 
-        // Begin window
-        ImGuiNET.ImGui.Begin($"{Id}", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove);
-
-        ImGuiNET.ImGui.SetWindowSize(Size, ImGuiCond.Always);
-
-        ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
-        ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.FrameBorderSize, 0);
-        ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, 0);
-
-        // Apply style
+        // Set up styles
         Style.ApplyStyle();
 
+        var style = Hexa.NET.ImGui.ImGui.GetStyle();
+        style.ScaleAllSizes(mainScale);
+        style.FontScaleDpi = mainScale;
+
+        style.WindowRounding = 0;
+        style.FrameBorderSize = 0;
+        style.WindowBorderSize = 0;
+
+        SDL.SetWindowTitle(Application.Instance.Window, Title);
+
+        // Begin window
+        Hexa.NET.ImGui.ImGui.Begin($"{Id}", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove);
+
+        Hexa.NET.ImGui.ImGui.SetWindowSize(Size, ImGuiCond.Always);
+
         // Push font to default to
-        ImFontPtr? fontPtr = DefaultFont?.GetPointer();
+        ImFontPtr? fontPtr = DefaultFont.GetPointer();
         if (fontPtr != null)
-            ImGuiNET.ImGui.PushFont(fontPtr.Value);
+            Hexa.NET.ImGui.ImGui.PushFont(fontPtr.Value, DefaultFont.Data.Size);
 
         // Add menu bar
         MenuBar?.Update();
         var menuHeight = MenuBar?.Height ?? 0;
 
         // Add form controls
-        ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Padding);
-        ImGuiNET.ImGui.SetWindowPos(new Vector2(0, menuHeight));
+        Hexa.NET.ImGui.ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Padding);
+        Hexa.NET.ImGui.ImGui.SetWindowPos(new Vector2(0, menuHeight));
 
-        var contentPos = ImGuiNET.ImGui.GetCursorScreenPos();
+        var contentPos = Hexa.NET.ImGui.ImGui.GetCursorScreenPos();
         var contentWidth = Content?.GetWidth(Width - (int)Padding.X * 2, Height - (int)Padding.Y * 2 - menuHeight) ?? 0;
         var contentHeight = Content?.GetHeight(Width - (int)Padding.X * 2, Height - (int)Padding.Y * 2 - menuHeight) ?? 0;
-        var contentRect = new Veldrid.Rectangle((int)contentPos.X, (int)contentPos.Y, contentWidth, contentHeight);
+        var contentRect = new Rectangle(contentPos, new Vector2(contentWidth, contentHeight));
 
         Content?.Update(contentRect);
 
@@ -167,17 +173,22 @@ public abstract class Form
         SetRenderingModal(null);
 
         // Handle Drag and Drop after rendering only if form is the top active layer
-        if (AllowDragDrop && _modals.Count <= 0)
-            if (Application.Instance.TryGetDragDrop(new Veldrid.Rectangle(0, 0, (int)Size.X, (int)Size.Y), out DragDropEvent[] dragDrops))
-                OnDragDrop(dragDrops);
+        //if (AllowDragDrop && _modals.Count <= 0)
+        //    if (Application.Instance.TryGetDragDrop(new Rectangle(0, 0, (int)Size.X, (int)Size.Y), out DragDropEvent[] dragDrops))
+        //        OnDragDrop(dragDrops);
+
+        Hexa.NET.ImGui.ImGui.PopStyleVar();
+
+        if (fontPtr != null)
+            Hexa.NET.ImGui.ImGui.PopFont();
 
         // End window
-        ImGuiNET.ImGui.End();
+        Hexa.NET.ImGui.ImGui.End();
     }
 
     protected void Close()
     {
-        Application.Instance?.Window.Close();
+        SDL.DestroyWindow(Application.Instance.Window);
     }
 
     #region Event Invokers
@@ -200,10 +211,10 @@ public abstract class Form
         await Closing?.Invoke(this, e);
     }
 
-    private void OnDragDrop(DragDropEvent[] e)
-    {
-        DragDrop?.Invoke(this, e);
-    }
+    //private void OnDragDrop(DragDropEvent[] e)
+    //{
+    //    DragDrop?.Invoke(this, e);
+    //}
 
     #endregion
 }

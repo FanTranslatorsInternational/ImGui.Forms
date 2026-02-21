@@ -7,7 +7,7 @@ public abstract class MenuBarItem
     /// <summary>
     /// The Id for this component.
     /// </summary>
-    protected int Id => IdFactory.Get(this);
+    protected int Id => Application.Instance.Ids.Get(this);
 
     /// <summary>
     /// The height of the menu bar item.
@@ -24,22 +24,22 @@ public abstract class MenuBarItem
     /// </summary>
     public void Update()
     {
-        ImGuiNET.ImGui.PushID(Id);
+        Hexa.NET.ImGui.ImGui.PushID(Id);
 
         ApplyStyles();
         UpdateInternal();
         RemoveStyles();
 
-        ImGuiNET.ImGui.PopID();
+        Hexa.NET.ImGui.ImGui.PopID();
     }
 
     internal void UpdateEvents()
     {
-        ImGuiNET.ImGui.PushID(Id);
+        Hexa.NET.ImGui.ImGui.PushID(Id);
 
         UpdateEventsInternal();
 
-        ImGuiNET.ImGui.PopID();
+        Hexa.NET.ImGui.ImGui.PopID();
     }
 
     /// <summary>

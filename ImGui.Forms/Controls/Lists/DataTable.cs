@@ -1,22 +1,21 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
 using ImGui.Forms.Extensions;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models.IO;
 using ImGui.Forms.Resources;
-using ImGuiNET;
-using Veldrid;
-using Rectangle = Veldrid.Rectangle;
+using ImGui.Forms.Support;
 using Size = ImGui.Forms.Models.Size;
 
 namespace ImGui.Forms.Controls.Lists;
 
 public class DataTable<TData> : Component
 {
-    private readonly KeyCommand _copyCommand = new(ModifierKeys.Control, Key.C);
+    private readonly KeyCommand _copyCommand = new(ImGuiKey.ModCtrl, ImGuiKey.C);
 
     private readonly System.Collections.Generic.List<DataTableRow<TData>> _selectedRows = new();
 
@@ -74,25 +73,25 @@ public class DataTable<TData> : Component
         var flags = ImGuiTableFlags.BordersV;
         if (IsResizable) flags |= ImGuiTableFlags.Resizable;
 
-        if (ImGuiNET.ImGui.BeginChild($"{Id}c", contentRect.Size))
+        if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}c", contentRect.Size))
         {
-            float newScrollY = ImGuiNET.ImGui.GetScrollY();
+            float newScrollY = Hexa.NET.ImGui.ImGui.GetScrollY();
 
             if (_scrollY != newScrollY)
             {
                 if (IsTabInactiveCore())
-                    ImGuiNET.ImGui.SetScrollY(_scrollY);
+                    Hexa.NET.ImGui.ImGui.SetScrollY(_scrollY);
 
                 _scrollY = newScrollY;
             }
 
-            if (ImGuiNET.ImGui.BeginTable($"{Id}t", Columns.Count, flags))
+            if (Hexa.NET.ImGui.ImGui.BeginTable($"{Id}t", Columns.Count, flags))
             {
                 if (ShowHeaders)
                 {
                     foreach (var column in Columns)
-                        ImGuiNET.ImGui.TableSetupColumn(column.Name);
-                    ImGuiNET.ImGui.TableHeadersRow();
+                        Hexa.NET.ImGui.ImGui.TableSetupColumn(column.Name);
+                    Hexa.NET.ImGui.ImGui.TableHeadersRow();
                 }
 
                 for (var r = 0; r < localRows.Count; r++)
@@ -100,26 +99,26 @@ public class DataTable<TData> : Component
                     var row = localRows[r];
                     var isRowSelected = _selectedRows.Contains(row);
 
-                    ImGuiNET.ImGui.TableNextRow();
+                    Hexa.NET.ImGui.ImGui.TableNextRow();
 
                     for (var c = 0; c < Columns.Count; c++)
                     {
                         var column = Columns[c];
-                        ImGuiNET.ImGui.TableSetColumnIndex(c);
+                        Hexa.NET.ImGui.ImGui.TableSetColumnIndex(c);
 
                         var rowColor = row.TextColor;
                         if (!rowColor.IsEmpty)
-                            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Text, row.TextColor.ToUInt32());
+                            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.Text, row.TextColor.ToUInt32());
 
                         if (IsSelectable && row.CanSelect && c == 0)
                         {
-                            var isSelected = ImGuiNET.ImGui.Selectable(column.Get(row), isRowSelected, ImGuiSelectableFlags.SpanAllColumns);
-                            isSelected |= ImGuiNET.ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByPopup)
-                                          && (ImGuiNET.ImGui.IsMouseClicked(ImGuiMouseButton.Left) || ImGuiNET.ImGui.IsMouseClicked(ImGuiMouseButton.Right));
+                            var isSelected = Hexa.NET.ImGui.ImGui.Selectable(column.Get(row), isRowSelected, ImGuiSelectableFlags.SpanAllColumns);
+                            isSelected |= Hexa.NET.ImGui.ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByPopup)
+                                          && (Hexa.NET.ImGui.ImGui.IsMouseClicked(ImGuiMouseButton.Left) || Hexa.NET.ImGui.ImGui.IsMouseClicked(ImGuiMouseButton.Right));
 
                             if (isSelected)
                             {
-                                if (CanSelectMultiple && ImGuiNET.ImGui.GetIO().KeyCtrl)
+                                if (CanSelectMultiple && Hexa.NET.ImGui.ImGui.GetIO().KeyCtrl)
                                 {
                                     if (isRowSelected)
                                     {
@@ -132,7 +131,7 @@ public class DataTable<TData> : Component
                                         _lastSelectedRow = r;
                                     }
                                 }
-                                else if (CanSelectMultiple && ImGuiNET.ImGui.GetIO().KeyShift)
+                                else if (CanSelectMultiple && Hexa.NET.ImGui.ImGui.GetIO().KeyShift)
                                 {
                                     if (_lastSelectedRow >= 0 && _lastSelectedRow != r)
                                     {
@@ -158,11 +157,11 @@ public class DataTable<TData> : Component
                         }
                         else
                         {
-                            ImGuiNET.ImGui.Text(column.Get(row));
+                            Hexa.NET.ImGui.ImGui.Text(column.Get(row));
                         }
 
                         if (!rowColor.IsEmpty)
-                            ImGuiNET.ImGui.PopStyleColor();
+                            Hexa.NET.ImGui.ImGui.PopStyleColor();
 
                         if (IsCellClicked())
                             _clickedCell = (r, c);
@@ -173,24 +172,24 @@ public class DataTable<TData> : Component
                     }
                 }
 
-                ImGuiNET.ImGui.EndTable();
+                Hexa.NET.ImGui.ImGui.EndTable();
 
                 // Handle copy data
                 if (_copyCommand.IsPressed() && Application.Instance.MainForm.IsActiveLayer())
                     CopySelectedRows();
 
                 // Handle double click event
-                if (ImGuiNET.ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left) && Application.Instance.MainForm.IsActiveLayer())
+                if (Hexa.NET.ImGui.ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left) && Application.Instance.MainForm.IsActiveLayer())
                     OnDoubleClicked();
             }
         }
 
-        ImGuiNET.ImGui.EndChild();
+        Hexa.NET.ImGui.ImGui.EndChild();
     }
 
     private bool IsCellClicked()
     {
-        return (ImGuiNET.ImGui.IsMouseReleased(ImGuiMouseButton.Right) || ImGuiNET.ImGui.IsMouseReleased(ImGuiMouseButton.Left)) && ImGuiNET.ImGui.IsItemHovered();
+        return (Hexa.NET.ImGui.ImGui.IsMouseReleased(ImGuiMouseButton.Right) || Hexa.NET.ImGui.ImGui.IsMouseReleased(ImGuiMouseButton.Left)) && Hexa.NET.ImGui.ImGui.IsItemHovered();
     }
 
     private void CopySelectedRows()
@@ -211,7 +210,7 @@ public class DataTable<TData> : Component
             rowValues.Clear();
         }
 
-        ImGuiNET.ImGui.SetClipboardText(sb.ToString());
+        Hexa.NET.ImGui.ImGui.SetClipboardText(sb.ToString());
     }
 
     private void OnSelectedRowsChanged()

@@ -36,7 +36,16 @@ public class ProgressBar : Component
     protected override unsafe void UpdateInternal(Rectangle contentRect)
     {
         // Draw progress bar
-        var barWidth = (float)Math.Ceiling(contentRect.Width / Maximum * Value);
+        var trueMinimum = Math.Min(Minimum, Maximum);
+        var trueMaximum = Math.Max(Minimum, Maximum);
+
+        var range = trueMaximum - trueMinimum;
+        var value = Math.Clamp(Value, trueMinimum, trueMaximum) - trueMinimum;
+
+        if (range <= 0)
+            range = 1;
+
+        var barWidth = (float)Math.Ceiling(contentRect.Width / range * value);
         Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddRectFilled(new Vector2(contentRect.X, contentRect.Y), new Vector2(contentRect.X + barWidth, contentRect.Y + contentRect.Height), ProgressColor.ToUInt32());
 
         // Draw border

@@ -1,6 +1,4 @@
-﻿using ImGui.Forms.Factories;
-
-namespace ImGui.Forms.Controls.Menu;
+﻿namespace ImGui.Forms.Controls.Menu;
 
 public abstract class MenuBarItem
 {

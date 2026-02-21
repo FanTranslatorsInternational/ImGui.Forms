@@ -75,9 +75,6 @@ public class TableLayout : Component
 
     protected override void UpdateInternal(Rectangle contentRect)
     {
-        if (Id == 0x5d63b6bd)
-            ;
-
         var localWidths = GetColumnWidths((int)contentRect.Width, (int)contentRect.Height, 1f);
         var localHeights = GetRowHeights((int)contentRect.Width, (int)contentRect.Height, 1f);
 

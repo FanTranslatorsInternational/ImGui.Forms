@@ -131,7 +131,7 @@ public abstract class Form
         // Set up styles
         Style.ApplyStyle();
 
-        var style = Hexa.NET.ImGui.ImGui.GetStyle();
+        var style = Hexa.NET.ImGui.ImGui.GetStyle(); 
         style.ScaleAllSizes(mainScale);
         style.FontScaleDpi = mainScale;
 

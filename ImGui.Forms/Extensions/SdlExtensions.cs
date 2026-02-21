@@ -7,8 +7,11 @@ namespace ImGui.Forms.Extensions;
 
 static class Sdl2NativeExtensions
 {
-    public static unsafe void SetWindowIcon(SDLWindowPtr window, Image<Rgba32> icon)
+    public static unsafe void SetWindowIcon(SDLWindowPtr window, Image<Rgba32>? icon)
     {
+        if (icon == null)
+            return;
+
         // Prepare surface
         var surfacePtr = SDL.CreateSurface(icon.Width, icon.Height, SDLPixelFormat.Rgba32);
 

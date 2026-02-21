@@ -171,11 +171,11 @@ public class ComboBox<TItem> : Component
                     Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddCircleFilled(itemPos + markerPos, 3f, Color.White.ToUInt32());
                 }
 
+                Hexa.NET.ImGui.ImGui.PopID();
+
                 itemPos += size with { X = 0 };
                 if (!isSelected)
                     continue;
-
-                Hexa.NET.ImGui.ImGui.PopID();
 
                 _input = item.Name;
 

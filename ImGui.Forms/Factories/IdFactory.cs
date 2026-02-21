@@ -1,11 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace ImGui.Forms.Factories;
 
 public class IdFactory
 {
-    private static readonly Random _random = new();
+    private static int _counter;
 
     private readonly HashSet<int> _ids = new();
     private readonly Dictionary<object, (int, bool)> _idDictionary = new();
@@ -18,7 +17,7 @@ public class IdFactory
             return _idDictionary[item].Item1;
         }
 
-        int id = Create();
+        int id = _counter++;
 
         _ids.Add(id);
         _idDictionary[item] = (id, true);
@@ -45,14 +44,5 @@ public class IdFactory
 
         foreach (var obj in objToDelete)
             _idDictionary.Remove(obj);
-    }
-
-    private int Create()
-    {
-        var id = _random.Next(int.MaxValue);
-        while (_ids.Contains(id))
-            id = _random.Next(int.MaxValue);
-
-        return id;
     }
 }

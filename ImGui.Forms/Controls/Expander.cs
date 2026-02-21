@@ -18,7 +18,7 @@ public class Expander : Component
 
     public int WidthIndent { get; set; } = 5;
 
-    public Component Content { get; set; }
+    public Component? Content { get; set; }
 
     public bool Expanded { get; set; }
 
@@ -30,7 +30,7 @@ public class Expander : Component
 
     #endregion
 
-    public Expander(Component content, LocalizedString caption = default)
+    public Expander(Component? content, LocalizedString caption = default)
     {
         Content = content;
         Caption = caption;
@@ -83,7 +83,7 @@ public class Expander : Component
         if (!Expanded)
             return GetHeaderHeight();
 
-        int height = Content.GetHeight(parentWidth, parentHeight, layoutCorrection);
+        int height = Content?.GetHeight(parentWidth, parentHeight, layoutCorrection) ?? 0;
         if (height <= 0)
             return GetHeaderHeight();
 

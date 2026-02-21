@@ -49,7 +49,8 @@ public abstract class Modal : Component
             flags |= ImGuiWindowFlags.MenuBar;
 
         var exists = true;
-        if (Hexa.NET.ImGui.ImGui.BeginPopupModal(id, ref exists, flags))
+        var shows = Hexa.NET.ImGui.ImGui.BeginPopupModal(id, ref exists, flags);
+        if (shows)
         {
             // Create menu bar of popup
             MenuBar?.Update();
@@ -67,12 +68,12 @@ public abstract class Modal : Component
             DrawModal(ChildModal);
 
             Hexa.NET.ImGui.ImGui.EndPopup();
-
-            if (_shouldClose)
-                await CloseCore();
         }
 
         Hexa.NET.ImGui.ImGui.PopStyleColor();
+
+        if (shows && _shouldClose)
+            await CloseCore();
 
         if (!exists)
             Close();
@@ -161,7 +162,7 @@ public abstract class Modal : Component
         var modalHeight = modal.Size.Height.IsContentAligned ? modal.Content.GetHeight(form.Width, form.Height) : GetDimension(modal.Size.Height, form.Height);
 
         var modalPos = new Vector2((form.Width - modalWidth) / 2f, (form.Height - modalHeight - modal.GetHeaderHeight()) / 2f);
-        var contentPos = modalPos + new Vector2(form.Padding.X, modal.GetHeaderHeight() + form.Padding.Y);
+        var contentPos = modalPos + form.Padding with { Y = modal.GetHeaderHeight() + form.Padding.Y };
 
         var contentSize = new Vector2(modalWidth, modalHeight);
         var modalSize = contentSize + new Vector2(form.Padding.X * 2, modal.GetHeaderHeight() + form.Padding.Y * 2);

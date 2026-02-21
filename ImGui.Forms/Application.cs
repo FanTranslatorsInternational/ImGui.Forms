@@ -81,7 +81,7 @@ public class Application
         SDL.SetWindowPosition(window, 50, 70);
         SDL.ShowWindow(window);
 
-        SDLGPUDevice* gpuDevice = SDL.CreateGPUDevice((uint)(SDLGPUShaderFormat.Spirv | SDLGPUShaderFormat.Dxil | SDLGPUShaderFormat.Metallib), true, (byte*)null);
+        SDLGPUDevice* gpuDevice = SDL.CreateGPUDevice((uint)(SDLGPUShaderFormat.Spirv | SDLGPUShaderFormat.Dxil | SDLGPUShaderFormat.Metallib), false, (byte*)null);
         if (gpuDevice == null)
         {
             Console.WriteLine($"Error: SDL_CreateGPUDevice(): {SDL.GetErrorS()}");
@@ -102,6 +102,10 @@ public class Application
         ImGuiIOPtr io = Hexa.NET.ImGui.ImGui.GetIO();
         io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard
                         | ImGuiConfigFlags.NavEnableGamepad;
+        io.ConfigErrorRecoveryEnableAssert = false;
+        io.ConfigErrorRecovery = false;
+        io.ConfigErrorRecoveryEnableDebugLog = false;
+        io.ConfigErrorRecoveryEnableTooltip = false;
 
         io.ConfigDpiScaleFonts = true;
         io.ConfigDpiScaleViewports = true;

@@ -111,7 +111,7 @@ public class TreeView<TNodeData> : Component
             if (SelectedNode == node) flags |= ImGuiTreeNodeFlags.Selected;
 
             // Add node
-            int nodeId = Application.Instance.Ids.Get(node);
+            int nodeId = Application.Instance.Ids!.Get(node);
 
             Hexa.NET.ImGui.ImGui.PushID(nodeId);
             Hexa.NET.ImGui.ImGui.SetNextItemOpen(node.IsExpanded);
@@ -155,7 +155,7 @@ public class TreeView<TNodeData> : Component
                 ContextMenu?.Update();
 
             // Add children nodes, if parent is expanded
-            if (node.IsExpanded && node.Nodes.Count > 0)
+            if (node is { IsExpanded: true, Nodes.Count: > 0 })
                 isAnyNodeFocused |= UpdateNodes(node.Nodes, ref nodeHovered);
 
             if (expanded)

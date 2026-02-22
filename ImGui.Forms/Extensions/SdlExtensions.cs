@@ -33,19 +33,13 @@ static class Sdl2NativeExtensions
         SDL.SetWindowIcon(window, surfacePtr);
     }
 
-    //private static nint GetClipboardText_Wrap(nint _) => Sdl_GetClipboardText();
+    private static unsafe byte* GetClipboardText_Wrap(nint _) => SDL.GetClipboardText();
 
-    //private static int SetClipboardText_Wrap(nint _, nint textPtr) => Sdl_SetClipboardText(textPtr);
+    private static unsafe bool SetClipboardText_Wrap(nint _, byte* textPtr) => SDL.SetClipboardText(textPtr);
 
-    //public delegate nint ImGui_GetClipboardText(nint context);
-    //public delegate int ImGui_SetClipboardText(nint context, nint textPtr);
+    public unsafe delegate byte* ImGui_GetClipboardText(nint context);
+    public unsafe delegate bool ImGui_SetClipboardText(nint context, byte* textPtr);
 
-    //public static ImGui_GetClipboardText GetClipboardText = GetClipboardText_Wrap;
-    //public static ImGui_SetClipboardText SetClipboardText = SetClipboardText_Wrap;
-
-    //private delegate nint SDL_GetClipboardText();
-    //private delegate int SDL_SetClipboardText(nint text);
-
-    //private static SDL_GetClipboardText Sdl_GetClipboardText = Sdl2Native.LoadFunction<SDL_GetClipboardText>("SDL_GetClipboardText");
-    //private static SDL_SetClipboardText Sdl_SetClipboardText = Sdl2Native.LoadFunction<SDL_SetClipboardText>("SDL_SetClipboardText");
+    public static unsafe ImGui_GetClipboardText GetClipboardText = GetClipboardText_Wrap;
+    public static unsafe ImGui_SetClipboardText SetClipboardText = SetClipboardText_Wrap;
 }

@@ -44,7 +44,7 @@ public abstract class Component
     /// <summary>
     /// The event to intercept DragDrop actions.
     /// </summary>
-    //public event EventHandler<DragDropEvent[]> DragDrop;
+    public event EventHandler<string[]> DragDrop;
 
     #endregion
 
@@ -82,8 +82,8 @@ public abstract class Component
             return;
         }
 
-        //if (Application.Instance.MainForm.IsActiveLayer() && Application.Instance.TryGetDragDrop(contentRect, out DragDropEvent[] dragDrops))
-        //    OnDragDrop(dragDrops);
+        if (Application.Instance.MainForm.IsActiveLayer() && Application.Instance.TryGetDragDrop(contentRect, out string[] files))
+            OnDragDrop(files);
 
         _tabInactive = false;
     }
@@ -198,11 +198,11 @@ public abstract class Component
     /// <summary>
     /// Invoke the DragDrop event of this component.
     /// </summary>
-    /// <param name="events">The drag drop objects received.</param>
-    //private void OnDragDrop(DragDropEvent[] events)
-    //{
-    //    DragDrop?.Invoke(this, events);
-    //}
+    /// <param name="files">The drag drop objects received.</param>
+    private void OnDragDrop(string[] files)
+    {
+        DragDrop?.Invoke(this, files);
+    }
 
     /// <summary>
     /// Calculates the integer value of a <see cref="SizeValue"/>.

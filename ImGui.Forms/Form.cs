@@ -68,7 +68,7 @@ public abstract class Form
 
     #region Events
 
-    //public event EventHandler<DragDropEvent[]> DragDrop;
+    public event EventHandler<string[]> DragDrop;
     public event EventHandler Load;
     public event EventHandler Resized;
     public event Func<object, ClosingEventArgs, Task> Closing;
@@ -122,7 +122,7 @@ public abstract class Form
         // Set icon
         if (_setIcon)
         {
-            Sdl2NativeExtensions.SetWindowIcon(Application.Instance.Window, Icon);
+            Sdl2NativeExtensions.SetWindowIcon(Application.Instance.Window!.Value, Icon);
             _setIcon = false;
         }
 
@@ -131,7 +131,7 @@ public abstract class Form
         // Set up styles
         Style.ApplyStyle();
 
-        var style = Hexa.NET.ImGui.ImGui.GetStyle(); 
+        var style = Hexa.NET.ImGui.ImGui.GetStyle();
         style.ScaleAllSizes(mainScale);
         style.FontScaleDpi = mainScale;
 
@@ -139,7 +139,7 @@ public abstract class Form
         style.FrameBorderSize = 0;
         style.WindowBorderSize = 0;
 
-        SDL.SetWindowTitle(Application.Instance.Window, Title);
+        SDL.SetWindowTitle(Application.Instance.Window!.Value, Title);
 
         // Begin window
         Hexa.NET.ImGui.ImGui.Begin($"{Id}", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove);
@@ -173,9 +173,9 @@ public abstract class Form
         SetRenderingModal(null);
 
         // Handle Drag and Drop after rendering only if form is the top active layer
-        //if (AllowDragDrop && _modals.Count <= 0)
-        //    if (Application.Instance.TryGetDragDrop(new Rectangle(0, 0, (int)Size.X, (int)Size.Y), out DragDropEvent[] dragDrops))
-        //        OnDragDrop(dragDrops);
+        if (AllowDragDrop && _modals.Count <= 0)
+            if (Application.Instance.TryGetDragDrop(new Rectangle(Vector2.Zero, Size), out string[] files))
+                OnDragDrop(files);
 
         Hexa.NET.ImGui.ImGui.PopStyleVar();
 
@@ -188,7 +188,7 @@ public abstract class Form
 
     protected void Close()
     {
-        SDL.DestroyWindow(Application.Instance.Window);
+        Application.Instance.Exit();
     }
 
     #region Event Invokers
@@ -211,10 +211,10 @@ public abstract class Form
         await Closing?.Invoke(this, e);
     }
 
-    //private void OnDragDrop(DragDropEvent[] e)
-    //{
-    //    DragDrop?.Invoke(this, e);
-    //}
+    private void OnDragDrop(string[] files)
+    {
+        DragDrop?.Invoke(this, files);
+    }
 
     #endregion
 }

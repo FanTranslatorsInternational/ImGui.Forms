@@ -12,5 +12,7 @@ namespace ImGui.Forms.Support
 
         public float Width => Size.X;
         public float Height => Size.Y;
+
+        public bool Contains(Vector2 pos) => pos.X >= Position.X && pos.Y >= Position.Y && pos.X <= Position.X + Size.X && pos.Y <= Position.Y + Size.Y;
     }
 }

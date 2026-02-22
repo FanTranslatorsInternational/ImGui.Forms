@@ -1,8 +1,8 @@
-﻿using ImGui.Forms.Models;
-using ImGui.Forms.Resources;
+﻿using ImGui.Forms.Resources;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using Hexa.NET.ImGui;
 
@@ -10,40 +10,38 @@ namespace ImGui.Forms.Factories;
 
 public static class FontFactory
 {
-    private const string DefaultFontName_ = "ProggyClean";
-    private const string DefaultFontResourceName_ = "ProggyClean.ttf";
+    private const string DefaultFontName = "ProggyClean";
+    private const string DefaultFontResourceName = "ProggyClean.ttf";
 
-    private static readonly Dictionary<string, FontMetaData> _fontCache = new();
-    private static readonly Dictionary<FontData, ImFontPtr> _fontPointers = new();
-
-    private static readonly Queue<FontData> _fontRegistrationQueue = new();
+    private static readonly Dictionary<string, FontMetaData> FontCache = [];
+    private static readonly Dictionary<FontData, ImFontPtr> FontPointers = [];
 
     static FontFactory()
     {
-        RegisterFromResource(DefaultFontName_, Assembly.GetExecutingAssembly(), DefaultFontResourceName_, FontGlyphRange.Latin);
+        RegisterFromResource(DefaultFontName, Assembly.GetExecutingAssembly(), DefaultFontResourceName);
     }
 
     #region Registration
 
-    public static void RegisterFromFile(string name, string ttfPath, FontGlyphRange glyphRanges = FontGlyphRange.All, string additionalCharacters = "")
+    public static void RegisterFromFile(string name, string ttfPath)
     {
         // If font with that name is already loaded, return
-        if (_fontCache.ContainsKey(name))
+        if (FontCache.ContainsKey(name))
             return;
 
         // Add file font to cache
-        _fontCache[name] = new FontMetaData(name, ttfPath, glyphRanges, additionalCharacters);
+        FontCache[name] = new FontMetaData(name, ttfPath);
     }
 
-    public static void RegisterFromResource(string name, string resourceName, FontGlyphRange glyphRanges = FontGlyphRange.All, string additionalCharacters = "")
+    public static void RegisterFromResource(string name, string resourceName)
     {
-        RegisterFromResource(name, Assembly.GetCallingAssembly(), resourceName, glyphRanges, additionalCharacters);
+        RegisterFromResource(name, Assembly.GetCallingAssembly(), resourceName);
     }
 
-    public static void RegisterFromResource(string name, Assembly assembly, string resourceName, FontGlyphRange glyphRanges = FontGlyphRange.All, string additionalCharacters = "")
+    public static void RegisterFromResource(string name, Assembly assembly, string resourceName)
     {
         // If font with that name is already loaded, return
-        if (_fontCache.ContainsKey(name))
+        if (FontCache.ContainsKey(name))
             return;
 
         // Load font from resource
@@ -57,7 +55,7 @@ public static class FontFactory
         tempFileStream.Close();
 
         // Add resource font to cache
-        _fontCache[name] = new FontMetaData(name, tempFile, glyphRanges, additionalCharacters, true);
+        FontCache[name] = new FontMetaData(name, tempFile, true);
     }
 
     #endregion
@@ -66,18 +64,18 @@ public static class FontFactory
 
     public static FontResource GetDefault(int size, FontResource fallbackFont)
     {
-        return Get(DefaultFontName_, size, fallbackFont);
+        return Get(DefaultFontName, size, fallbackFont);
     }
 
     public static FontResource GetDefault(int size)
     {
-        return Get(DefaultFontName_, size);
+        return Get(DefaultFontName, size);
     }
 
     public static FontResource Get(string name, int size, FontResource fallbackFont)
     {
         // If font with that name is already loaded, return
-        if (!_fontCache.TryGetValue(name, out FontMetaData? metadata))
+        if (!FontCache.TryGetValue(name, out FontMetaData? metadata))
             throw new InvalidOperationException($"Unregistered font {name}.");
 
         return new FontResource(new FontData(metadata, size, fallbackFont.Data));
@@ -86,7 +84,7 @@ public static class FontFactory
     public static FontResource Get(string name, int size)
     {
         // If font with that name is already loaded, return
-        if (!_fontCache.TryGetValue(name, out FontMetaData? metadata))
+        if (!FontCache.TryGetValue(name, out FontMetaData? metadata))
             throw new InvalidOperationException($"Unregistered font {name}.");
 
         return new FontResource(new FontData(metadata, size));
@@ -94,7 +92,7 @@ public static class FontFactory
 
     internal static ImFontPtr? GetPointer(FontData data)
     {
-        if (_fontPointers.TryGetValue(data, out ImFontPtr fontPtr))
+        if (FontPointers.TryGetValue(data, out ImFontPtr fontPtr))
             return fontPtr;
 
         return InitializeFont(data);
@@ -109,50 +107,37 @@ public static class FontFactory
     internal static void Initialize(ImGuiIOPtr io)
     {
         _io = io;
-
-        InitializeFonts();
     }
 
-    private static void InitializeFonts()
+    private static unsafe ImFontPtr InitializeFont(FontData data)
     {
-        if (_fontRegistrationQueue.Count <= 0)
-            return;
+        ImFontPtr baseFont = _io.Fonts.AddFontFromFileTTF(data.Metadata.Path, data.Size, new ImFontConfigPtr());
 
-        while (_fontRegistrationQueue.Count > 0)
+        ImFontConfig* config = Hexa.NET.ImGui.ImGui.ImFontConfig();
+        config->MergeMode = 1;
+
+        foreach (FontData fallback in CollectFallbackFonts(data).Reverse())
+            _ = _io.Fonts.AddFontFromFileTTF(fallback.Metadata.Path, fallback.Size, config);
+
+        return FontPointers[data] = baseFont;
+    }
+
+    private static IEnumerable<FontData> CollectFallbackFonts(FontData fontData)
+    {
+        FontData? fallback = fontData.Fallback;
+
+        while (fallback is not null)
         {
-            FontData newFontData = _fontRegistrationQueue.Dequeue();
-            _ = InitializeFont(newFontData);
+            yield return fallback;
+            fallback = fallback.Fallback;
         }
-    }
-
-    private static ImFontPtr InitializeFont(FontData data)
-    {
-        _fontPointers[data] = AddFont(_io, data);
-
-        return _fontPointers[data];
-    }
-
-    private static unsafe ImFontPtr AddFont(ImGuiIOPtr io, FontData fontData)
-    {
-        ImFontConfig* config = new ImFontConfigPtr();
-
-        if (fontData.Fallback != null)
-        {
-            _ = AddFont(io, fontData.Fallback);
-
-            config = Hexa.NET.ImGui.ImGui.ImFontConfig();
-            config->MergeMode = 1;
-        }
-
-        return io.Fonts.AddFontFromFileTTF(fontData.Metadata.Path, fontData.Size, config);
     }
 
     #endregion
 
     public static void Dispose()
     {
-        _fontCache.Clear();
-        _fontPointers.Clear();
-        _fontRegistrationQueue.Clear();
+        FontCache.Clear();
+        FontPointers.Clear();
     }
 }

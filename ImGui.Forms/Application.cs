@@ -1,21 +1,27 @@
-using System;
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.SDL3;
 using Hexa.NET.SDL3;
-using System.Numerics;
+using ImGui.Forms.Extensions;
 using ImGui.Forms.Factories;
 using ImGui.Forms.Localization;
+using System;
+using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using ImSDLEvent = Hexa.NET.ImGui.Backends.SDL3.SDLEvent;
-using ImSDLWindow = Hexa.NET.ImGui.Backends.SDL3.SDLWindow;
-using SDLWindow = Hexa.NET.SDL3.SDLWindow;
-using SDLEvent = Hexa.NET.SDL3.SDLEvent;
-using SDLGPUDevice = Hexa.NET.SDL3.SDLGPUDevice;
-using ImSDLGPUDevice = Hexa.NET.ImGui.Backends.SDL3.SDLGPUDevice;
-using SDLGPUCommandBuffer = Hexa.NET.SDL3.SDLGPUCommandBuffer;
 using ImSDLGPUCommandBuffer = Hexa.NET.ImGui.Backends.SDL3.SDLGPUCommandBuffer;
-using SDLGPURenderPass = Hexa.NET.SDL3.SDLGPURenderPass;
+using ImSDLGPUDevice = Hexa.NET.ImGui.Backends.SDL3.SDLGPUDevice;
 using ImSDLGPURenderPass = Hexa.NET.ImGui.Backends.SDL3.SDLGPURenderPass;
+using ImSDLWindow = Hexa.NET.ImGui.Backends.SDL3.SDLWindow;
+using Rectangle = ImGui.Forms.Support.Rectangle;
+using SDLEvent = Hexa.NET.SDL3.SDLEvent;
+using SDLGPUCommandBuffer = Hexa.NET.SDL3.SDLGPUCommandBuffer;
+using SDLGPUDevice = Hexa.NET.SDL3.SDLGPUDevice;
+using SDLGPURenderPass = Hexa.NET.SDL3.SDLGPURenderPass;
+using SDLGPURenderPassPtr = Hexa.NET.SDL3.SDLGPURenderPassPtr;
+using SDLWindow = Hexa.NET.SDL3.SDLWindow;
 using SDLWindowPtr = Hexa.NET.SDL3.SDLWindowPtr;
+// ReSharper disable BitwiseOperatorOnEnumWithoutFlags
 
 namespace ImGui.Forms;
 
@@ -24,32 +30,34 @@ public class Application
     private bool _isClosing;
     private bool _shouldClose;
 
-    private ExecutionContext _executionContext;
+    private ExecutionContext? _executionContext;
 
-    //private DragDropEventEx[] _dragDropEvents;
-    private bool[] _frameHandledDragDrops;
+    private DragDropEvent[] _dragDropEvents = [];
+    private bool[] _frameHandledDragDrops = [];
 
     #region Static properties
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     public static Application Instance { get; private set; }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
     #endregion
 
     #region Properties
 
-    public Form MainForm => _executionContext.MainForm;
+    public Form? MainForm => _executionContext?.MainForm;
 
-    internal SDLWindowPtr Window => _executionContext.Window;
-    internal ImageFactory Images => _executionContext.Images;
-    internal IdFactory Ids => _executionContext.Ids;
+    internal SDLWindowPtr? Window => _executionContext?.Window;
+    internal ImageFactory? Images => _executionContext?.Images;
+    internal IdFactory? Ids => _executionContext?.Ids;
 
-    public ILocalizer? Localizer { get; set; }
+    public ILocalizer? Localizer { get; private set; }
 
     #endregion
 
     #region Events
 
-    public event EventHandler<Exception> UnhandledException;
+    public event EventHandler<Exception?>? UnhandledException;
 
     #endregion
 
@@ -63,6 +71,9 @@ public class Application
 
     public unsafe void Execute(Form form)
     {
+        if (_executionContext != null)
+            throw new InvalidOperationException("There already is an application running.");
+
         if (!SDL.Init((int)(SDLInitFlags.Video | SDLInitFlags.Gamepad)))
         {
             Console.WriteLine($"Error: SDL_Init(): {SDL.GetErrorS()}");
@@ -110,6 +121,10 @@ public class Application
         io.ConfigDpiScaleFonts = true;
         io.ConfigDpiScaleViewports = true;
 
+        ImGuiPlatformIOPtr platformIo = Hexa.NET.ImGui.ImGui.GetPlatformIO();
+        platformIo.PlatformGetClipboardTextFn = (void*)Marshal.GetFunctionPointerForDelegate(Sdl2NativeExtensions.GetClipboardText);
+        platformIo.PlatformSetClipboardTextFn = (void*)Marshal.GetFunctionPointerForDelegate(Sdl2NativeExtensions.SetClipboardText);
+
         _executionContext = new ExecutionContext(form, window, new ImageFactory(gpuDevice), new IdFactory());
         FontFactory.Initialize(io);
 
@@ -124,24 +139,51 @@ public class Application
         };
         ImGuiImplSDL3.SDLGPU3Init(&initInfo);
 
-        bool done = false;
-        while (!done)
+        while (!_shouldClose)
         {
             UpdateApplicationEvents();
 
-            Images.FreeTextures();
-            Ids.FreeUnused();
+            _executionContext.Images.FreeTextures();
+            _executionContext.Ids.FreeUnused();
 
             SDLEvent e;
             while (SDL.PollEvent(&e))
             {
                 ImGuiImplSDL3.ProcessEvent((ImSDLEvent*)&e);
-                var type = (SDLEventType)e.Type;
-                if (type == SDLEventType.Quit ||
-                    (type == SDLEventType.WindowCloseRequested &&
-                     e.Window.WindowID == SDL.GetWindowID(window)))
+
+                if (e.Window.WindowID != SDL.GetWindowID(window))
+                    continue;
+
+                switch ((SDLEventType)e.Type)
                 {
-                    done = true;
+                    case SDLEventType.WindowCloseRequested:
+                        if (!ShouldCancelClose())
+                            _shouldClose = true;
+                        break;
+
+                    case SDLEventType.Quit:
+                        if (!_isClosing)
+                            _shouldClose = true;
+                        break;
+
+                    case SDLEventType.WindowShown:
+                        form.OnLoad();
+                        break;
+
+                    case SDLEventType.WindowResized:
+                        int w = 0, h = 0;
+                        SDL.GetWindowSize(window, ref w, ref h);
+
+                        form.Size = new Vector2(w, h);
+                        form.OnResized();
+                        break;
+
+                    case SDLEventType.DropFile:
+                        var dropEvent = Unsafe.Read<SDLDropEvent>(&e);
+
+                        string? file = dropEvent.Data == null ? null : Marshal.PtrToStringUTF8((nint)dropEvent.Data);
+                        Window_DragDrop(file);
+                        break;
                 }
             }
 
@@ -190,6 +232,7 @@ public class Application
                 };
 
                 SDLGPURenderPass* renderPass = SDL.BeginGPURenderPass(commandBuffer, &targetInfo, 1, null);
+                _executionContext.Images.BindTextures(renderPass);
                 ImGuiImplSDL3.SDLGPU3RenderDrawData(drawData, (ImSDLGPUCommandBuffer*)commandBuffer, (ImSDLGPURenderPass*)renderPass, null);
                 SDL.EndGPURenderPass(renderPass);
             }
@@ -210,73 +253,39 @@ public class Application
         SDL.Quit();
     }
 
-    //public void Execute(Form form)
-    //{
-    //    if (Instance != null)
-    //        throw new InvalidOperationException("There already is an application running.");
-
-    //    CreateApplication(form);
-
-    //    _executionContext.Window.Resized += Window_Resized;
-    //    _executionContext.Window.DragDrop += Window_DragDrop;
-    //    _executionContext.Window.Shown += Window_Shown;
-    //    _executionContext.Window.SetCloseRequestedHandler(ShouldCancelClose);
-
-    //    var cl = _executionContext.GraphicsDevice.ResourceFactory.CreateCommandList();
-
-    //    // Main application loop
-    //    while (_executionContext.Window.Exists)
-    //    {
-    //        if (!UpdateFrame(cl))
-    //            break;
-    //    }
-
-    //    // Clean up resources
-    //    _executionContext.GraphicsDevice.WaitForIdle();
-
-    //    _executionContext.Renderer.Dispose();
-    //    cl.Dispose();
-
-    //    _executionContext.GraphicsDevice.Dispose();
-
-    //    FontFactory.Dispose();
-    //}
-
     public void Exit()
     {
-        if (Instance == null)
+        if (_executionContext == null)
             throw new InvalidOperationException("There is no application running.");
 
-        SDL.DestroyWindow(Window);
+        _shouldClose = true;
     }
 
     public void SetSize(Vector2 size)
     {
-        if (Instance == null)
+        if (_executionContext == null)
             throw new InvalidOperationException("There is no application running.");
 
-        SDL.SetWindowSize(Window, (int)size.X, (int)size.Y);
+        _executionContext.MainForm.Size = size;
 
-        Instance.MainForm.Size = size;
+        SDL.SetWindowSize(_executionContext.Window, (int)size.X, (int)size.Y);
     }
 
     private void UpdateApplicationEvents()
     {
-        //_dragDropEvents = [];
+        _dragDropEvents = [];
         _frameHandledDragDrops = [];
     }
 
-    #region Window events
-
-    private void Window_Shown()
-    {
-        _executionContext.MainForm.OnLoad();
-    }
+    #region Window event
 
     private bool ShouldCancelClose()
     {
+        if (_executionContext == null)
+            return false;
+
         // If any close blocking modal is open, cancel closing
-        if (MainForm.HasBlockingModals())
+        if (_executionContext.MainForm.HasBlockingModals())
             return true;
 
         // If not closing action is currently taking place, start closing action
@@ -290,33 +299,30 @@ public class Application
         return _isClosing || !_shouldClose;
     }
 
+    // ReSharper disable once AsyncVoidMethod
     private async void IsClosing()
     {
+        if (_executionContext == null)
+            return;
+
         var args = new ClosingEventArgs();
-        await MainForm.OnClosing(args);
+        await _executionContext.MainForm.OnClosing(args);
 
         _isClosing = false;
         _shouldClose = !args.Cancel;
     }
 
-    //private void Window_Resized()
-    //{
-    //    _executionContext.GraphicsDevice.MainSwapchain.Resize((uint)_executionContext.Window.Width, (uint)_executionContext.Window.Height);
-    //    _executionContext.Renderer.WindowResized(_executionContext.Window.Width, _executionContext.Window.Height);
+    private void Window_DragDrop(string? path)
+    {
+        if (path == null)
+            return;
 
-    //    _executionContext.MainForm.Size = new Vector2(_executionContext.Window.Width, _executionContext.Window.Height);
+        Array.Resize(ref _frameHandledDragDrops, _frameHandledDragDrops.Length + 1);
+        _frameHandledDragDrops[^1] = false;
 
-    //    _executionContext.MainForm.OnResized();
-    //}
-
-    //private void Window_DragDrop(DragDropEvent obj)
-    //{
-    //    Array.Resize(ref _frameHandledDragDrops, _frameHandledDragDrops.Length + 1);
-    //    _frameHandledDragDrops[^1] = false;
-
-    //    Array.Resize(ref _dragDropEvents, _dragDropEvents.Length + 1);
-    //    _dragDropEvents[^1] = new DragDropEventEx(obj, Hexa.NET.ImGui.ImGui.GetMousePos());
-    //}
+        Array.Resize(ref _dragDropEvents, _dragDropEvents.Length + 1);
+        _dragDropEvents[^1] = new DragDropEvent(path, Hexa.NET.ImGui.ImGui.GetMousePos());
+    }
 
     #endregion
 
@@ -325,40 +331,34 @@ public class Application
         UnhandledException?.Invoke(this, e.ExceptionObject as Exception);
     }
 
-    //internal bool TryGetDragDrop(Rectangle controlRect, out DragDropEvent[] events)
-    //{
-    //    events = new DragDropEvent[_dragDropEvents.Length];
-    //    var index = 0;
+    internal bool TryGetDragDrop(Rectangle controlRect, out string[] files)
+    {
+        files = new string[_dragDropEvents.Length];
+        var index = 0;
 
-    //    for (var i = 0; i < _frameHandledDragDrops.Length; i++)
-    //    {
-    //        if (_frameHandledDragDrops[i] || _dragDropEvents[i].IsEmpty)
-    //            continue;
+        for (var i = 0; i < _frameHandledDragDrops.Length; i++)
+        {
+            if (_frameHandledDragDrops[i] || _dragDropEvents[i].IsEmpty)
+                continue;
 
-    //        if (!controlRect.Contains(new Point((int)_dragDropEvents[i].MousePosition.X, (int)_dragDropEvents[i].MousePosition.Y)))
-    //            continue;
+            if (!controlRect.Contains(_dragDropEvents[i].MousePosition))
+                continue;
 
-    //        events[index++] = _dragDropEvents[i].Event;
-    //        _frameHandledDragDrops[i] = true;
-    //    }
+            files[index++] = _dragDropEvents[i].File;
+            _frameHandledDragDrops[i] = true;
+        }
 
-    //    Array.Resize(ref events, index);
-    //    return events.Length > 0;
-    //}
+        Array.Resize(ref files, index);
+        return files.Length > 0;
+    }
 }
 
 record ExecutionContext(Form MainForm, SDLWindowPtr Window, ImageFactory Images, IdFactory Ids);
 
-//readonly struct DragDropEventEx
-//{
-//    public DragDropEvent Event { get; }
-//    public Vector2 MousePosition { get; }
+readonly struct DragDropEvent(string file, Vector2 mousePos)
+{
+    public string File { get; } = file;
+    public Vector2 MousePosition { get; } = mousePos;
 
-//    public bool IsEmpty => MousePosition == default && Event.File == null;
-
-//    public DragDropEventEx(DragDropEvent evt, Vector2 mousePos)
-//    {
-//        Event = evt;
-//        MousePosition = mousePos;
-//    }
-//}
+    public bool IsEmpty => MousePosition == default && File == null;
+}

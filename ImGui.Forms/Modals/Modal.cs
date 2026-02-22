@@ -16,7 +16,7 @@ public abstract class Modal : Component
 {
     private static readonly KeyCommand CloseCommand = new(ImGuiKey.Escape);
 
-    private CancellationTokenSource _tokenSource;
+    private CancellationTokenSource? _tokenSource;
     private bool _shouldClose;
 
     internal Modal? ChildModal { get; set; }
@@ -151,12 +151,14 @@ public abstract class Modal : Component
 
     internal static void DrawModal(Modal? modal)
     {
-        if (modal == null)
+        if (modal?.Content == null)
             return;
 
-        Application.Instance.MainForm.SetRenderingModal(modal);
+        var form = Application.Instance?.MainForm;
+        if (form == null)
+            return;
 
-        var form = Application.Instance.MainForm;
+        form.SetRenderingModal(modal);
 
         var modalWidth = modal.Size.Width.IsContentAligned ? modal.Content.GetWidth(form.Width, form.Height) : GetDimension(modal.Size.Width, form.Width);
         var modalHeight = modal.Size.Height.IsContentAligned ? modal.Content.GetHeight(form.Width, form.Height) : GetDimension(modal.Size.Height, form.Height);

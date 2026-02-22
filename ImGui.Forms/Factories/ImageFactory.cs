@@ -1,9 +1,8 @@
-﻿using Hexa.NET.SDL3;
+using Hexa.NET.SDL3;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace ImGui.Forms.Factories;
 
@@ -53,37 +52,6 @@ class ImageFactory(SDLGPUDevicePtr gpuDevice)
 
         _ptrTexturesRefCount[ptr]--;
         _unloadQueue.Add(ptr);
-    }
-
-    public void BindTextures(SDLGPURenderPassPtr renderPass)
-    {
-        if (_ptrTextures.Values.Count <= 0)
-            return;
-
-        SDLGPUSamplerCreateInfo sampInfo = new SDLGPUSamplerCreateInfo
-        {
-            MinFilter = SDLGPUFilter.Nearest,
-            MagFilter = SDLGPUFilter.Nearest,
-            MipmapMode = SDLGPUSamplerMipmapMode.Nearest
-        };
-
-        SDLGPUSamplerPtr nearestSampler = SDL.CreateGPUSampler(gpuDevice, sampInfo);
-
-        var binds = new SDLGPUTextureSamplerBinding[_ptrTextures.Values.Count];
-        for (var i = 0; i < binds.Length; i++)
-        {
-            SDLGPUTexturePtr texture = _ptrTextures.Values.ElementAt(i);
-
-            SDLGPUTextureSamplerBinding bind = new SDLGPUTextureSamplerBinding
-            {
-                Texture = texture,
-                Sampler = nearestSampler
-            };
-            binds[i] = bind;
-        }
-
-        SDL.BindGPUFragmentSamplers(renderPass, 0u, binds[0], (uint)binds.Length);
-        SDL.BindGPUVertexSamplers(renderPass, 0u, binds[0], (uint)binds.Length);
     }
 
     private unsafe nint Load2DTexture(Image<Rgba32> image)
@@ -181,6 +149,18 @@ class ImageFactory(SDLGPUDevicePtr gpuDevice)
             _inputPointers.Remove(obj);
         }
 
+        _unloadQueue.Clear();
+    }
+
+    internal void Dispose()
+    {
+        foreach (var ptrTexture in _ptrTextures)
+            SDL.ReleaseGPUTexture(gpuDevice, ptrTexture.Value);
+
+        _ptrTextures.Clear();
+        _ptrTexturesRefCount.Clear();
+        _inputPointers.Clear();
+        _inputPointersReverse.Clear();
         _unloadQueue.Clear();
     }
 }

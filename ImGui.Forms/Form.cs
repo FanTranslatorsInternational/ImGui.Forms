@@ -7,13 +7,14 @@ using ImGui.Forms.Factories;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Modals;
 using ImGui.Forms.Resources;
+using ImGui.Forms.Support;
+using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
-using SixLabors.ImageSharp;
 using Rectangle = ImGui.Forms.Support.Rectangle;
 
 namespace ImGui.Forms;
@@ -119,6 +120,12 @@ public abstract class Form
 
     internal void Update()
     {
+        // Begin window
+        Hexa.NET.ImGui.ImGui.Begin($"{Id}", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove);
+        
+        // Set nearest sampler for image interpolation
+        ImGuiSampler.SetNearest();
+
         // Set icon
         if (_setIcon)
         {
@@ -140,9 +147,6 @@ public abstract class Form
         style.WindowBorderSize = 0;
 
         SDL.SetWindowTitle(Application.Instance.Window!.Value, Title);
-
-        // Begin window
-        Hexa.NET.ImGui.ImGui.Begin($"{Id}", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove);
 
         Hexa.NET.ImGui.ImGui.SetWindowSize(Size, ImGuiCond.Always);
 

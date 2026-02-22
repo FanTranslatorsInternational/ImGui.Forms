@@ -4,6 +4,7 @@ using Hexa.NET.SDL3;
 using ImGui.Forms.Extensions;
 using ImGui.Forms.Factories;
 using ImGui.Forms.Localization;
+using ImGui.Forms.Support;
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -18,7 +19,6 @@ using SDLEvent = Hexa.NET.SDL3.SDLEvent;
 using SDLGPUCommandBuffer = Hexa.NET.SDL3.SDLGPUCommandBuffer;
 using SDLGPUDevice = Hexa.NET.SDL3.SDLGPUDevice;
 using SDLGPURenderPass = Hexa.NET.SDL3.SDLGPURenderPass;
-using SDLGPURenderPassPtr = Hexa.NET.SDL3.SDLGPURenderPassPtr;
 using SDLWindow = Hexa.NET.SDL3.SDLWindow;
 using SDLWindowPtr = Hexa.NET.SDL3.SDLWindowPtr;
 // ReSharper disable BitwiseOperatorOnEnumWithoutFlags
@@ -111,6 +111,7 @@ public class Application
         Hexa.NET.ImGui.ImGui.SetCurrentContext(ctx);
 
         ImGuiIOPtr io = Hexa.NET.ImGui.ImGui.GetIO();
+        io.IniFilename = null;
         io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard
                         | ImGuiConfigFlags.NavEnableGamepad;
         io.ConfigErrorRecoveryEnableAssert = false;
@@ -138,6 +139,8 @@ public class Application
             MSAASamples = (int)SDLGPUSampleCount.Samplecount1
         };
         ImGuiImplSDL3.SDLGPU3Init(&initInfo);
+
+        ImGuiSampler.Initialize(gpuDevice);
 
         while (!_shouldClose)
         {
@@ -232,7 +235,6 @@ public class Application
                 };
 
                 SDLGPURenderPass* renderPass = SDL.BeginGPURenderPass(commandBuffer, &targetInfo, 1, null);
-                _executionContext.Images.BindTextures(renderPass);
                 ImGuiImplSDL3.SDLGPU3RenderDrawData(drawData, (ImSDLGPUCommandBuffer*)commandBuffer, (ImSDLGPURenderPass*)renderPass, null);
                 SDL.EndGPURenderPass(renderPass);
             }
@@ -246,6 +248,9 @@ public class Application
         Hexa.NET.ImGui.ImGui.DestroyContext();
 
         FontFactory.Dispose();
+        _executionContext.Images.Dispose();
+
+        ImGuiSampler.Release(gpuDevice);
 
         SDL.ReleaseWindowFromGPUDevice(gpuDevice, window);
         SDL.DestroyGPUDevice(gpuDevice);

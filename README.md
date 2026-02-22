@@ -14,15 +14,11 @@ This and all credited projects under the MIT license.
 
 ### Dear ImGui
 
-Copyright (c) 2014-2024 Omar Cornut
+Copyright (c) 2014-2026 Omar Cornut
 
-### ImGui.NET
+### Hexa.NET.ImGui
 
-Copyright (c) 2017 Eric Mellino and ImGui.NET contributors
-
-### Veldrid
-
-Copyright (c) 2017 Eric Mellino and Veldrid contributors
+Copyright (c) 2023-2026 Juna Meinhold
 
 ### TextEditor
 

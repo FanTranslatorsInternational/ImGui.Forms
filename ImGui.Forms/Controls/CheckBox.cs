@@ -1,10 +1,10 @@
 ﻿using System;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
-using ImGuiNET;
-using Veldrid;
+using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls;
 
@@ -16,7 +16,7 @@ public class CheckBox : Component
 
     public LocalizedString Text { get; set; }
     public LocalizedString Tooltip { get; set; }
-    public FontResource Font { get; set; }
+    public FontResource? Font { get; set; }
 
     public bool Checked
     {
@@ -46,7 +46,7 @@ public class CheckBox : Component
         ApplyStyles(Enabled, Font);
 
         var size = TextMeasurer.MeasureText(Text);
-        var width = (int)(Math.Ceiling(size.X) + 21 + ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.X);
+        var width = (int)(Math.Ceiling(size.X) + 21 + Hexa.NET.ImGui.ImGui.GetStyle().ItemInnerSpacing.X);
         var height = (int)Math.Max(Math.Ceiling(size.Y), 21);
 
         RemoveStyles(Enabled, Font);
@@ -56,7 +56,7 @@ public class CheckBox : Component
 
     protected override void UpdateInternal(Rectangle contentRect)
     {
-        ImGuiNET.ImGui.SetNextItemWidth(contentRect.Width);
+        Hexa.NET.ImGui.ImGui.SetNextItemWidth(contentRect.Width);
 
         var check = Checked;
         var enabled = Enabled;
@@ -65,41 +65,41 @@ public class CheckBox : Component
         ApplyStyles(enabled, font);
 
         if (IsHovering(contentRect) && !string.IsNullOrEmpty(Tooltip))
-            ImGuiNET.ImGui.SetTooltip(Tooltip);
+            Hexa.NET.ImGui.ImGui.SetTooltip(Tooltip);
 
-        if (ImGuiNET.ImGui.Checkbox(Text, ref check) && Enabled)
+        if (Hexa.NET.ImGui.ImGui.Checkbox(Text, ref check) && Enabled)
             Checked = check;
 
         RemoveStyles(enabled, font);
     }
 
-    private void ApplyStyles(bool enabled, FontResource font)
+    private void ApplyStyles(bool enabled, FontResource? font)
     {
         if (!enabled)
         {
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.CheckMark, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text));
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.CheckMark, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.Text));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBg, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
         }
 
         ImFontPtr? fontPtr = font?.GetPointer();
         if (fontPtr != null)
-            ImGuiNET.ImGui.PushFont(fontPtr.Value);
+            Hexa.NET.ImGui.ImGui.PushFont(fontPtr.Value, font!.Data.Size);
     }
 
-    private void RemoveStyles(bool enabled, FontResource font)
+    private void RemoveStyles(bool enabled, FontResource? font)
     {
         if (font?.GetPointer() != null)
-            ImGuiNET.ImGui.PopFont();
+            Hexa.NET.ImGui.ImGui.PopFont();
 
         if (!enabled)
-            ImGuiNET.ImGui.PopStyleColor(4);
+            Hexa.NET.ImGui.ImGui.PopStyleColor(4);
     }
 
     private bool IsHovering(Rectangle contentRect)
     {
-        return ImGuiNET.ImGui.IsMouseHoveringRect(contentRect.Position, contentRect.Position + contentRect.Size);
+        return Hexa.NET.ImGui.ImGui.IsMouseHoveringRect(contentRect.Position, contentRect.Position + contentRect.Size);
     }
 
     private void OnCheckChanged()

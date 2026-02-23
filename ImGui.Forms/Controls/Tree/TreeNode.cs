@@ -13,7 +13,7 @@ public abstract class TreeNode
 
     public ThemedColor TextColor { get; set; }
 
-    public FontResource Font { get; set; }
+    public FontResource? Font { get; set; }
 
     public bool IsExpanded
     {

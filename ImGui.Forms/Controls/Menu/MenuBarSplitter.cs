@@ -6,7 +6,7 @@ public class MenuBarSplitter : MenuBarItem
 
     protected override void UpdateInternal()
     {
-        ImGuiNET.ImGui.Separator();
+        Hexa.NET.ImGui.ImGui.Separator();
     }
 
     protected override void UpdateEventsInternal()

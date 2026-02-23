@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.InteropServices;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Extensions;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
-using ImGuiNET;
 using SixLabors.ImageSharp;
-using Rectangle = Veldrid.Rectangle;
+using Rectangle = ImGui.Forms.Support.Rectangle;
 using Size = ImGui.Forms.Models.Size;
 
 // Initial code: https://github.com/ocornut/imgui/issues/2057
@@ -67,11 +67,11 @@ public class ComboBox<TItem> : Component
 
     public override Size GetSize()
     {
-        var maxWidth = (int)(Items.Select(x => TextMeasurer.GetCurrentLineWidth(x.Name)).DefaultIfEmpty(0).Max() + ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.X * 2);
-        int arrowWidth = (int)(ButtonSizeX_ + ImGuiNET.ImGui.GetStyle().FramePadding.X * 2);
+        var maxWidth = (int)(Items.Select(x => TextMeasurer.GetCurrentLineWidth(x.Name)).DefaultIfEmpty(0).Max() + Hexa.NET.ImGui.ImGui.GetStyle().ItemInnerSpacing.X * 2);
+        int arrowWidth = (int)(ButtonSizeX_ + Hexa.NET.ImGui.ImGui.GetStyle().FramePadding.X * 2);
 
         SizeValue width = Width.IsContentAligned ? maxWidth + arrowWidth : Width;
-        var height = (int)(TextMeasurer.GetCurrentLineHeight() + ImGuiNET.ImGui.GetStyle().ItemInnerSpacing.Y * 2);
+        var height = (int)(TextMeasurer.GetCurrentLineHeight() + Hexa.NET.ImGui.ImGui.GetStyle().ItemInnerSpacing.Y * 2);
 
         return new Size(width, height);
     }
@@ -88,14 +88,14 @@ public class ComboBox<TItem> : Component
         else
             maxShowItems = (uint)Math.Min(MaxShowItems, Items.Count);
 
-        ImGuiNET.ImGui.PushID(Id);
+        Hexa.NET.ImGui.ImGui.PushID(Id);
 
-        var arrowWidth = ButtonSizeX_ + ImGuiNET.ImGui.GetStyle().FramePadding.X * 2;
-        ImGuiNET.ImGui.SetNextItemWidth(contentRect.Width - arrowWidth);
+        var arrowWidth = ButtonSizeX_ + Hexa.NET.ImGui.ImGui.GetStyle().FramePadding.X * 2;
+        Hexa.NET.ImGui.ImGui.SetNextItemWidth(contentRect.Width - arrowWidth);
 
         var localInput = _input;
 
-        bool isFinal = ImGuiNET.ImGui.InputText("##in", ref localInput, MaxCharacters, ImGuiInputTextFlags.CallbackAlways | ImGuiInputTextFlags.EnterReturnsTrue, Propose);
+        bool isFinal = Hexa.NET.ImGui.ImGui.InputText("##in", ref localInput, MaxCharacters, ImGuiInputTextFlags.CallbackAlways | ImGuiInputTextFlags.EnterReturnsTrue, Propose);
         if (enabled && isFinal)
         {
             DropDownItem<TItem> selectedItem = Items.FirstOrDefault(i => i.Name == localInput);
@@ -110,18 +110,18 @@ public class ComboBox<TItem> : Component
         if (enabled)
             _input = localInput;
 
-        ImGuiNET.ImGui.OpenPopupOnItemClick("combobox"); // Enable right-click
-        Vector2 pos = ImGuiNET.ImGui.GetItemRectMin();
-        Vector2 size = ImGuiNET.ImGui.GetItemRectSize();
+        Hexa.NET.ImGui.ImGui.OpenPopupOnItemClick("combobox"); // Enable right-click
+        Vector2 pos = Hexa.NET.ImGui.ImGui.GetItemRectMin();
+        Vector2 size = Hexa.NET.ImGui.ImGui.GetItemRectSize();
 
-        ImGuiNET.ImGui.SameLine(0, 0);
-        if (ImGuiNET.ImGui.ArrowButton("##openCombo", ImGuiDir.Down))
+        Hexa.NET.ImGui.ImGui.SameLine(0, 0);
+        if (Hexa.NET.ImGui.ImGui.ArrowButton("##openCombo", ImGuiDir.Down))
         {
-            ImGuiNET.ImGui.OpenPopup("combobox");
+            Hexa.NET.ImGui.ImGui.OpenPopup("combobox");
         }
-        ImGuiNET.ImGui.OpenPopupOnItemClick("combobox"); // Enable right-click
+        Hexa.NET.ImGui.ImGui.OpenPopupOnItemClick("combobox"); // Enable right-click
 
-        Vector2 arrowSize = ImGuiNET.ImGui.GetItemRectSize();
+        Vector2 arrowSize = Hexa.NET.ImGui.ImGui.GetItemRectSize();
         float itemSize = TextMeasurer.GetCurrentLineHeight() + Style.GetStyleVector2(ImGuiStyleVar.ItemSpacing).Y;
 
         Vector2 popupPos = pos;
@@ -150,10 +150,10 @@ public class ComboBox<TItem> : Component
                 throw new InvalidOperationException($"Invalid combobox alignment {Alignment}.");
         }
 
-        ImGuiNET.ImGui.SetNextWindowPos(popupPos);
-        ImGuiNET.ImGui.SetNextWindowSize(popupSize);
+        Hexa.NET.ImGui.ImGui.SetNextWindowPos(popupPos);
+        Hexa.NET.ImGui.ImGui.SetNextWindowSize(popupSize);
 
-        if (enabled && ImGuiNET.ImGui.BeginPopup("combobox", ImGuiWindowFlags.NoMove))
+        if (enabled && Hexa.NET.ImGui.ImGui.BeginPopup("combobox", ImGuiWindowFlags.NoMove))
         {
             Vector2 itemPos = popupPos;
             for (var i = 0; i < Items.Count; i++)
@@ -162,20 +162,20 @@ public class ComboBox<TItem> : Component
                 bool isPreferred = PreferredItems.Contains(item);
 
                 // Set selectable with item name
-                ImGuiNET.ImGui.PushID($"{Id}_item{i}");
+                Hexa.NET.ImGui.ImGui.PushID($"{Id}_item{i}");
 
-                bool isSelected = ImGuiNET.ImGui.Selectable(item.Name);
+                bool isSelected = Hexa.NET.ImGui.ImGui.Selectable(item.Name);
                 if (isPreferred)
                 {
                     var markerPos = new Vector2(size.X + arrowSize.X / 2, arrowSize.Y / 2);
-                    ImGuiNET.ImGui.GetWindowDrawList().AddCircleFilled(itemPos + markerPos, 3f, Color.White.ToUInt32());
+                    Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddCircleFilled(itemPos + markerPos, 3f, Color.White.ToUInt32());
                 }
+
+                Hexa.NET.ImGui.ImGui.PopID();
 
                 itemPos += size with { X = 0 };
                 if (!isSelected)
                     continue;
-
-                ImGuiNET.ImGui.PopID();
 
                 _input = item.Name;
 
@@ -186,10 +186,10 @@ public class ComboBox<TItem> : Component
                 }
             }
 
-            ImGuiNET.ImGui.EndPopup();
+            Hexa.NET.ImGui.ImGui.EndPopup();
         }
 
-        ImGuiNET.ImGui.PopID();
+        Hexa.NET.ImGui.ImGui.PopID();
 
         RemoveStyles(enabled);
     }
@@ -203,20 +203,20 @@ public class ComboBox<TItem> : Component
     {
         if (!enabled)
         {
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Button, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonHovered, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ButtonActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.Button, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.ButtonHovered, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.ButtonActive, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
 
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBg, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, ImGuiNET.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBg, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
         }
     }
 
     private void RemoveStyles(bool enabled)
     {
         if (!enabled)
-            ImGuiNET.ImGui.PopStyleColor(6);
+            Hexa.NET.ImGui.ImGui.PopStyleColor(6);
     }
 
     private string? _prevBuffer;
@@ -225,7 +225,7 @@ public class ComboBox<TItem> : Component
     private unsafe int Propose(ImGuiInputTextCallbackData* data)
     {
         var dataPtr = new ImGuiInputTextCallbackDataPtr(data);
-        string bufferString = Marshal.PtrToStringUTF8(dataPtr.Buf);
+        string bufferString = Marshal.PtrToStringUTF8((nint)dataPtr.Buf);
         if (bufferString == null)
             return 0;
 
@@ -237,7 +237,7 @@ public class ComboBox<TItem> : Component
             return 0;
 
         // We need to give the user a chance to remove wrong input
-        if (ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Backspace))
+        if (Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.Backspace))
         {
             // We delete the last char automatically, since it is what the user wants to delete, but only if there is something (selected/marked/hovered)
             // FIXME: This worked fine, when not used as helper function
@@ -253,7 +253,7 @@ public class ComboBox<TItem> : Component
             return 0;
         }
 
-        if (ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Delete))
+        if (Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.Delete))
             return 0;
 
         int prevDiff = -1;

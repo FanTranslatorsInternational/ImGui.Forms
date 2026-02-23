@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Numerics;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Extensions;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Resources;
-using ImGuiNET;
 using SixLabors.ImageSharp;
-using Rectangle = Veldrid.Rectangle;
+using Rectangle = ImGui.Forms.Support.Rectangle;
 using Size = ImGui.Forms.Models.Size;
 
 namespace ImGui.Forms.Controls;
@@ -17,7 +17,7 @@ public class ProgressBar : Component
 
     public LocalizedString Text { get; set; }
 
-    public FontResource Font { get; set; }
+    public FontResource? Font { get; set; }
 
     public Size Size { get; set; } = Size.Parent;
 
@@ -33,14 +33,23 @@ public class ProgressBar : Component
 
     public override Size GetSize() => Size;
 
-    protected override void UpdateInternal(Rectangle contentRect)
+    protected override unsafe void UpdateInternal(Rectangle contentRect)
     {
         // Draw progress bar
-        var barWidth = (float)Math.Ceiling((float)contentRect.Width / Maximum * Value);
-        ImGuiNET.ImGui.GetWindowDrawList().AddRectFilled(new Vector2(contentRect.X, contentRect.Y), new Vector2(contentRect.X + barWidth, contentRect.Y + contentRect.Height), ProgressColor.ToUInt32());
+        var trueMinimum = Math.Min(Minimum, Maximum);
+        var trueMaximum = Math.Max(Minimum, Maximum);
+
+        var range = trueMaximum - trueMinimum;
+        var value = Math.Clamp(Value, trueMinimum, trueMaximum) - trueMinimum;
+
+        if (range <= 0)
+            range = 1;
+
+        var barWidth = (float)Math.Ceiling(contentRect.Width / range * value);
+        Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddRectFilled(new Vector2(contentRect.X, contentRect.Y), new Vector2(contentRect.X + barWidth, contentRect.Y + contentRect.Height), ProgressColor.ToUInt32());
 
         // Draw border
-        ImGuiNET.ImGui.GetWindowDrawList().AddRect(new Vector2(contentRect.X, contentRect.Y), new Vector2(contentRect.X + contentRect.Width, contentRect.Y + contentRect.Height), ImGuiNET.ImGui.GetColorU32(ImGuiCol.Border));
+        Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddRect(new Vector2(contentRect.X, contentRect.Y), new Vector2(contentRect.X + contentRect.Width, contentRect.Y + contentRect.Height), Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.Border));
 
         // Draw text
         var textSize = TextMeasurer.MeasureText(Text);
@@ -48,21 +57,21 @@ public class ProgressBar : Component
 
         ImFontPtr? fontPtr = Font?.GetPointer();
         if (fontPtr != null)
-            ImGuiNET.ImGui.GetWindowDrawList().AddText(fontPtr.Value, Font.Data.Size, textPos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), Text);
+            Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddText(fontPtr.Value, Font!.Data.Size, textPos, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.Text), Text);
         else
-            ImGuiNET.ImGui.GetWindowDrawList().AddText(textPos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), Text);
+            Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddText(textPos, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.Text), Text);
     }
 
     protected override void ApplyStyles()
     {
         ImFontPtr? fontPtr = Font?.GetPointer();
         if (fontPtr != null)
-            ImGuiNET.ImGui.PushFont(fontPtr.Value);
+            Hexa.NET.ImGui.ImGui.PushFont(fontPtr.Value, Font!.Data.Size);
     }
 
     protected override void RemoveStyles()
     {
         if (Font?.GetPointer() != null)
-            ImGuiNET.ImGui.PopFont();
+            Hexa.NET.ImGui.ImGui.PopFont();
     }
 }

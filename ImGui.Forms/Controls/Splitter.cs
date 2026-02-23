@@ -1,8 +1,8 @@
-﻿using ImGui.Forms.Controls.Base;
+﻿using Hexa.NET.ImGui;
+using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Layouts;
 using ImGui.Forms.Models;
-using ImGuiNET;
-using Veldrid;
+using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls;
 
@@ -25,6 +25,6 @@ public class Splitter : Component
 
     protected override void UpdateInternal(Rectangle contentRect)
     {
-        ImGuiNET.ImGui.GetWindowDrawList().AddRectFilled(contentRect.Position, contentRect.Position + contentRect.Size, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Border));
+        Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddRectFilled(contentRect.Position, contentRect.Position + contentRect.Size, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.Border));
     }
 }

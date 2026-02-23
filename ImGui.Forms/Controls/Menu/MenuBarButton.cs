@@ -1,8 +1,8 @@
 ﻿using System;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models.IO;
 using ImGui.Forms.Resources;
-using ImGuiNET;
 
 namespace ImGui.Forms.Controls.Menu;
 
@@ -12,7 +12,7 @@ public class MenuBarButton : MenuBarItem
 
     public LocalizedString Text { get; set; }
 
-    public FontResource Font { get; set; }
+    public FontResource? Font { get; set; }
 
     public KeyCommand KeyAction { get; set; }
 
@@ -34,7 +34,7 @@ public class MenuBarButton : MenuBarItem
     protected override void UpdateInternal()
     {
         // Add menu button
-        if ((ImGuiNET.ImGui.MenuItem(Text, KeyAction.Name, false, Enabled) || KeyAction.IsPressed()) && Enabled)
+        if ((Hexa.NET.ImGui.ImGui.MenuItem(Text, KeyAction.Name, false, Enabled) || KeyAction.IsPressed()) && Enabled)
             // Execute click event, if set
             Clicked?.Invoke(this, EventArgs.Empty);
     }
@@ -52,7 +52,7 @@ public class MenuBarButton : MenuBarItem
         ApplyStyles();
 
         var textSize = TextMeasurer.MeasureText(Text);
-        var height = (int)(textSize.Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y * 2);
+        var height = (int)(textSize.Y + Hexa.NET.ImGui.ImGui.GetStyle().FramePadding.Y * 2);
 
         RemoveStyles();
 
@@ -63,12 +63,12 @@ public class MenuBarButton : MenuBarItem
     {
         ImFontPtr? fontPtr = Font?.GetPointer();
         if (fontPtr != null)
-            ImGuiNET.ImGui.PushFont(fontPtr.Value);
+            Hexa.NET.ImGui.ImGui.PushFont(fontPtr.Value, Font!.Data.Size);
     }
 
     protected override void RemoveStyles()
     {
         if (Font?.GetPointer() != null)
-            ImGuiNET.ImGui.PopFont();
+            Hexa.NET.ImGui.ImGui.PopFont();
     }
 }

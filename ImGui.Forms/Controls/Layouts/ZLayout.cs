@@ -2,7 +2,7 @@
 using System.Numerics;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
-using Veldrid;
+using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls.Layouts;
 
@@ -25,7 +25,7 @@ public class ZLayout : Component
 
     protected override void UpdateInternal(Rectangle contentRect)
     {
-        if (ImGuiNET.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height)))
+        if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height)))
         {
             var largestHeight = 0;
 
@@ -36,8 +36,8 @@ public class ZLayout : Component
                 if (!(item?.Visible ?? false))
                     continue;
 
-                var itemWidth = item.GetWidth(contentRect.Width, contentRect.Height);
-                var itemHeight = item.GetHeight(contentRect.Width, contentRect.Height);
+                var itemWidth = item.GetWidth((int)contentRect.Width, (int)contentRect.Height);
+                var itemHeight = item.GetHeight((int)contentRect.Width, (int)contentRect.Height);
 
                 // Wrap positions
                 if (x + itemWidth + ItemSpacing.X >= contentRect.Width)
@@ -54,24 +54,24 @@ public class ZLayout : Component
                 if (itemWidth == 0 || itemHeight == 0)
                     continue;
 
-                var scrollY = -(int)ImGuiNET.ImGui.GetScrollY();
+                var scrollY = -(int)Hexa.NET.ImGui.ImGui.GetScrollY();
 
-                ImGuiNET.ImGui.SetCursorPosX(x);
-                ImGuiNET.ImGui.SetCursorPosY(y);
+                Hexa.NET.ImGui.ImGui.SetCursorPosX(x);
+                Hexa.NET.ImGui.ImGui.SetCursorPosY(y);
 
                 // Draw component container
-                if (ImGuiNET.ImGui.BeginChild($"{Id}-{i}", new Vector2(itemWidth, itemHeight)))
+                if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}-{i}", new Vector2(itemWidth, itemHeight)))
                     // Draw component
-                    item.Update(new Rectangle(contentRect.X + x, contentRect.Y + y + scrollY, itemWidth, itemHeight));
+                    item.Update(new Rectangle(new Vector2(contentRect.X + x, contentRect.Y + y + scrollY), new Vector2(itemWidth, itemHeight)));
 
-                ImGuiNET.ImGui.EndChild();
+                Hexa.NET.ImGui.ImGui.EndChild();
 
                 // Advance component position
                 x += itemWidth + (int)ItemSpacing.X;
             }
         }
 
-        ImGuiNET.ImGui.EndChild();
+        Hexa.NET.ImGui.ImGui.EndChild();
     }
 
     protected override void SetTabInactiveCore()

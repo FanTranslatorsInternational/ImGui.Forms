@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Models;
 
 namespace ImGui.Forms.Resources;
@@ -38,7 +39,12 @@ public class ThemedImageResource
             _darkImage.Destroy();
     }
 
-    public static explicit operator nint(ThemedImageResource ir) => ir == null ? nint.Zero : (nint)ir.GetImage();
+    public bool IsValid() => GetTextureRef().TexID != nint.Zero;
+
+    public ImTextureRef GetTextureRef()
+    {
+        return GetImage().GetTextureRef();
+    }
 
     public static implicit operator ThemedImageResource(ImageResource ir) => new(ir, ir);
 

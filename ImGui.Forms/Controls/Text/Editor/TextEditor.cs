@@ -1,13 +1,13 @@
-﻿using ImGuiNET;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
-using Veldrid;
+using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls.Text.Editor;
 // Original implementation in C++ and for Dear ImGui by BalazsJako: https://github.com/BalazsJako/ImGuiColorTextEdit
@@ -281,32 +281,32 @@ public class TextEditor : Component
                     // skip
                     continue;
                 case '\n':
-                {
-                    if (cindex < _lines[aWhere.Line].Length)
                     {
-                        GlyphLine newLine = InsertLine(aWhere.Line + 1);
-                        GlyphLine line = _lines[aWhere.Line];
-                        newLine?.Glyphs.InsertRange(0, line.Glyphs[cindex..]);
-                        line.Glyphs.RemoveRange(cindex, line.Length - cindex);
-                    }
-                    else
-                    {
-                        InsertLine(aWhere.Line + 1);
-                    }
+                        if (cindex < _lines[aWhere.Line].Length)
+                        {
+                            GlyphLine newLine = InsertLine(aWhere.Line + 1);
+                            GlyphLine line = _lines[aWhere.Line];
+                            newLine?.Glyphs.InsertRange(0, line.Glyphs[cindex..]);
+                            line.Glyphs.RemoveRange(cindex, line.Length - cindex);
+                        }
+                        else
+                        {
+                            InsertLine(aWhere.Line + 1);
+                        }
 
-                    ++aWhere.Line;
-                    aWhere.Column = 0;
-                    cindex = 0;
-                    ++totalLines;
-                    break;
-                }
+                        ++aWhere.Line;
+                        aWhere.Column = 0;
+                        cindex = 0;
+                        ++totalLines;
+                        break;
+                    }
                 default:
-                {
-                    GlyphLine line = _lines[aWhere.Line];
-                    line.Glyphs.Insert(cindex++, new Glyph(character));
-                    ++aWhere.Column;
-                    break;
-                }
+                    {
+                        GlyphLine line = _lines[aWhere.Line];
+                        line.Glyphs.Insert(cindex++, new Glyph(character));
+                        ++aWhere.Column;
+                        break;
+                    }
             }
 
             _isTextChanged = true;
@@ -328,7 +328,7 @@ public class TextEditor : Component
 
     private Coordinate ScreenPosToCoordinates(Vector2 aPosition)
     {
-        Vector2 origin = ImGuiNET.ImGui.GetCursorScreenPos();
+        Vector2 origin = Hexa.NET.ImGui.ImGui.GetCursorScreenPos();
         Vector2 local = new(aPosition.X - origin.X, aPosition.Y - origin.Y);
 
         int lineNo = Math.Max(0, (int)Math.Floor(local.Y / _characterAdvance.Y));
@@ -348,7 +348,7 @@ public class TextEditor : Component
 
                 if (line[columnIndex].Character == '\t')
                 {
-                    float spaceSize = ImGuiNET.ImGui.GetFont().CalcTextSizeA(ImGuiNET.ImGui.GetFontSize(), float.MaxValue, -1.0f, " ").X;
+                    float spaceSize = Hexa.NET.ImGui.ImGui.CalcTextSizeA(Hexa.NET.ImGui.ImGui.GetFont(), Hexa.NET.ImGui.ImGui.GetFontSize(), float.MaxValue, -1.0f, " ").X;
                     float oldX = columnX;
                     float newColumnX = (float)(1.0f + Math.Floor((1.0f + columnX) / (TabSize * spaceSize))) * (TabSize * spaceSize);
                     columnWidth = newColumnX - oldX;
@@ -360,7 +360,7 @@ public class TextEditor : Component
                 }
                 else
                 {
-                    columnWidth = ImGuiNET.ImGui.GetFont().CalcTextSizeA(ImGuiNET.ImGui.GetFontSize(), float.MaxValue, -1.0f, $"{line[columnIndex++].Character}").X;
+                    columnWidth = Hexa.NET.ImGui.ImGui.CalcTextSizeA(Hexa.NET.ImGui.ImGui.GetFont(), Hexa.NET.ImGui.ImGui.GetFontSize(), float.MaxValue, -1.0f, $"{line[columnIndex++].Character}").X;
                     if (_textStart + columnX + columnWidth * 0.5f > local.X)
                         break;
 
@@ -745,76 +745,76 @@ public class TextEditor : Component
 
     private void HandleKeyboardInputs()
     {
-        ImGuiIOPtr io = ImGuiNET.ImGui.GetIO();
+        ImGuiIOPtr io = Hexa.NET.ImGui.ImGui.GetIO();
 
         bool shift = io.KeyShift;
         bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
         bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
 
-        if (ImGuiNET.ImGui.IsWindowFocused())
+        if (Hexa.NET.ImGui.ImGui.IsWindowFocused())
         {
-            if (ImGuiNET.ImGui.IsWindowHovered())
-                ImGuiNET.ImGui.SetMouseCursor(ImGuiMouseCursor.TextInput);
+            if (Hexa.NET.ImGui.ImGui.IsWindowHovered())
+                Hexa.NET.ImGui.ImGui.SetMouseCursor(ImGuiMouseCursor.TextInput);
 
             io.WantCaptureKeyboard = true;
             io.WantTextInput = true;
 
-            if (!IsReadOnly && ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Z))
+            if (!IsReadOnly && ctrl && !shift && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.Z))
                 Undo();
-            else if (!IsReadOnly && !ctrl && !shift && alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Backspace))
+            else if (!IsReadOnly && !ctrl && !shift && alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.Backspace))
                 Undo();
-            else if (!IsReadOnly && ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Y))
+            else if (!IsReadOnly && ctrl && !shift && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.Y))
                 Redo();
-            else if (!ctrl && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.UpArrow))
+            else if (!ctrl && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.UpArrow))
                 MoveUp(1, shift);
-            else if (!ctrl && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.DownArrow))
+            else if (!ctrl && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.DownArrow))
                 MoveDown(1, shift);
-            else if (!alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.LeftArrow))
+            else if (!alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.LeftArrow))
                 MoveLeft(1, shift, ctrl);
-            else if (!alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.RightArrow))
+            else if (!alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.RightArrow))
                 MoveRight(1, shift, ctrl);
-            else if (!alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.PageUp))
+            else if (!alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.PageUp))
                 MoveUp(GetPageSize() - 4, shift);
-            else if (!alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.PageDown))
+            else if (!alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.PageDown))
                 MoveDown(GetPageSize() - 4, shift);
-            else if (!alt && ctrl && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Home))
+            else if (!alt && ctrl && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.Home))
                 MoveTop(shift);
-            else if (ctrl && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.End))
+            else if (ctrl && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.End))
                 MoveBottom(shift);
-            else if (!ctrl && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Home))
+            else if (!ctrl && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.Home))
                 MoveHome(shift);
-            else if (!ctrl && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.End))
+            else if (!ctrl && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.End))
                 MoveEnd(shift);
-            else if (!IsReadOnly && !ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Delete))
+            else if (!IsReadOnly && !ctrl && !shift && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.Delete))
                 Delete();
-            else if (!IsReadOnly && !ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Backspace))
+            else if (!IsReadOnly && !ctrl && !shift && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.Backspace))
                 Backspace();
-            else if (!ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Insert))
+            else if (!ctrl && !shift && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.Insert))
                 IsOverwrite ^= true;
-            else if (ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Insert))
+            else if (ctrl && !shift && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.Insert))
                 Copy();
-            else if (ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.C))
+            else if (ctrl && !shift && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.C))
                 Copy();
-            else if (!IsReadOnly && !ctrl && shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Insert))
+            else if (!IsReadOnly && !ctrl && shift && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.Insert))
                 Paste();
-            else if (!IsReadOnly && ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.V))
+            else if (!IsReadOnly && ctrl && !shift && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.V))
                 Paste();
-            else if (ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.X))
+            else if (ctrl && !shift && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.X))
                 Cut();
-            else if (!ctrl && shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Delete))
+            else if (!ctrl && shift && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.Delete))
                 Cut();
-            else if (ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.A))
+            else if (ctrl && !shift && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.A))
                 SelectAll();
-            else if (!IsReadOnly && !ctrl && !shift && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Enter))
+            else if (!IsReadOnly && !ctrl && !shift && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.Enter))
                 EnterCharacter('\n', false);
-            else if (!IsReadOnly && !ctrl && !alt && ImGuiNET.ImGui.IsKeyPressed(ImGuiKey.Tab))
+            else if (!IsReadOnly && !ctrl && !alt && Hexa.NET.ImGui.ImGui.IsKeyPressed(ImGuiKey.Tab))
                 EnterCharacter('\t', shift);
 
             if (!IsReadOnly && io.InputQueueCharacters.Size > 0)
             {
                 for (var i = 0; i < io.InputQueueCharacters.Size; i++)
                 {
-                    ushort c = io.InputQueueCharacters[i];
+                    uint c = io.InputQueueCharacters[i];
                     if (c != 0 && (c == '\n' || c >= 32))
                         EnterCharacter((char)c, shift);
                 }
@@ -824,19 +824,19 @@ public class TextEditor : Component
 
     private void HandleMouseInputs()
     {
-        ImGuiIOPtr io = ImGuiNET.ImGui.GetIO();
+        ImGuiIOPtr io = Hexa.NET.ImGui.ImGui.GetIO();
         bool shift = io.KeyShift;
         bool ctrl = io.ConfigMacOSXBehaviors ? io.KeySuper : io.KeyCtrl;
         bool alt = io.ConfigMacOSXBehaviors ? io.KeyCtrl : io.KeyAlt;
 
-        if (ImGuiNET.ImGui.IsWindowHovered())
+        if (Hexa.NET.ImGui.ImGui.IsWindowHovered())
         {
             if (!shift && !alt)
             {
-                double t = ImGuiNET.ImGui.GetTime();
+                double t = Hexa.NET.ImGui.ImGui.GetTime();
 
-                bool click = ImGuiNET.ImGui.IsMouseClicked(0);
-                bool doubleClick = ImGuiNET.ImGui.IsMouseDoubleClicked(0);
+                bool click = Hexa.NET.ImGui.ImGui.IsMouseClicked(0);
+                bool doubleClick = Hexa.NET.ImGui.ImGui.IsMouseDoubleClicked(0);
                 bool tripleClick = click && !doubleClick && _lastClick != -1.0f && t - _lastClick < io.MouseDoubleClickTime;
 
                 /*
@@ -848,7 +848,7 @@ public class TextEditor : Component
                     if (!ctrl)
                     {
                         mState.CursorPosition = _interactiveStart =
-                            _interactiveEnd = ScreenPosToCoordinates(ImGuiNET.ImGui.GetMousePos());
+                            _interactiveEnd = ScreenPosToCoordinates(Hexa.NET.ImGui.ImGui.GetMousePos());
                         _selectionMode = SelectionMode.Line;
                         SetSelection(_interactiveStart, _interactiveEnd, _selectionMode);
                     }
@@ -865,7 +865,7 @@ public class TextEditor : Component
                     if (!ctrl)
                     {
                         mState.CursorPosition = _interactiveStart =
-                            _interactiveEnd = ScreenPosToCoordinates(ImGuiNET.ImGui.GetMousePos());
+                            _interactiveEnd = ScreenPosToCoordinates(Hexa.NET.ImGui.ImGui.GetMousePos());
                         if (_selectionMode == SelectionMode.Line)
                             _selectionMode = SelectionMode.Normal;
                         else
@@ -873,7 +873,7 @@ public class TextEditor : Component
                         SetSelection(_interactiveStart, _interactiveEnd, _selectionMode);
                     }
 
-                    _lastClick = (float)ImGuiNET.ImGui.GetTime();
+                    _lastClick = (float)Hexa.NET.ImGui.ImGui.GetTime();
                 }
 
                 /*
@@ -883,20 +883,20 @@ public class TextEditor : Component
                 else if (click)
                 {
                     mState.CursorPosition =
-                        _interactiveStart = _interactiveEnd = ScreenPosToCoordinates(ImGuiNET.ImGui.GetMousePos());
+                        _interactiveStart = _interactiveEnd = ScreenPosToCoordinates(Hexa.NET.ImGui.ImGui.GetMousePos());
                     if (ctrl)
                         _selectionMode = SelectionMode.Word;
                     else
                         _selectionMode = SelectionMode.Normal;
                     SetSelection(_interactiveStart, _interactiveEnd, _selectionMode);
 
-                    _lastClick = (float)ImGuiNET.ImGui.GetTime();
+                    _lastClick = (float)Hexa.NET.ImGui.ImGui.GetTime();
                 }
                 // Mouse left button dragging (=> update selection)
-                else if (ImGuiNET.ImGui.IsMouseDragging(0) && ImGuiNET.ImGui.IsMouseDown(0))
+                else if (Hexa.NET.ImGui.ImGui.IsMouseDragging(0) && Hexa.NET.ImGui.ImGui.IsMouseDown(0))
                 {
                     io.WantCaptureMouse = true;
-                    mState.CursorPosition = _interactiveEnd = ScreenPosToCoordinates(ImGuiNET.ImGui.GetMousePos());
+                    mState.CursorPosition = _interactiveEnd = ScreenPosToCoordinates(Hexa.NET.ImGui.ImGui.GetMousePos());
                     SetSelection(_interactiveStart, _interactiveEnd, _selectionMode);
                 }
             }
@@ -906,33 +906,33 @@ public class TextEditor : Component
     private void Render()
     {
         /* Compute CharacterAdvance regarding to scaled font size (Ctrl + mouse wheel) */
-        float fontSize = ImGuiNET.ImGui.GetFont().CalcTextSizeA(ImGuiNET.ImGui.GetFontSize(), float.MaxValue, -1.0f, "#").X;
-        _characterAdvance = new Vector2(fontSize, ImGuiNET.ImGui.GetTextLineHeightWithSpacing() * LineSpacing);
+        float fontSize = Hexa.NET.ImGui.ImGui.CalcTextSizeA(Hexa.NET.ImGui.ImGui.GetFont(), Hexa.NET.ImGui.ImGui.GetFontSize(), float.MaxValue, -1.0f, "#").X;
+        _characterAdvance = new Vector2(fontSize, Hexa.NET.ImGui.ImGui.GetTextLineHeightWithSpacing() * LineSpacing);
 
         /* Update palette with the current alpha from style */
         for (var i = 0; i < (int)PaletteIndex.Max; ++i)
         {
-            Vector4 color = ImGuiNET.ImGui.ColorConvertU32ToFloat4(_setPalette[i]);
-            color.W *= ImGuiNET.ImGui.GetStyle().Alpha;
-            _currentPalette[i] = ImGuiNET.ImGui.ColorConvertFloat4ToU32(color);
+            Vector4 color = Hexa.NET.ImGui.ImGui.ColorConvertU32ToFloat4(_setPalette[i]);
+            color.W *= Hexa.NET.ImGui.ImGui.GetStyle().Alpha;
+            _currentPalette[i] = Hexa.NET.ImGui.ImGui.ColorConvertFloat4ToU32(color);
         }
 
         if (_lineBuffer != string.Empty)
             throw new InvalidOperationException("Data in line buffer.");
 
-        Vector2 contentSize = ImGuiNET.ImGui.GetContentRegionAvail();
-        ImDrawListPtr drawList = ImGuiNET.ImGui.GetWindowDrawList();
+        Vector2 contentSize = Hexa.NET.ImGui.ImGui.GetContentRegionAvail();
+        ImDrawListPtr drawList = Hexa.NET.ImGui.ImGui.GetWindowDrawList();
         float longest = _textStart;
 
         if (_scrollToTop)
         {
             _scrollToTop = false;
-            ImGuiNET.ImGui.SetScrollY(0f);
+            Hexa.NET.ImGui.ImGui.SetScrollY(0f);
         }
 
-        Vector2 cursorScreenPos = ImGuiNET.ImGui.GetCursorScreenPos();
-        float scrollX = ImGuiNET.ImGui.GetScrollX();
-        float scrollY = ImGuiNET.ImGui.GetScrollY();
+        Vector2 cursorScreenPos = Hexa.NET.ImGui.ImGui.GetCursorScreenPos();
+        float scrollX = Hexa.NET.ImGui.ImGui.GetScrollX();
+        float scrollY = Hexa.NET.ImGui.ImGui.GetScrollY();
 
         var lineNo = (int)Math.Floor(scrollY / _characterAdvance.Y);
         int globalLineMax = _lines.Count;
@@ -941,14 +941,14 @@ public class TextEditor : Component
 
         // Deduce mTextStart by evaluating Lines size (global lineMax) plus two spaces as text width
         if (IsShowingLineNumbers)
-            _textStart = ImGuiNET.ImGui.GetFont().CalcTextSizeA(ImGuiNET.ImGui.GetFontSize(), float.MaxValue, -1.0f, $" {globalLineMax} ").X +
+            _textStart = Hexa.NET.ImGui.ImGui.CalcTextSizeA(Hexa.NET.ImGui.ImGui.GetFont(), Hexa.NET.ImGui.ImGui.GetFontSize(), float.MaxValue, -1.0f, $" {globalLineMax} ").X +
                          LeftMargin;
         else
             _textStart = LeftMargin;
 
         if (_lines.Count > 0)
         {
-            float spaceSize = ImGuiNET.ImGui.GetFont().CalcTextSizeA(ImGuiNET.ImGui.GetFontSize(), float.MaxValue, -1.0f, " ").X;
+            float spaceSize = Hexa.NET.ImGui.ImGui.CalcTextSizeA(Hexa.NET.ImGui.ImGui.GetFont(), Hexa.NET.ImGui.ImGui.GetFontSize(), float.MaxValue, -1.0f, " ").X;
 
             while (lineNo <= lineMax)
             {
@@ -1004,17 +1004,17 @@ public class TextEditor : Component
                         lineStartScreenPos.Y + _characterAdvance.Y);
                     drawList.AddRectFilled(start, end, _currentPalette[(int)PaletteIndex.ErrorMarker]);
 
-                    if (ImGuiNET.ImGui.IsMouseHoveringRect(lineStartScreenPos, end))
+                    if (Hexa.NET.ImGui.ImGui.IsMouseHoveringRect(lineStartScreenPos, end))
                     {
-                        ImGuiNET.ImGui.BeginTooltip();
-                        ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, 0.2f, 0.2f, 1.0f));
-                        ImGuiNET.ImGui.Text($"Error at line {lineNo + 1}:");
-                        ImGuiNET.ImGui.PopStyleColor();
-                        ImGuiNET.ImGui.Separator();
-                        ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, 1.0f, 0.2f, 1.0f));
-                        ImGuiNET.ImGui.Text(errorIt);
-                        ImGuiNET.ImGui.PopStyleColor();
-                        ImGuiNET.ImGui.EndTooltip();
+                        Hexa.NET.ImGui.ImGui.BeginTooltip();
+                        Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, 0.2f, 0.2f, 1.0f));
+                        Hexa.NET.ImGui.ImGui.Text($"Error at line {lineNo + 1}:");
+                        Hexa.NET.ImGui.ImGui.PopStyleColor();
+                        Hexa.NET.ImGui.ImGui.Separator();
+                        Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1.0f, 1.0f, 0.2f, 1.0f));
+                        Hexa.NET.ImGui.ImGui.Text(errorIt);
+                        Hexa.NET.ImGui.ImGui.PopStyleColor();
+                        Hexa.NET.ImGui.ImGui.EndTooltip();
                     }
                 }
 
@@ -1024,14 +1024,14 @@ public class TextEditor : Component
                     var lineText = $"{lineNo + 1}  ";
 
                     float lineNoWidth =
-                        ImGuiNET.ImGui.GetFont().CalcTextSizeA(ImGuiNET.ImGui.GetFontSize(), float.MaxValue, -1.0f, lineText).X;
+                        Hexa.NET.ImGui.ImGui.CalcTextSizeA(Hexa.NET.ImGui.ImGui.GetFont(), Hexa.NET.ImGui.ImGui.GetFontSize(), float.MaxValue, -1.0f, lineText).X;
                     drawList.AddText(new Vector2(lineStartScreenPos.X + _textStart - lineNoWidth, lineStartScreenPos.Y),
                         _currentPalette[(int)PaletteIndex.LineNumber], lineText);
                 }
 
                 if (mState.CursorPosition.Line == lineNo)
                 {
-                    bool focused = ImGuiNET.ImGui.IsWindowFocused();
+                    bool focused = Hexa.NET.ImGui.ImGui.IsWindowFocused();
 
                     // Highlight the current line (where the cursor is)
                     if (!HasSelection())
@@ -1067,7 +1067,7 @@ public class TextEditor : Component
                                 }
                                 else
                                 {
-                                    width = ImGuiNET.ImGui.GetFont().CalcTextSizeA(ImGuiNET.ImGui.GetFontSize(), float.MaxValue, -1.0f, $"{line[cindex].Character}").X;
+                                    width = Hexa.NET.ImGui.ImGui.CalcTextSizeA(Hexa.NET.ImGui.ImGui.GetFont(), Hexa.NET.ImGui.ImGui.GetFontSize(), float.MaxValue, -1.0f, $"{line[cindex].Character}").X;
                                 }
                             }
 
@@ -1093,7 +1093,7 @@ public class TextEditor : Component
                     {
                         Vector2 newOffset = new(textScreenPos.X + bufferOffset.X, textScreenPos.Y + bufferOffset.Y);
                         drawList.AddText(newOffset, prevColor, _lineBuffer);
-                        Vector2 textSize = ImGuiNET.ImGui.GetFont().CalcTextSizeA(ImGuiNET.ImGui.GetFontSize(), float.MaxValue, -1.0f,
+                        Vector2 textSize = Hexa.NET.ImGui.ImGui.CalcTextSizeA(Hexa.NET.ImGui.ImGui.GetFont(), Hexa.NET.ImGui.ImGui.GetFontSize(), float.MaxValue, -1.0f,
                             _lineBuffer);
                         bufferOffset.X += textSize.X;
                         _lineBuffer = string.Empty;
@@ -1104,42 +1104,42 @@ public class TextEditor : Component
                     switch (glyph.Character)
                     {
                         case '\t':
-                        {
-                            float oldX = bufferOffset.X;
-                            bufferOffset.X = (float)(1.0f + Math.Floor((1.0f + bufferOffset.X) / (TabSize * spaceSize))) * (TabSize * spaceSize);
-                            ++i;
-
-                            if (IsShowingWhitespaces)
                             {
-                                float s = ImGuiNET.ImGui.GetFontSize();
-                                float x1 = textScreenPos.X + oldX + 1.0f;
-                                float x2 = textScreenPos.X + bufferOffset.X - 1.0f;
-                                float y = textScreenPos.Y + bufferOffset.Y + s * 0.5f;
-                                Vector2 p1 = new(x1, y);
-                                Vector2 p2 = new(x2, y);
-                                Vector2 p3 = new(x2 - s * 0.2f, y - s * 0.2f);
-                                Vector2 p4 = new(x2 - s * 0.2f, y + s * 0.2f);
-                                drawList.AddLine(p1, p2, 0x90909090);
-                                drawList.AddLine(p2, p3, 0x90909090);
-                                drawList.AddLine(p2, p4, 0x90909090);
-                            }
+                                float oldX = bufferOffset.X;
+                                bufferOffset.X = (float)(1.0f + Math.Floor((1.0f + bufferOffset.X) / (TabSize * spaceSize))) * (TabSize * spaceSize);
+                                ++i;
 
-                            break;
-                        }
+                                if (IsShowingWhitespaces)
+                                {
+                                    float s = Hexa.NET.ImGui.ImGui.GetFontSize();
+                                    float x1 = textScreenPos.X + oldX + 1.0f;
+                                    float x2 = textScreenPos.X + bufferOffset.X - 1.0f;
+                                    float y = textScreenPos.Y + bufferOffset.Y + s * 0.5f;
+                                    Vector2 p1 = new(x1, y);
+                                    Vector2 p2 = new(x2, y);
+                                    Vector2 p3 = new(x2 - s * 0.2f, y - s * 0.2f);
+                                    Vector2 p4 = new(x2 - s * 0.2f, y + s * 0.2f);
+                                    drawList.AddLine(p1, p2, 0x90909090);
+                                    drawList.AddLine(p2, p3, 0x90909090);
+                                    drawList.AddLine(p2, p4, 0x90909090);
+                                }
+
+                                break;
+                            }
                         case ' ':
-                        {
-                            if (IsShowingWhitespaces)
                             {
-                                float s = ImGuiNET.ImGui.GetFontSize();
-                                float x = textScreenPos.X + bufferOffset.X + spaceSize * 0.5f;
-                                float y = textScreenPos.Y + bufferOffset.Y + s * 0.5f;
-                                drawList.AddCircleFilled(new Vector2(x, y), 1.5f, 0x80808080, 4);
-                            }
+                                if (IsShowingWhitespaces)
+                                {
+                                    float s = Hexa.NET.ImGui.ImGui.GetFontSize();
+                                    float x = textScreenPos.X + bufferOffset.X + spaceSize * 0.5f;
+                                    float y = textScreenPos.Y + bufferOffset.Y + s * 0.5f;
+                                    drawList.AddCircleFilled(new Vector2(x, y), 1.5f, 0x80808080, 4);
+                                }
 
-                            bufferOffset.X += spaceSize;
-                            i++;
-                            break;
-                        }
+                                bufferOffset.X += spaceSize;
+                                i++;
+                                break;
+                            }
                         default:
                             _lineBuffer += line[i++].Character;
                             break;
@@ -1159,31 +1159,31 @@ public class TextEditor : Component
             }
 
             // Draw a tooltip on known identifiers/preprocessor symbols
-            if (ImGuiNET.ImGui.IsMousePosValid())
+            if (Hexa.NET.ImGui.ImGui.IsMousePosValid())
             {
-                string id = GetWordAt(ScreenPosToCoordinates(ImGuiNET.ImGui.GetMousePos()));
+                string id = GetWordAt(ScreenPosToCoordinates(Hexa.NET.ImGui.ImGui.GetMousePos()));
                 if (id.Length > 0)
                 {
                     if (_languageDefinition.Identifiers.TryGetValue(id, out Identifier it))
                     {
-                        ImGuiNET.ImGui.BeginTooltip();
-                        ImGuiNET.ImGui.TextUnformatted(it.Value);
-                        ImGuiNET.ImGui.EndTooltip();
+                        Hexa.NET.ImGui.ImGui.BeginTooltip();
+                        Hexa.NET.ImGui.ImGui.TextUnformatted(it.Value);
+                        Hexa.NET.ImGui.ImGui.EndTooltip();
                     }
                     else
                     {
                         if (_languageDefinition.Preprocessors.TryGetValue(id, out Identifier pi))
                         {
-                            ImGuiNET.ImGui.BeginTooltip();
-                            ImGuiNET.ImGui.TextUnformatted(pi.Value);
-                            ImGuiNET.ImGui.EndTooltip();
+                            Hexa.NET.ImGui.ImGui.BeginTooltip();
+                            Hexa.NET.ImGui.ImGui.TextUnformatted(pi.Value);
+                            Hexa.NET.ImGui.ImGui.EndTooltip();
                         }
                     }
                 }
             }
         }
 
-        ImGuiNET.ImGui.Dummy(new Vector2(longest + 2, _lines.Count * _characterAdvance.Y));
+        Hexa.NET.ImGui.ImGui.Dummy(new Vector2(longest + 2, _lines.Count * _characterAdvance.Y));
 
         if (_scrollToSelection)
         {
@@ -1193,7 +1193,7 @@ public class TextEditor : Component
         else if (_scrollToCursor)
         {
             EnsureCursorVisible();
-            ImGuiNET.ImGui.SetWindowFocus();
+            Hexa.NET.ImGui.ImGui.SetWindowFocus();
             _scrollToCursor = false;
         }
     }
@@ -1204,11 +1204,11 @@ public class TextEditor : Component
         _isTextChanged = false;
         _isCursorPositionChanged = false;
 
-        ImGuiNET.ImGui.PushStyleColor(ImGuiCol.ChildBg,
-            ImGuiNET.ImGui.ColorConvertU32ToFloat4(_currentPalette[(int)PaletteIndex.Background]));
-        ImGuiNET.ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
+        Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.ChildBg,
+            Hexa.NET.ImGui.ImGui.ColorConvertU32ToFloat4(_currentPalette[(int)PaletteIndex.Background]));
+        Hexa.NET.ImGui.ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
 
-        ImGuiNET.ImGui.BeginChild(aTitle, aSize, aBorder ? ImGuiChildFlags.Border : ImGuiChildFlags.None,
+        Hexa.NET.ImGui.ImGui.BeginChild(aTitle, aSize, aBorder ? ImGuiChildFlags.Borders : ImGuiChildFlags.None,
             ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.NoMove);
 
         if (IsHandleKeyboardInputsEnabled)
@@ -1220,10 +1220,10 @@ public class TextEditor : Component
         ColorizeInternal();
         Render();
 
-        ImGuiNET.ImGui.EndChild();
+        Hexa.NET.ImGui.ImGui.EndChild();
 
-        ImGuiNET.ImGui.PopStyleVar();
-        ImGuiNET.ImGui.PopStyleColor();
+        Hexa.NET.ImGui.ImGui.PopStyleVar();
+        Hexa.NET.ImGui.ImGui.PopStyleColor();
 
         _withinRender = false;
 
@@ -1514,20 +1514,20 @@ public class TextEditor : Component
             case SelectionMode.Normal:
                 break;
             case SelectionMode.Word:
-            {
-                mState.SelectionStart = FindWordStart(mState.SelectionStart);
-                if (!IsOnWordBoundary(mState.SelectionEnd))
-                    mState.SelectionEnd = FindWordEnd(FindWordStart(mState.SelectionEnd));
-                break;
-            }
+                {
+                    mState.SelectionStart = FindWordStart(mState.SelectionStart);
+                    if (!IsOnWordBoundary(mState.SelectionEnd))
+                        mState.SelectionEnd = FindWordEnd(FindWordStart(mState.SelectionEnd));
+                    break;
+                }
             case SelectionMode.Line:
-            {
-                int lineNo = mState.SelectionEnd.Line;
-                int lineSize = lineNo < _lines.Count ? _lines[lineNo].Length : 0;
-                mState.SelectionStart = new Coordinate(mState.SelectionStart.Line, 0);
-                mState.SelectionEnd = new Coordinate(lineNo, GetLineMaxColumn(lineNo));
-                break;
-            }
+                {
+                    int lineNo = mState.SelectionEnd.Line;
+                    int lineSize = lineNo < _lines.Count ? _lines[lineNo].Length : 0;
+                    mState.SelectionStart = new Coordinate(mState.SelectionStart.Line, 0);
+                    mState.SelectionEnd = new Coordinate(lineNo, GetLineMaxColumn(lineNo));
+                    break;
+                }
             default:
                 break;
         }
@@ -1996,7 +1996,7 @@ public class TextEditor : Component
     {
         if (HasSelection())
         {
-            ImGuiNET.ImGui.SetClipboardText(GetSelectedText());
+            Hexa.NET.ImGui.ImGui.SetClipboardText(GetSelectedText());
         }
         else
         {
@@ -2006,7 +2006,7 @@ public class TextEditor : Component
                 GlyphLine line = _lines[GetCursorPosition().Line];
                 foreach (Glyph g in line.Glyphs)
                     str += g.Character;
-                ImGuiNET.ImGui.SetClipboardText(str);
+                Hexa.NET.ImGui.ImGui.SetClipboardText(str);
             }
         }
     }
@@ -2036,12 +2036,12 @@ public class TextEditor : Component
         }
     }
 
-    public void Paste()
+    public unsafe void Paste()
     {
         if (IsReadOnly)
             return;
 
-        string clipText = ImGuiNET.ImGui.GetClipboardText();
+        string clipText = Hexa.NET.ImGui.ImGui.GetClipboardTextS();
         if (clipText != null && clipText.Length > 0)
         {
             UndoRecord u = new();
@@ -2367,22 +2367,22 @@ public class TextEditor : Component
                         switch (c)
                         {
                             case '\"' when currentIndex + 1 < line.Length && line[currentIndex + 1].Character == '\"':
-                            {
-                                currentIndex += 1;
-                                if (currentIndex < line.Length)
-                                    currentGlyph.IsMultiLineComment = inComment;
-                                break;
-                            }
+                                {
+                                    currentIndex += 1;
+                                    if (currentIndex < line.Length)
+                                        currentGlyph.IsMultiLineComment = inComment;
+                                    break;
+                                }
                             case '\"':
                                 withinString = false;
                                 break;
                             case '\\':
-                            {
-                                currentIndex += 1;
-                                if (currentIndex < line.Length)
-                                    currentGlyph.IsMultiLineComment = inComment;
-                                break;
-                            }
+                                {
+                                    currentIndex += 1;
+                                    if (currentIndex < line.Length)
+                                        currentGlyph.IsMultiLineComment = inComment;
+                                    break;
+                                }
                         }
                     }
                     else
@@ -2470,7 +2470,7 @@ public class TextEditor : Component
     {
         GlyphLine line = _lines[aFrom.Line];
         var distance = 0.0f;
-        float spaceSize = ImGuiNET.ImGui.GetFont().CalcTextSizeA(ImGuiNET.ImGui.GetFontSize(), float.MaxValue, -1.0f, " ").X;
+        float spaceSize = Hexa.NET.ImGui.ImGui.CalcTextSizeA(Hexa.NET.ImGui.ImGui.GetFont(), Hexa.NET.ImGui.ImGui.GetFontSize(), float.MaxValue, -1.0f, " ").X;
         int colIndex = GetCharacterIndex(aFrom);
         for (var it = 0; it < line.Length && it < colIndex;)
         {
@@ -2481,7 +2481,7 @@ public class TextEditor : Component
             }
             else
             {
-                distance += ImGuiNET.ImGui.GetFont().CalcTextSizeA(ImGuiNET.ImGui.GetFontSize(), float.MaxValue, -1.0f, $"{line[it++].Character}").X;
+                distance += Hexa.NET.ImGui.ImGui.CalcTextSizeA(Hexa.NET.ImGui.ImGui.GetFont(), Hexa.NET.ImGui.ImGui.GetFontSize(), float.MaxValue, -1.0f, $"{line[it++].Character}").X;
             }
         }
 
@@ -2512,11 +2512,11 @@ public class TextEditor : Component
 
     private void EnsureCoordinateVisible(Coordinate aCoordinate)
     {
-        float scrollX = ImGuiNET.ImGui.GetScrollX();
-        float scrollY = ImGuiNET.ImGui.GetScrollY();
+        float scrollX = Hexa.NET.ImGui.ImGui.GetScrollX();
+        float scrollY = Hexa.NET.ImGui.ImGui.GetScrollY();
 
-        float height = ImGuiNET.ImGui.GetWindowHeight();
-        float width = ImGuiNET.ImGui.GetWindowWidth();
+        float height = Hexa.NET.ImGui.ImGui.GetWindowHeight();
+        float width = Hexa.NET.ImGui.ImGui.GetWindowWidth();
 
         int top = 1 + (int)Math.Ceiling(scrollY / _characterAdvance.Y);
         var bottom = (int)Math.Ceiling((scrollY + height) / _characterAdvance.Y);
@@ -2528,18 +2528,18 @@ public class TextEditor : Component
         float len = TextDistanceToLineStart(pos);
 
         if (pos.Line < top)
-            ImGuiNET.ImGui.SetScrollY(Math.Max(0.0f, (pos.Line - 1) * _characterAdvance.Y));
+            Hexa.NET.ImGui.ImGui.SetScrollY(Math.Max(0.0f, (pos.Line - 1) * _characterAdvance.Y));
         if (pos.Line > bottom - 4)
-            ImGuiNET.ImGui.SetScrollY(Math.Max(0.0f, (pos.Line + 4) * _characterAdvance.Y - height));
+            Hexa.NET.ImGui.ImGui.SetScrollY(Math.Max(0.0f, (pos.Line + 4) * _characterAdvance.Y - height));
         if (len + _textStart < left + 4)
-            ImGuiNET.ImGui.SetScrollX(Math.Max(0.0f, len + _textStart - 4));
+            Hexa.NET.ImGui.ImGui.SetScrollX(Math.Max(0.0f, len + _textStart - 4));
         if (len + _textStart > right - 4)
-            ImGuiNET.ImGui.SetScrollX(Math.Max(0.0f, len + _textStart + 4 - width));
+            Hexa.NET.ImGui.ImGui.SetScrollX(Math.Max(0.0f, len + _textStart + 4 - width));
     }
 
     private int GetPageSize()
     {
-        float height = ImGuiNET.ImGui.GetWindowHeight() - 20.0f;
+        float height = Hexa.NET.ImGui.ImGui.GetWindowHeight() - 20.0f;
         return (int)Math.Floor(height / _characterAdvance.Y);
     }
 }

@@ -1,8 +1,8 @@
 ﻿using ImGui.Forms.Models;
-using ImGuiNET;
 using System;
 using System.Numerics;
-using Veldrid;
+using Hexa.NET.ImGui;
+using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls.Base;
 
@@ -52,17 +52,17 @@ public class ZoomableComponent : Component
 
     protected override void UpdateInternal(Rectangle contentRect)
     {
-        if (ImGuiNET.ImGui.BeginChild($"{Id}", contentRect.Size))
+        if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}", contentRect.Size))
         {
-            ImGuiNET.ImGui.Dummy(contentRect.Size);
+            Hexa.NET.ImGui.ImGui.Dummy(contentRect.Size);
 
             var componentCenterPosition = contentRect.Position + contentRect.Size / 2;
             var translatedComponentCenterPosition = componentCenterPosition + _transform.Translation;
 
-            var io = ImGuiNET.ImGui.GetIO();
+            var io = Hexa.NET.ImGui.ImGui.GetIO();
 
             // On mouse scroll, rescale matrix
-            if (io.MouseWheel != 0 && ImGuiNET.ImGui.IsItemHovered())
+            if (io.MouseWheel != 0 && Hexa.NET.ImGui.ImGui.IsItemHovered())
             {
                 var scale = Vector2.One + new Vector2(io.MouseWheel / 8);
                 var translatedMousePosition = io.MousePos + _transform.Translation;
@@ -72,27 +72,27 @@ public class ZoomableComponent : Component
             }
 
             // On mouse down, re-translate matrix
-            if (!_mouseDown && !ImGuiNET.ImGui.IsMouseDragging(ImGuiMouseButton.Right) &&
-                ImGuiNET.ImGui.IsItemHovered() && ImGuiNET.ImGui.IsMouseDown(ImGuiMouseButton.Right))
+            if (!_mouseDown && !Hexa.NET.ImGui.ImGui.IsMouseDragging(ImGuiMouseButton.Right) &&
+                Hexa.NET.ImGui.ImGui.IsItemHovered() && Hexa.NET.ImGui.ImGui.IsMouseDown(ImGuiMouseButton.Right))
             {
-                _mouseDownPosition = ImGuiNET.ImGui.GetMousePos();
+                _mouseDownPosition = Hexa.NET.ImGui.ImGui.GetMousePos();
                 _mouseDown = true;
 
-                ImGuiNET.ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeNESW);
+                Hexa.NET.ImGui.ImGui.SetMouseCursor(ImGuiMouseCursor.ResizeNesw);
             }
 
-            if (ImGuiNET.ImGui.IsMouseReleased(ImGuiMouseButton.Right))
+            if (Hexa.NET.ImGui.ImGui.IsMouseReleased(ImGuiMouseButton.Right))
             {
                 _mouseDownPosition = Vector2.Zero;
                 _mouseDown = false;
 
-                ImGuiNET.ImGui.SetMouseCursor(ImGuiMouseCursor.Arrow);
+                Hexa.NET.ImGui.ImGui.SetMouseCursor(ImGuiMouseCursor.Arrow);
             }
 
-            if (_mouseDown && ImGuiNET.ImGui.IsItemHovered())
+            if (_mouseDown && Hexa.NET.ImGui.ImGui.IsItemHovered())
             {
-                _transform *= Matrix3x2.CreateTranslation(ImGuiNET.ImGui.GetMousePos() - _mouseDownPosition);
-                _mouseDownPosition = ImGuiNET.ImGui.GetMousePos();
+                _transform *= Matrix3x2.CreateTranslation(Hexa.NET.ImGui.ImGui.GetMousePos() - _mouseDownPosition);
+                _mouseDownPosition = Hexa.NET.ImGui.ImGui.GetMousePos();
 
                 OnContentMoved();
             }
@@ -100,7 +100,7 @@ public class ZoomableComponent : Component
             DrawInternal(contentRect);
         }
 
-        ImGuiNET.ImGui.EndChild();
+        Hexa.NET.ImGui.ImGui.EndChild();
     }
 
     protected virtual void DrawInternal(Rectangle contentRect) { }
@@ -115,12 +115,7 @@ public class ZoomableComponent : Component
         var absoluteContentPosition = contentCenterPosition + _transform.Translation + scaledContentPosition;
         var absoluteContentEndPosition = absoluteContentPosition + scaledContentSize;
 
-        return new Rectangle(
-            (int)absoluteContentPosition.X,
-            (int)absoluteContentPosition.Y,
-            (int)(absoluteContentEndPosition.X - absoluteContentPosition.X),
-            (int)(absoluteContentEndPosition.Y - absoluteContentPosition.Y)
-        );
+        return new Rectangle(absoluteContentPosition, absoluteContentEndPosition - absoluteContentPosition);
     }
 
     protected Vector2 Transform(Rectangle contentRect, Vector2 toTransform)

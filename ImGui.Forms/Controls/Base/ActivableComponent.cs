@@ -16,7 +16,7 @@ public abstract class ActivableComponent : Component
     /// </summary>
     /// <returns></returns>
     /// <remarks>This method is preferred over <see cref="Active"/> since it reflects changes by <see cref="ToggleActive"/>.</remarks>
-    public bool IsActive() => Enabled && (Active || (ImGuiNET.ImGui.IsItemHovered() && ImGuiNET.ImGui.IsItemActive()));
+    public bool IsActive() => Enabled && (Active || (Hexa.NET.ImGui.ImGui.IsItemHovered() && Hexa.NET.ImGui.ImGui.IsItemActive()));
 
     /// <summary>
     /// Toggle the state of activity for the component based on <paramref name="toggleActive"/>.

@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Models;
-using ImGuiNET;
-using Veldrid;
+using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls.Layouts;
 
@@ -75,11 +75,8 @@ public class TableLayout : Component
 
     protected override void UpdateInternal(Rectangle contentRect)
     {
-        if (Id == 0x5d63b6bd)
-            ;
-
-        var localWidths = GetColumnWidths(contentRect.Width, contentRect.Height, 1f);
-        var localHeights = GetRowHeights(contentRect.Width, contentRect.Height, 1f);
+        var localWidths = GetColumnWidths((int)contentRect.Width, (int)contentRect.Height, 1f);
+        var localHeights = GetRowHeights((int)contentRect.Width, (int)contentRect.Height, 1f);
 
         var totalWidth = localWidths.Sum() + Spacing.X * (localWidths.Length - 1);
         var totalHeight = localHeights.Sum() + Spacing.Y * (localHeights.Length - 1);
@@ -88,21 +85,21 @@ public class TableLayout : Component
         if (contentRect.Height < totalHeight)
             childFlags |= ImGuiWindowFlags.AlwaysVerticalScrollbar;
 
-        if (ImGuiNET.ImGui.BeginChild($"{Id}", contentRect.Size, ImGuiChildFlags.None, childFlags))
+        if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}", contentRect.Size, ImGuiChildFlags.None, childFlags))
         {
             Vector2 initPosition = GetInitPoint(localWidths, localHeights, contentRect);
-            ImGuiNET.ImGui.SetCursorPos(initPosition);
+            Hexa.NET.ImGui.ImGui.SetCursorPos(initPosition);
 
-            float outerScrollX = ImGuiNET.ImGui.GetScrollX();
-            float outerScrollY = ImGuiNET.ImGui.GetScrollY();
+            float outerScrollX = Hexa.NET.ImGui.ImGui.GetScrollX();
+            float outerScrollY = Hexa.NET.ImGui.ImGui.GetScrollY();
 
-            if (ImGuiNET.ImGui.BeginChild($"{Id}-in", new Vector2(totalWidth, totalHeight), ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar))
+            if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}-in", new Vector2(totalWidth, totalHeight), ImGuiChildFlags.None, ImGuiWindowFlags.NoScrollbar))
             {
                 var cellPosition = Vector2.Zero;
                 float origX = cellPosition.X;
 
-                float innerScrollX = ImGuiNET.ImGui.GetScrollX();
-                float innerScrollY = ImGuiNET.ImGui.GetScrollY();
+                float innerScrollX = Hexa.NET.ImGui.ImGui.GetScrollX();
+                float innerScrollY = Hexa.NET.ImGui.ImGui.GetScrollY();
 
                 var localCells = Rows.Select(r => r.Cells).ToArray();
                 var localMaxColumns = GetMaxColumnCount();
@@ -158,13 +155,13 @@ public class TableLayout : Component
 
                             // Draw cell border
                             if (cell.ShowBorder)
-                                ImGuiNET.ImGui.GetWindowDrawList().AddRect(cellPos, cellPos + new Vector2(cellWidth, cellHeight), ImGuiNET.ImGui.GetColorU32(ImGuiCol.Border), 0);
+                                Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddRect(cellPos, cellPos + new Vector2(cellWidth, cellHeight), Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.Border));
 
                             // Draw cell container
-                            ImGuiNET.ImGui.SetCursorPos(cellPosition + cellOffset);
+                            Hexa.NET.ImGui.ImGui.SetCursorPos(cellPosition + cellOffset);
 
                             // Draw component
-                            cell.Content?.Update(new Rectangle((int)cellPos.X, (int)cellPos.Y, cellInternalWidth, cellInternalHeight));
+                            cell.Content?.Update(new Rectangle(cellPos, new Vector2(cellInternalWidth, cellInternalHeight)));
                         }
 
                         cellPosition += new Vector2(cellWidth + (cellWidth <= 0 ? 0 : Spacing.X), 0);
@@ -175,10 +172,10 @@ public class TableLayout : Component
                 }
             }
 
-            ImGuiNET.ImGui.EndChild();
+            Hexa.NET.ImGui.ImGui.EndChild();
         }
 
-        ImGuiNET.ImGui.EndChild();
+        Hexa.NET.ImGui.ImGui.EndChild();
     }
 
     protected override void SetTabInactiveCore()
@@ -423,11 +420,11 @@ public class TableLayout : Component
         switch (HorizontalAlignment)
         {
             case HorizontalAlignment.Center:
-                addX = (contentRect.Width - totalWidth) / 2;
+                addX = ((int)contentRect.Width - totalWidth) / 2;
                 break;
 
             case HorizontalAlignment.Right:
-                addX = contentRect.Width - totalWidth;
+                addX = (int)contentRect.Width - totalWidth;
                 break;
         }
 
@@ -435,16 +432,16 @@ public class TableLayout : Component
         switch (VerticalAlignment)
         {
             case VerticalAlignment.Center:
-                addY = (contentRect.Height - totalHeight) / 2;
+                addY = ((int)contentRect.Height - totalHeight) / 2;
                 break;
 
             case VerticalAlignment.Bottom:
-                addY = contentRect.Height - totalHeight;
+                addY = (int)contentRect.Height - totalHeight;
                 break;
         }
 
-        float x = ImGuiNET.ImGui.GetCursorPosX() + addX;
-        float y = ImGuiNET.ImGui.GetCursorPosY() + addY;
+        float x = Hexa.NET.ImGui.ImGui.GetCursorPosX() + addX;
+        float y = Hexa.NET.ImGui.ImGui.GetCursorPosY() + addY;
 
         return new Vector2(x, y);
     }

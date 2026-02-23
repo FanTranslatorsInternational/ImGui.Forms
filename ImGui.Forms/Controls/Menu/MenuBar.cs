@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Resources;
-using ImGuiNET;
 
 namespace ImGui.Forms.Controls.Menu;
 
@@ -11,7 +11,7 @@ public abstract class MenuBar
 
     public IList<MenuBarItem> Items { get; } = new List<MenuBarItem>();
 
-    public FontResource Font { get; set; }
+    public FontResource? Font { get; set; }
 
     public int Height => GetHeight();
 
@@ -24,20 +24,20 @@ public abstract class MenuBar
     {
         ImFontPtr? fontPtr = Font?.GetPointer();
         if (fontPtr != null)
-            ImGuiNET.ImGui.PushFont(fontPtr.Value);
+            Hexa.NET.ImGui.ImGui.PushFont(fontPtr.Value, Font!.Data.Size);
 
         // Begin menu bar
         bool isMenuOpen = _isMain ?
-            ImGuiNET.ImGui.BeginMainMenuBar() :
-            ImGuiNET.ImGui.BeginMenuBar();
+            Hexa.NET.ImGui.ImGui.BeginMainMenuBar() :
+            Hexa.NET.ImGui.ImGui.BeginMenuBar();
         if (isMenuOpen)
         {
             // Add content to menu bar
             foreach (var child in Items)
                 child.Update();
 
-            if (_isMain) ImGuiNET.ImGui.EndMainMenuBar();
-            else ImGuiNET.ImGui.EndMenuBar();
+            if (_isMain) Hexa.NET.ImGui.ImGui.EndMainMenuBar();
+            else Hexa.NET.ImGui.ImGui.EndMenuBar();
         }
         else
         {
@@ -46,22 +46,22 @@ public abstract class MenuBar
         }
 
         if (fontPtr != null)
-            ImGuiNET.ImGui.PopFont();
+            Hexa.NET.ImGui.ImGui.PopFont();
     }
 
     private int GetHeight()
     {
         ImFontPtr? fontPtr = Font?.GetPointer();
         if (fontPtr != null)
-            ImGuiNET.ImGui.PushFont(fontPtr.Value);
+            Hexa.NET.ImGui.ImGui.PushFont(fontPtr.Value, Font!.Data.Size);
 
         var height = Items.Count > 0
             ? Items.Max(x => x.Height) :
             // HINT: It's currently unknown where those 3 pixels come from, but they have to be added to get the correct size of the menu
-            (int)(TextMeasurer.GetCurrentLineHeight() + ImGuiNET.ImGui.GetStyle().FramePadding.Y * 2) + 3;
+            (int)(TextMeasurer.GetCurrentLineHeight() + Hexa.NET.ImGui.ImGui.GetStyle().FramePadding.Y * 2) + 3;
 
         if (fontPtr != null)
-            ImGuiNET.ImGui.PopFont();
+            Hexa.NET.ImGui.ImGui.PopFont();
 
         return height;
     }

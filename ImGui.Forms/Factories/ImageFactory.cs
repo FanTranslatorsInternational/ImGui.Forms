@@ -1,36 +1,26 @@
-﻿using System.Collections.Generic;
-using ImGui.Forms.Support.Veldrid.ImGui;
+using Hexa.NET.SDL3;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
-using Veldrid;
+using System;
+using System.Collections.Generic;
 
 namespace ImGui.Forms.Factories;
 
-class ImageFactory
+class ImageFactory(SDLGPUDevicePtr gpuDevice)
 {
-    private readonly GraphicsDevice _gd;
-    private readonly ImGuiRenderer _controller;
-
     private readonly Dictionary<Image<Rgba32>, nint> _inputPointers = [];
     private readonly Dictionary<nint, Image<Rgba32>> _inputPointersReverse = [];
-    private readonly Dictionary<nint, Texture> _ptrTextures = [];
+    private readonly Dictionary<nint, SDLGPUTexturePtr> _ptrTextures = [];
     private readonly Dictionary<nint, int> _ptrTexturesRefCount = [];
-
     private readonly List<nint> _unloadQueue = [];
-
-    public ImageFactory(GraphicsDevice gd, ImGuiRenderer controller)
-    {
-        _gd = gd;
-        _controller = controller;
-    }
 
     public nint LoadImage(Image<Rgba32> img)
     {
         nint ptr;
 
-        if (_inputPointers.ContainsKey(img))
+        if (_inputPointers.TryGetValue(img, out IntPtr texturePtr))
         {
-            ptr = _inputPointers[img];
+            ptr = texturePtr;
             UpdateImage(ptr);
 
             _ptrTexturesRefCount[ptr]++;
@@ -38,7 +28,7 @@ class ImageFactory
             return ptr;
         }
 
-        ptr = LoadImageInternal(img);
+        ptr = Load2DTexture(img);
 
         _inputPointers[img] = ptr;
         _inputPointersReverse[ptr] = img;
@@ -49,10 +39,10 @@ class ImageFactory
 
     public void UpdateImage(nint ptr)
     {
-        if (!_ptrTextures.ContainsKey(ptr) || !_inputPointersReverse.ContainsKey(ptr))
+        if (!_ptrTextures.ContainsKey(ptr) || !_inputPointersReverse.TryGetValue(ptr, out Image<Rgba32>? texture))
             return;
 
-        CopyImageData(_ptrTextures[ptr], _inputPointersReverse[ptr]);
+        TransferToGpuTexture(_ptrTextures[ptr], texture);
     }
 
     public void UnloadImage(nint ptr)
@@ -64,29 +54,81 @@ class ImageFactory
         _unloadQueue.Add(ptr);
     }
 
-    private nint LoadImageInternal(Image<Rgba32> image)
+    private unsafe nint Load2DTexture(Image<Rgba32> image)
     {
-        var texture = _gd.ResourceFactory.CreateTexture(TextureDescription.Texture2D(
-            (uint)image.Width, (uint)image.Height, 1, 1, PixelFormat.R8_G8_B8_A8_UNorm, TextureUsage.Sampled));
-
-        CopyImageData(texture, image);
+        SDLGPUTexturePtr gpuTexture = CreateGpuTexture(image);
 
         // Add image pointer to cache
-        var imgPtr = _controller.GetOrCreateImGuiBinding(_gd.ResourceFactory, texture);
-        _ptrTextures[imgPtr] = texture;
+        var imgPtr = (nint)gpuTexture.Handle;
+        _ptrTextures[imgPtr] = gpuTexture;
 
         return imgPtr;
     }
 
-    private unsafe void CopyImageData(Texture texture, Image<Rgba32> image)
+    private SDLGPUTexturePtr CreateGpuTexture(Image<Rgba32> image)
     {
+        SDLGPUTexturePtr gpuTexture = SDL.CreateGPUTexture(gpuDevice, new SDLGPUTextureCreateInfo
+        {
+            Width = (uint)image.Width,
+            Height = (uint)image.Height,
+            Format = SDLGPUTextureFormat.R8G8B8A8Unorm,
+            Type = SDLGPUTextureType.Texturetype2D,
+            LayerCountOrDepth = 1,
+            NumLevels = 1,
+            SampleCount = SDLGPUSampleCount.Samplecount1,
+            Usage = (int)SDLGPUTextureUsageFlags.Sampler
+        });
+
+        TransferToGpuTexture(gpuTexture, image);
+
+        return gpuTexture;
+    }
+
+    private unsafe void TransferToGpuTexture(SDLGPUTexturePtr gpuTexture, Image<Rgba32> image)
+    {
+        // Transfer image into temporary buffer
+        int size = image.Width * image.Height * 4;
+
+        SDLGPUTransferBufferPtr transferBuffer = SDL.CreateGPUTransferBuffer(gpuDevice, new SDLGPUTransferBufferCreateInfo
+        {
+            Size = (uint)size,
+            Usage = SDLGPUTransferBufferUsage.Upload
+        });
+
+        void* texturePtr = SDL.MapGPUTransferBuffer(gpuDevice, transferBuffer, true);
+
         var copiedImage = new Rgba32[image.Width * image.Height];
         image.CopyPixelDataTo(copiedImage);
 
-        int size = image.Width * image.Height * 4;
-
         fixed (Rgba32* imgData = copiedImage)
-            _gd.UpdateTexture(texture, (nint)imgData, (uint)size, 0, 0, 0, (uint)image.Width, (uint)image.Height, 1, 0, 0);
+            Buffer.MemoryCopy(imgData, texturePtr, size, size);
+
+        SDL.UnmapGPUTransferBuffer(gpuDevice, transferBuffer);
+
+        // Upload texture
+        var transferInfo = new SDLGPUTextureTransferInfo
+        {
+            Offset = 0,
+            TransferBuffer = transferBuffer
+        };
+
+        var textureRegion = new SDLGPUTextureRegion
+        {
+            Texture = gpuTexture,
+            X = 0,
+            Y = 0,
+            W = (uint)image.Width,
+            H = (uint)image.Height,
+            D = 1
+        };
+
+        SDLGPUCommandBufferPtr cmd = SDL.AcquireGPUCommandBuffer(gpuDevice);
+        SDLGPUCopyPassPtr copyPass = SDL.BeginGPUCopyPass(cmd);
+        SDL.UploadToGPUTexture(copyPass, transferInfo, textureRegion, false);
+        SDL.EndGPUCopyPass(copyPass);
+        SDL.SubmitGPUCommandBuffer(cmd);
+
+        SDL.ReleaseGPUTransferBuffer(gpuDevice, transferBuffer);
     }
 
     internal void FreeTextures()
@@ -97,7 +139,7 @@ class ImageFactory
             if (!_ptrTexturesRefCount.ContainsKey(toFree) || _ptrTexturesRefCount[toFree] > 0)
                 continue;
 
-            _controller.RemoveImGuiBinding(_ptrTextures[toFree]);
+            SDL.ReleaseGPUTexture(gpuDevice, _ptrTextures[toFree]);
 
             _ptrTextures.Remove(toFree);
             _ptrTexturesRefCount.Remove(toFree);
@@ -107,6 +149,18 @@ class ImageFactory
             _inputPointers.Remove(obj);
         }
 
+        _unloadQueue.Clear();
+    }
+
+    internal void Dispose()
+    {
+        foreach (var ptrTexture in _ptrTextures)
+            SDL.ReleaseGPUTexture(gpuDevice, ptrTexture.Value);
+
+        _ptrTextures.Clear();
+        _ptrTexturesRefCount.Clear();
+        _inputPointers.Clear();
+        _inputPointersReverse.Clear();
         _unloadQueue.Clear();
     }
 }

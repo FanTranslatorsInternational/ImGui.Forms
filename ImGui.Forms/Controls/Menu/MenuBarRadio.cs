@@ -72,7 +72,7 @@ public class MenuBarRadio : MenuBarItem
         ApplyStyles();
 
         var textSize = TextMeasurer.MeasureText(Text);
-        var height = (int)(textSize.Y + ImGuiNET.ImGui.GetStyle().FramePadding.Y);
+        var height = (int)(textSize.Y + Hexa.NET.ImGui.ImGui.GetStyle().FramePadding.Y);
 
         RemoveStyles();
 

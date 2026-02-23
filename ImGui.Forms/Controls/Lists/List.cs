@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Layouts;
-using ImGuiNET;
-using Veldrid;
+using ImGui.Forms.Support;
 using Size = ImGui.Forms.Models.Size;
 
 namespace ImGui.Forms.Controls.Lists;
@@ -64,7 +64,7 @@ public class List<TItem> : Component where TItem : Component
         if (Alignment == Alignment.Horizontal)
             flags |= ImGuiWindowFlags.HorizontalScrollbar;
 
-        if (ImGuiNET.ImGui.BeginChild($"{Id}", contentRect.Size, ImGuiChildFlags.None, flags))
+        if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}", contentRect.Size, ImGuiChildFlags.None, flags))
         {
             if (_scrollToLast)
             {
@@ -72,20 +72,20 @@ public class List<TItem> : Component where TItem : Component
                 _scrollToLast = false;
             }
 
-            var scrollbarDimension = listDimension > scrollableDimension ? (int)ImGuiNET.ImGui.GetStyle().ScrollbarSize : 0;
-            var scroll = new Vector2(-(int)ImGuiNET.ImGui.GetScrollX(), -(int)ImGuiNET.ImGui.GetScrollY());
+            var scrollbarDimension = listDimension > scrollableDimension ? (int)Hexa.NET.ImGui.ImGui.GetStyle().ScrollbarSize : 0;
+            var scroll = new Vector2(-(int)Hexa.NET.ImGui.ImGui.GetScrollX(), -(int)Hexa.NET.ImGui.ImGui.GetScrollY());
 
             var (x, y) = (Padding.X, Padding.Y);
             var contentPos = new Vector2(contentRect.X + x, contentRect.Y + y);
 
-            if (ImGuiNET.ImGui.BeginChild($"{Id}_in", GetInnerSize(listDimension, contentRect), ImGuiChildFlags.None))
+            if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}_in", GetInnerSize(listDimension, contentRect), ImGuiChildFlags.None))
             {
                 for (var i = 0; i < localItems.Length; i++)
                 {
                     var item = localItems[i];
 
-                    var itemWidth = item.GetWidth(contentRect.Width - (Alignment == Alignment.Vertical ? scrollbarDimension : 0) - (int)(Padding.X * 2), contentRect.Height);
-                    var itemHeight = item.GetHeight(contentRect.Width, contentRect.Height - (Alignment == Alignment.Horizontal ? scrollbarDimension : 0) - (int)(Padding.Y * 2));
+                    var itemWidth = item.GetWidth((int)contentRect.Width - (Alignment == Alignment.Vertical ? scrollbarDimension : 0) - (int)(Padding.X * 2), (int)contentRect.Height);
+                    var itemHeight = item.GetHeight((int)contentRect.Width, (int)contentRect.Height - (Alignment == Alignment.Horizontal ? scrollbarDimension : 0) - (int)(Padding.Y * 2));
                     var itemSize = new Vector2(itemWidth, itemHeight);
 
                     var contentItemPos = new Vector2(contentRect.X + x, contentRect.Y + y);
@@ -96,33 +96,33 @@ public class List<TItem> : Component where TItem : Component
 
                     // Create item states
                     var isItemSelected = item == SelectedItem;
-                    var isItemHovered = ImGuiNET.ImGui.IsMouseHoveringRect(contentRect.Position, contentRect.Position + contentRect.Size)
+                    var isItemHovered = Hexa.NET.ImGui.ImGui.IsMouseHoveringRect(contentRect.Position, contentRect.Position + contentRect.Size)
                                         && (Alignment == Alignment.Vertical
-                                            ? (int)(ImGuiNET.ImGui.GetMousePos().Y - contentScrollPos.Y) / (itemHeight + ItemSpacing) == i
-                                            : (int)(ImGuiNET.ImGui.GetMousePos().X - contentScrollPos.X) / (itemWidth + ItemSpacing) == i);
-                    var isItemClicked = isItemHovered && ImGuiNET.ImGui.IsMouseDown(ImGuiMouseButton.Left);
+                                            ? (int)(Hexa.NET.ImGui.ImGui.GetMousePos().Y - contentScrollPos.Y) / (itemHeight + ItemSpacing) == i
+                                            : (int)(Hexa.NET.ImGui.ImGui.GetMousePos().X - contentScrollPos.X) / (itemWidth + ItemSpacing) == i);
+                    var isItemClicked = isItemHovered && Hexa.NET.ImGui.ImGui.IsMouseDown(ImGuiMouseButton.Left);
 
                     // Set selected item locally
-                    if (IsSelectable && isItemHovered && ImGuiNET.ImGui.IsMouseClicked(ImGuiMouseButton.Left))
+                    if (IsSelectable && isItemHovered && Hexa.NET.ImGui.ImGui.IsMouseClicked(ImGuiMouseButton.Left))
                         selectedItem = item;
 
                     // Add background color for selection
                     var color = isItemClicked
-                        ? ImGuiNET.ImGui.GetColorU32(ImGuiCol.HeaderActive)
+                        ? Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.HeaderActive)
                         : isItemHovered
-                            ? ImGuiNET.ImGui.GetColorU32(ImGuiCol.HeaderHovered)
+                            ? Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.HeaderHovered)
                             : isItemSelected
-                                ? ImGuiNET.ImGui.GetColorU32(ImGuiCol.Header)
+                                ? Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.Header)
                                 : 0;
 
                     if (IsSelectable && (isItemHovered || isItemSelected))
-                        ImGuiNET.ImGui.GetWindowDrawList().AddRectFilled(contentItemScrollPos, contentItemScrollEndPos, color);
+                        Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddRectFilled(contentItemScrollPos, contentItemScrollEndPos, color);
 
-                    ImGuiNET.ImGui.SetCursorPos(new Vector2(x, y));
-                    if (ImGuiNET.ImGui.BeginChild($"{Id}_itm{i}", itemSize))
-                        item.Update(new Rectangle((int)contentItemScrollPos.X, (int)contentItemScrollPos.Y, itemWidth, itemHeight));
+                    Hexa.NET.ImGui.ImGui.SetCursorPos(new Vector2(x, y));
+                    if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}_itm{i}", itemSize))
+                        item.Update(new Rectangle(contentItemScrollPos, new Vector2(itemWidth, itemHeight)));
 
-                    ImGuiNET.ImGui.EndChild();
+                    Hexa.NET.ImGui.ImGui.EndChild();
 
                     if (Alignment == Alignment.Vertical)
                         y += itemHeight + ItemSpacing;
@@ -131,10 +131,10 @@ public class List<TItem> : Component where TItem : Component
                 }
             }
 
-            ImGuiNET.ImGui.EndChild();
+            Hexa.NET.ImGui.ImGui.EndChild();
         }
 
-        ImGuiNET.ImGui.EndChild();
+        Hexa.NET.ImGui.ImGui.EndChild();
 
         // Invoke selected item change event
         if (IsSelectable && selectedItem != null && SelectedItem != selectedItem)
@@ -155,7 +155,7 @@ public class List<TItem> : Component where TItem : Component
 
         // Allocate for scroll bar
         if (Alignment == Alignment.Vertical && totalHeight > GetHeight(parentWidth, parentHeight, layoutCorrection))
-            totalWidth += (int)ImGuiNET.ImGui.GetStyle().ScrollbarSize;
+            totalWidth += (int)Hexa.NET.ImGui.ImGui.GetStyle().ScrollbarSize;
 
         return Math.Min(parentWidth, (int)(totalWidth + Padding.X * 2));
     }
@@ -181,7 +181,7 @@ public class List<TItem> : Component where TItem : Component
 
         // Allocate for scroll bar
         if (Alignment == Alignment.Horizontal && totalWidth > GetWidth(parentWidth, parentHeight, layoutCorrection))
-            totalHeight += (int)ImGuiNET.ImGui.GetStyle().ScrollbarSize;
+            totalHeight += (int)Hexa.NET.ImGui.ImGui.GetStyle().ScrollbarSize;
 
         return Math.Min(parentHeight, (int)(totalHeight + Padding.X * 2));
     }
@@ -212,8 +212,8 @@ public class List<TItem> : Component where TItem : Component
     private int GetDimension(Component component, Rectangle contentRect)
     {
         return Alignment == Alignment.Vertical
-            ? component.GetHeight(contentRect.Width, contentRect.Height)
-            : component.GetWidth(contentRect.Width, contentRect.Height);
+            ? component.GetHeight((int)contentRect.Width, (int)contentRect.Height)
+            : component.GetWidth((int)contentRect.Width, (int)contentRect.Height);
     }
 
     private float GetPadding()
@@ -226,8 +226,8 @@ public class List<TItem> : Component where TItem : Component
     private int GetScrollableDimension(Rectangle contentRect)
     {
         return Alignment == Alignment.Vertical
-            ? contentRect.Height
-            : contentRect.Width;
+            ? (int)contentRect.Height
+            : (int)contentRect.Width;
     }
 
     private Vector2 GetInnerSize(int listDimension, Rectangle contentRect)
@@ -242,9 +242,9 @@ public class List<TItem> : Component where TItem : Component
         scroll = Math.Max(0, scroll);
 
         if (Alignment == Alignment.Vertical)
-            ImGuiNET.ImGui.SetScrollY(scroll);
+            Hexa.NET.ImGui.ImGui.SetScrollY(scroll);
         else
-            ImGuiNET.ImGui.SetScrollX(scroll);
+            Hexa.NET.ImGui.ImGui.SetScrollX(scroll);
     }
 
     #endregion

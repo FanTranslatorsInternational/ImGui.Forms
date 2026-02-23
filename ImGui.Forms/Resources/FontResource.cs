@@ -1,8 +1,7 @@
 ﻿using System;
 using System.IO;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Factories;
-using ImGui.Forms.Models;
-using ImGuiNET;
 
 namespace ImGui.Forms.Resources;
 
@@ -34,23 +33,21 @@ public class FontResource : IDisposable
 
     public FontResource Clone(int size)
     {
-        return new FontResource(Clone(Data, size, null));
+        return new FontResource(Clone(Data, size));
     }
 
     public FontResource Clone(int size, string characterSet)
     {
-        return new FontResource(Clone(Data, size, characterSet));
+        return new FontResource(Clone(Data, size));
     }
 
-    private FontData Clone(FontData data, int size, string? characterSet)
+    private FontData Clone(FontData data, int size)
     {
         FontData? fallback = null;
         if (data.Fallback != null)
-            fallback = Clone(data.Fallback, size, characterSet);
+            fallback = Clone(data.Fallback, size);
 
-        var metaData = new FontMetaData(data.Metadata.Name, data.Metadata.Path,
-            characterSet == null ? data.Metadata.GlyphRanges : FontGlyphRange.None, characterSet ?? string.Empty,
-            data.Metadata.IsTemporary);
+        var metaData = new FontMetaData(data.Metadata.Name, data.Metadata.Path, data.Metadata.IsTemporary);
 
         return new FontData(metaData, size, fallback);
     }
@@ -94,23 +91,11 @@ public record FontMetaData
     /// </summary>
     internal bool IsTemporary { get; }
 
-    /// <summary>
-    /// Supported glyphs.
-    /// </summary>
-    public FontGlyphRange GlyphRanges { get; }
-
-    /// <summary>
-    /// Additional characters to be represented by this font.
-    /// </summary>
-    public string AdditionalCharacters { get; }
-
-    internal FontMetaData(string name, string path, FontGlyphRange glyphRanges, string additionalCharacters = "", bool temporary = false)
+    internal FontMetaData(string name, string path, bool temporary = false)
     {
         Name = name;
         Path = path;
         IsTemporary = temporary;
-        GlyphRanges = glyphRanges;
-        AdditionalCharacters = additionalCharacters;
     }
 }
 

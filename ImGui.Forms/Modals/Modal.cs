@@ -1,30 +1,30 @@
 ﻿using System.Numerics;
 using System.Threading;
 using System.Threading.Tasks;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Controls.Menu;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Models.IO;
 using ImGui.Forms.Resources;
-using ImGuiNET;
-using Veldrid;
+using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Modals;
 
 public abstract class Modal : Component
 {
-    private static readonly KeyCommand CloseCommand = new(Key.Escape);
+    private static readonly KeyCommand CloseCommand = new(ImGuiKey.Escape);
 
-    private CancellationTokenSource _tokenSource;
+    private CancellationTokenSource? _tokenSource;
     private bool _shouldClose;
 
-    internal Modal ChildModal { get; set; }
+    internal Modal? ChildModal { get; set; }
 
     public LocalizedString Caption { get; set; } = string.Empty;
 
-    public ModalMenuBar MenuBar { get; set; }
-    public Component Content { get; set; }
+    public ModalMenuBar? MenuBar { get; set; }
+    public Component? Content { get; set; }
 
     public bool BlockFormClosing { get; private set; }
 
@@ -40,23 +40,24 @@ public abstract class Modal : Component
     protected override async void UpdateInternal(Rectangle contentRect)
     {
         var id = Caption.IsEmpty ? "##source" : (string)Caption;
-        ImGuiNET.ImGui.OpenPopup(id);
+        Hexa.NET.ImGui.ImGui.OpenPopup(id);
 
-        ImGuiNET.ImGui.PushStyleColor(ImGuiCol.PopupBg, ImGuiNET.ImGui.GetColorU32(ImGuiCol.WindowBg));
+        Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.PopupBg, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.WindowBg));
 
         var flags = ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize;
         if (MenuBar is not null)
             flags |= ImGuiWindowFlags.MenuBar;
 
         var exists = true;
-        if (ImGuiNET.ImGui.BeginPopupModal(id, ref exists, flags))
+        var shows = Hexa.NET.ImGui.ImGui.BeginPopupModal(id, ref exists, flags);
+        if (shows)
         {
             // Create menu bar of popup
             MenuBar?.Update();
             var menuHeight = MenuBar?.Height ?? 0;
 
             // Create content of popup
-            Content?.Update(new Rectangle(contentRect.X, contentRect.Y + menuHeight, contentRect.Width, contentRect.Height - menuHeight));
+            Content?.Update(new Rectangle(contentRect.Position + new Vector2(0, menuHeight), contentRect.Size - new Vector2(0, menuHeight)));
 
             if (OkAction.IsPressed())
                 Close(DialogResult.Ok);
@@ -66,13 +67,13 @@ public abstract class Modal : Component
             // Create content of child modal
             DrawModal(ChildModal);
 
-            ImGuiNET.ImGui.EndPopup();
-
-            if (_shouldClose)
-                await CloseCore();
+            Hexa.NET.ImGui.ImGui.EndPopup();
         }
 
-        ImGuiNET.ImGui.PopStyleColor();
+        Hexa.NET.ImGui.ImGui.PopStyleColor();
+
+        if (shows && _shouldClose)
+            await CloseCore();
 
         if (!exists)
             Close();
@@ -136,7 +137,7 @@ public abstract class Modal : Component
 
         await _tokenSource?.CancelAsync()!;
 
-        ImGuiNET.ImGui.CloseCurrentPopup();
+        Hexa.NET.ImGui.ImGui.CloseCurrentPopup();
     }
 
     protected virtual void ShowInternal() { }
@@ -148,28 +149,30 @@ public abstract class Modal : Component
 
     #region Helper
 
-    internal static void DrawModal(Modal modal)
+    internal static void DrawModal(Modal? modal)
     {
-        if (modal == null)
+        if (modal?.Content == null)
             return;
 
-        Application.Instance.MainForm.SetRenderingModal(modal);
+        var form = Application.Instance?.MainForm;
+        if (form == null)
+            return;
 
-        var form = Application.Instance.MainForm;
+        form.SetRenderingModal(modal);
 
         var modalWidth = modal.Size.Width.IsContentAligned ? modal.Content.GetWidth(form.Width, form.Height) : GetDimension(modal.Size.Width, form.Width);
         var modalHeight = modal.Size.Height.IsContentAligned ? modal.Content.GetHeight(form.Width, form.Height) : GetDimension(modal.Size.Height, form.Height);
 
         var modalPos = new Vector2((form.Width - modalWidth) / 2f, (form.Height - modalHeight - modal.GetHeaderHeight()) / 2f);
-        var contentPos = modalPos + new Vector2(form.Padding.X, modal.GetHeaderHeight() + form.Padding.Y);
+        var contentPos = modalPos + form.Padding with { Y = modal.GetHeaderHeight() + form.Padding.Y };
 
         var contentSize = new Vector2(modalWidth, modalHeight);
         var modalSize = contentSize + new Vector2(form.Padding.X * 2, modal.GetHeaderHeight() + form.Padding.Y * 2);
 
-        ImGuiNET.ImGui.SetNextWindowPos(modalPos);
-        ImGuiNET.ImGui.SetNextWindowSize(modalSize);
+        Hexa.NET.ImGui.ImGui.SetNextWindowPos(modalPos);
+        Hexa.NET.ImGui.ImGui.SetNextWindowSize(modalSize);
 
-        modal.Update(new Rectangle((int)contentPos.X, (int)contentPos.Y, (int)contentSize.X, (int)contentSize.Y));
+        modal.Update(new Rectangle(contentPos, contentSize));
     }
 
     #endregion

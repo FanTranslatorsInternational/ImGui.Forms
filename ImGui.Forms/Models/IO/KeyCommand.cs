@@ -1,38 +1,36 @@
-﻿using ImGui.Forms.Localization;
-using ImGui.Forms.Support.Veldrid.ImGui;
-using ImGuiNET;
-using Veldrid;
+﻿using Hexa.NET.ImGui;
+using ImGui.Forms.Localization;
 
 namespace ImGui.Forms.Models.IO;
 
 public readonly struct KeyCommand
 {
-    private readonly ModifierKeys _modifiers;
-    private readonly MouseButton? _mouse = null;
-    private readonly Key _key;
+    private readonly ImGuiKey _modifiers;
+    private readonly ImGuiMouseButton? _mouse = null;
+    private readonly ImGuiKey _key;
     private readonly LocalizedString _name;
 
     public bool IsEmpty => !HasModifier && !HasKey && !HasMouse;
 
-    public bool HasModifier => _modifiers != ModifierKeys.None;
+    public bool HasModifier => _modifiers != ImGuiKey.None;
     public bool HasMouse => _mouse.HasValue;
-    public bool HasKey => _key != Key.Unknown;
+    public bool HasKey => _key != ImGuiKey.None;
 
     public string Name => _name;
 
-    public KeyCommand(Key key, LocalizedString name = default) : this(ModifierKeys.None, key, null, name)
+    public KeyCommand(ImGuiKey key, LocalizedString name = default) : this(ImGuiKey.None, key, null, name)
     { }
 
-    public KeyCommand(MouseButton mouse, LocalizedString name = default) : this(ModifierKeys.None, Key.Unknown, mouse, name)
+    public KeyCommand(ImGuiMouseButton mouse, LocalizedString name = default) : this(ImGuiKey.None, ImGuiKey.None, mouse, name)
     { }
 
-    public KeyCommand(ModifierKeys modifiers, Key key, LocalizedString name = default) : this(modifiers, key, null, name)
+    public KeyCommand(ImGuiKey modifiers, ImGuiKey key, LocalizedString name = default) : this(modifiers, key, null, name)
     { }
 
-    public KeyCommand(ModifierKeys modifiers, MouseButton mouse, LocalizedString name = default) : this(modifiers, Key.Unknown, mouse, name)
+    public KeyCommand(ImGuiKey modifiers, ImGuiMouseButton mouse, LocalizedString name = default) : this(modifiers, ImGuiKey.None, mouse, name)
     { }
 
-    private KeyCommand(ModifierKeys modifiers, Key key, MouseButton? mouse, LocalizedString name = default)
+    private KeyCommand(ImGuiKey modifiers, ImGuiKey key, ImGuiMouseButton? mouse, LocalizedString name = default)
     {
         _modifiers = modifiers;
         _mouse = mouse;
@@ -51,7 +49,7 @@ public readonly struct KeyCommand
         if (HasMouse)
         {
             var mouse = GetImGuiMouseButton();
-            if (mouse.HasValue && ImGuiNET.ImGui.IsMouseReleased(mouse.Value))
+            if (mouse.HasValue && Hexa.NET.ImGui.ImGui.IsMouseReleased(mouse.Value))
                 return !HasModifier && !HasKey || IsDown(onActiveLayer);
 
             return false;
@@ -60,11 +58,11 @@ public readonly struct KeyCommand
         var isPressed = true;
 
         if (!HasModifier && HasKey)
-            isPressed = ImGuiNET.ImGui.IsKeyPressed(GetImGuiKey());
+            isPressed = Hexa.NET.ImGui.ImGui.IsKeyPressed(GetImGuiKey());
         else if (HasModifier && !HasKey)
-            isPressed = ImGuiNET.ImGui.IsKeyPressed(GetImGuiModifierKey());
+            isPressed = Hexa.NET.ImGui.ImGui.IsKeyPressed(GetImGuiModifierKey());
         else if (HasModifier && HasKey)
-            isPressed = ImGuiNET.ImGui.IsKeyChordPressed(GetImGuiKeyChord());
+            isPressed = Hexa.NET.ImGui.ImGui.IsKeyChordPressed(GetImGuiKeyChord());
 
         return isPressed;
     }
@@ -79,11 +77,11 @@ public readonly struct KeyCommand
 
         var isDown = false;
         if (HasModifier && HasKey)
-            isDown = ImGuiNET.ImGui.IsKeyDown(GetImGuiModifierKey()) && ImGuiNET.ImGui.IsKeyDown(GetImGuiKey());
+            isDown = Hexa.NET.ImGui.ImGui.IsKeyDown(GetImGuiModifierKey()) && Hexa.NET.ImGui.ImGui.IsKeyDown(GetImGuiKey());
         else if (HasModifier)
-            isDown = ImGuiNET.ImGui.IsKeyDown(GetImGuiModifierKey());
+            isDown = Hexa.NET.ImGui.ImGui.IsKeyDown(GetImGuiModifierKey());
         else if (HasKey)
-            isDown = ImGuiNET.ImGui.IsKeyDown(GetImGuiKey());
+            isDown = Hexa.NET.ImGui.ImGui.IsKeyDown(GetImGuiKey());
 
         return isDown;
     }
@@ -98,11 +96,11 @@ public readonly struct KeyCommand
 
         var isReleased = false;
         if (HasModifier && HasKey)
-            isReleased = ImGuiNET.ImGui.IsKeyReleased(GetImGuiModifierKey()) && ImGuiNET.ImGui.IsKeyReleased(GetImGuiKey());
+            isReleased = Hexa.NET.ImGui.ImGui.IsKeyReleased(GetImGuiModifierKey()) && Hexa.NET.ImGui.ImGui.IsKeyReleased(GetImGuiKey());
         else if (HasModifier)
-            isReleased = ImGuiNET.ImGui.IsKeyReleased(GetImGuiModifierKey());
+            isReleased = Hexa.NET.ImGui.ImGui.IsKeyReleased(GetImGuiModifierKey());
         else if (HasKey)
-            isReleased = ImGuiNET.ImGui.IsKeyReleased(GetImGuiKey());
+            isReleased = Hexa.NET.ImGui.ImGui.IsKeyReleased(GetImGuiKey());
 
         return isReleased;
     }
@@ -113,34 +111,25 @@ public readonly struct KeyCommand
     }
 
     // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
-    private ImGuiKey GetImGuiKeyChord()
+    private int GetImGuiKeyChord()
     {
         ImGuiKey result = GetImGuiKey();
-        return result | GetImGuiModifierKey();
+        return (int)(result | GetImGuiModifierKey());
     }
 
     private ImGuiKey GetImGuiKey()
     {
-        if (!ImGuiKeyMapper.TryMapKey(_key, out ImGuiKey imGuiKey))
-            return ImGuiKey.None;
-
-        return imGuiKey;
+        return _key;
     }
 
     private ImGuiKey GetImGuiModifierKey()
     {
-        if (!ImGuiKeyMapper.TryMapModifierKey(_modifiers, out ImGuiKey imGuiKey))
-            return ImGuiKey.ModNone;
-
-        return imGuiKey;
+        return _modifiers;
     }
 
     private ImGuiMouseButton? GetImGuiMouseButton()
     {
-        if (!ImGuiKeyMapper.TryMapMouseButton(_mouse!.Value, out ImGuiMouseButton? imGuiMouse))
-            return null;
-
-        return imGuiMouse;
+        return _mouse;
     }
 
     public static bool operator ==(KeyCommand a, KeyCommand b) => a._modifiers == b._modifiers && a._key == b._key;

@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Numerics;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Extensions;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
-using ImGuiNET;
-using Rectangle = Veldrid.Rectangle;
+using ImGui.Forms.Support;
 using Size = ImGui.Forms.Models.Size;
 
 namespace ImGui.Forms.Controls;
@@ -17,7 +17,7 @@ public class Label : Component
 
     public LocalizedString Text { get; set; }
 
-    public FontResource Font { get; set; }
+    public FontResource? Font { get; set; }
 
     public int LineDistance { get; set; }
 
@@ -62,7 +62,7 @@ public class Label : Component
         var pos = contentRect.Position;
         foreach (var line in escapedText.Split(Environment.NewLine))
         {
-            ImGuiNET.ImGui.GetWindowDrawList().AddText(pos, ImGuiNET.ImGui.GetColorU32(ImGuiCol.Text), line);
+            Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddText(pos, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.Text), line);
 
             var lineSize = TextMeasurer.MeasureText(line);
             pos += new Vector2(0, lineSize.Y + LineDistance);
@@ -74,20 +74,20 @@ public class Label : Component
     protected override void ApplyStyles()
     {
         if (!TextColor.IsEmpty)
-            ImGuiNET.ImGui.PushStyleColor(ImGuiCol.Text, TextColor.ToUInt32());
+            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.Text, TextColor.ToUInt32());
 
         ImFontPtr? fontPtr = Font?.GetPointer();
         if (fontPtr != null)
-            ImGuiNET.ImGui.PushFont(fontPtr.Value);
+            Hexa.NET.ImGui.ImGui.PushFont(fontPtr.Value, Font!.Data.Size);
     }
 
     protected override void RemoveStyles()
     {
         if (Font?.GetPointer() != null)
-            ImGuiNET.ImGui.PopFont();
+            Hexa.NET.ImGui.ImGui.PopFont();
 
         if (!TextColor.IsEmpty)
-            ImGuiNET.ImGui.PopStyleColor();
+            Hexa.NET.ImGui.ImGui.PopStyleColor();
     }
 
     protected string EscapeText()

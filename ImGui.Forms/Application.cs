@@ -6,6 +6,7 @@ using ImGui.Forms.Factories;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Support;
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -31,6 +32,8 @@ public class Application
     private bool _shouldClose;
 
     private ExecutionContext? _executionContext;
+    private readonly List<GpuPrepareAction> _gpuPrepareActions = [];
+    private readonly List<GpuRenderAction> _gpuRenderActions = [];
 
     private DragDropEvent[] _dragDropEvents = [];
     private bool[] _frameHandledDragDrops = [];
@@ -50,6 +53,8 @@ public class Application
     internal SDLWindowPtr? Window => _executionContext?.Window;
     internal ImageFactory? Images => _executionContext?.Images;
     internal IdFactory? Ids => _executionContext?.Ids;
+    internal unsafe SDLGPUDevice* GpuDevice => _executionContext == null ? (SDLGPUDevice*)0 : _executionContext.GpuDevice;
+    internal SDLGPUTextureFormat SwapchainFormat => _executionContext?.SwapchainFormat ?? default;
 
     public ILocalizer? Localizer { get; private set; }
 
@@ -126,7 +131,7 @@ public class Application
         platformIo.PlatformGetClipboardTextFn = (void*)Marshal.GetFunctionPointerForDelegate(Sdl2NativeExtensions.GetClipboardText);
         platformIo.PlatformSetClipboardTextFn = (void*)Marshal.GetFunctionPointerForDelegate(Sdl2NativeExtensions.SetClipboardText);
 
-        _executionContext = new ExecutionContext(form, window, new ImageFactory(gpuDevice), new IdFactory());
+        _executionContext = new ExecutionContext(form, window, new ImageFactory(gpuDevice), new IdFactory(), gpuDevice, SDL.GetGPUSwapchainTextureFormat(gpuDevice, window));
         FontFactory.Initialize(io);
 
         ImGuiImplSDL3.SetCurrentContext(ctx);
@@ -216,6 +221,7 @@ public class Application
             if (swapTexture != null && !isMinimized)
             {
                 ImGuiImplSDL3.SDLGPU3PrepareDrawData(drawData, (ImSDLGPUCommandBuffer*)commandBuffer);
+                ExecuteQueuedGpuPrepares(gpuDevice, commandBuffer);
 
                 SDLGPUColorTargetInfo targetInfo = new()
                 {
@@ -235,6 +241,7 @@ public class Application
                 };
 
                 SDLGPURenderPass* renderPass = SDL.BeginGPURenderPass(commandBuffer, &targetInfo, 1, null);
+                ExecuteQueuedGpuRenders(gpuDevice, commandBuffer, renderPass);
                 ImGuiImplSDL3.SDLGPU3RenderDrawData(drawData, (ImSDLGPUCommandBuffer*)commandBuffer, (ImSDLGPURenderPass*)renderPass, null);
                 SDL.EndGPURenderPass(renderPass);
             }
@@ -280,6 +287,30 @@ public class Application
     {
         _dragDropEvents = [];
         _frameHandledDragDrops = [];
+        _gpuPrepareActions.Clear();
+        _gpuRenderActions.Clear();
+    }
+
+    internal void EnqueueGpuPrepareAction(GpuPrepareAction action)
+    {
+        _gpuPrepareActions.Add(action);
+    }
+
+    internal void EnqueueGpuRenderAction(GpuRenderAction action)
+    {
+        _gpuRenderActions.Add(action);
+    }
+
+    private unsafe void ExecuteQueuedGpuPrepares(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer)
+    {
+        foreach (var action in _gpuPrepareActions)
+            action(gpuDevice, commandBuffer);
+    }
+
+    private unsafe void ExecuteQueuedGpuRenders(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer, SDLGPURenderPass* renderPass)
+    {
+        foreach (var action in _gpuRenderActions)
+            action(gpuDevice, commandBuffer, renderPass);
     }
 
     #region Window event
@@ -358,7 +389,18 @@ public class Application
     }
 }
 
-record ExecutionContext(Form MainForm, SDLWindowPtr Window, ImageFactory Images, IdFactory Ids);
+internal unsafe delegate void GpuPrepareAction(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer);
+internal unsafe delegate void GpuRenderAction(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer, SDLGPURenderPass* renderPass);
+
+internal unsafe sealed class ExecutionContext(Form mainForm, SDLWindowPtr window, ImageFactory images, IdFactory ids, SDLGPUDevice* gpuDevice, SDLGPUTextureFormat swapchainFormat)
+{
+    public Form MainForm { get; } = mainForm;
+    public SDLWindowPtr Window { get; } = window;
+    public ImageFactory Images { get; } = images;
+    public IdFactory Ids { get; } = ids;
+    public SDLGPUDevice* GpuDevice { get; } = gpuDevice;
+    public SDLGPUTextureFormat SwapchainFormat { get; } = swapchainFormat;
+}
 
 readonly struct DragDropEvent(string file, Vector2 mousePos)
 {

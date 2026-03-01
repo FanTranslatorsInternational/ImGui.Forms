@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -21,6 +21,10 @@
   <ItemGroup>
     <None Remove="Resources\Fonts\ProggyClean.ttf" />
     <None Remove="Resources\Images\error.png" />
+    <None Remove="Resources\Shaders\DXIL\PositionColorTransform.vert.dxil" />
+    <None Remove="Resources\Shaders\DXIL\SolidColor.frag.dxil" />
+    <None Remove="Resources\Shaders\SPIRV\PositionColorTransform.vert.spv" />
+    <None Remove="Resources\Shaders\SPIRV\SolidColor.frag.spv" />
   </ItemGroup>
 
   <ItemGroup>
@@ -29,6 +33,18 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Resources\Images\error.png">
       <LogicalName>error.png</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Shaders\DXIL\PositionColorTransform.vert.dxil">
+      <LogicalName>ImGui.Forms.Resources.Shaders.DXIL.PositionColorTransform.vert.dxil</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Shaders\DXIL\SolidColor.frag.dxil">
+      <LogicalName>ImGui.Forms.Resources.Shaders.DXIL.SolidColor.frag.dxil</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Shaders\SPIRV\PositionColorTransform.vert.spv">
+      <LogicalName>ImGui.Forms.Resources.Shaders.SPIRV.PositionColorTransform.vert.spv</LogicalName>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Shaders\SPIRV\SolidColor.frag.spv">
+      <LogicalName>ImGui.Forms.Resources.Shaders.SPIRV.SolidColor.frag.spv</LogicalName>
     </EmbeddedResource>
   </ItemGroup>
 

@@ -94,7 +94,7 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
         _vertexDataDirty = false;
     }
 
-    public void Render(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer, SDLGPURenderPass* renderPass, Rectangle contentRect)
+    public void Render(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer, SDLGPURenderPass* renderPass, Rectangle contentRect, Matrix4x4 transformation)
     {
         if (_vertices.Length == 0 || _pipeline == null || _vertexBuffer == null)
             return;
@@ -123,8 +123,7 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
 
         Matrix4x4 projection = Matrix4x4.CreatePerspectiveFieldOfView(MathF.PI / 3f, viewportWidth / (float)viewportHeight, 0.1f, 100f);
         Matrix4x4 view = Matrix4x4.CreateLookAt(new Vector3(0f, 0f, 3f), Vector3.Zero, Vector3.UnitY);
-        Matrix4x4 model = Matrix4x4.CreateRotationY((float)SDL.GetTicks() / 1000f) * Matrix4x4.CreateRotationX(-0.4f);
-        Matrix4x4 transform = model * view * projection;
+        Matrix4x4 transform = transformation * view * projection;
 
         SDL.BindGPUGraphicsPipeline(renderPass, _pipeline);
 

@@ -241,8 +241,8 @@ public class Application
                 };
 
                 SDLGPURenderPass* renderPass = SDL.BeginGPURenderPass(commandBuffer, &targetInfo, 1, null);
-                ExecuteQueuedGpuRenders(gpuDevice, commandBuffer, renderPass);
                 ImGuiImplSDL3.SDLGPU3RenderDrawData(drawData, (ImSDLGPUCommandBuffer*)commandBuffer, (ImSDLGPURenderPass*)renderPass, null);
+                ExecuteQueuedGpuRenders(gpuDevice, commandBuffer, renderPass);
                 SDL.EndGPURenderPass(renderPass);
             }
 

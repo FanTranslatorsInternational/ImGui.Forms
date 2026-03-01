@@ -52,6 +52,7 @@
     <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" />
     <PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.18" />
     <PackageReference Include="Hexa.NET.ImGui.Backends.SDL3" Version="1.0.18" />
+    <PackageReference Include="Hexa.NET.ImGuizmo" Version="2.2.9" />
     <PackageReference Include="Hexa.NET.SDL3" Version="1.2.17" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
   </ItemGroup>

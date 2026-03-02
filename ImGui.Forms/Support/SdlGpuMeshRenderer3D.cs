@@ -123,7 +123,11 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
 
         Matrix4x4 projection = Matrix4x4.CreatePerspectiveFieldOfView(MathF.PI / 3f, viewportWidth / (float)viewportHeight, 0.1f, 100f);
         Matrix4x4 view = Matrix4x4.CreateLookAt(new Vector3(0f, 0f, 3f), Vector3.Zero, Vector3.UnitY);
-        Matrix4x4 transform = transformation * view * projection;
+        MeshTransformUniform uniform = new()
+        {
+            World = transformation,
+            WorldViewProjection = transformation * view * projection
+        };
 
         SDL.BindGPUGraphicsPipeline(renderPass, _pipeline);
 
@@ -134,7 +138,7 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
         };
 
         SDL.BindGPUVertexBuffers(renderPass, 0, &vertexBinding, 1);
-        SDL.PushGPUVertexUniformData(commandBuffer, 0, &transform, (uint)sizeof(Matrix4x4));
+        SDL.PushGPUVertexUniformData(commandBuffer, 0, &uniform, (uint)sizeof(MeshTransformUniform));
         SDL.DrawGPUPrimitives(renderPass, (uint)_vertices.Length, 1, 0, 0);
     }
 
@@ -278,16 +282,16 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
         if ((format & SDLGPUShaderFormat.Dxil) != 0)
         {
             return (
-                ReadEmbeddedFile("ImGui.Forms.Resources.Shaders.DXIL.PositionColorTransform.vert.dxil"),
-                ReadEmbeddedFile("ImGui.Forms.Resources.Shaders.DXIL.SolidColor.frag.dxil"),
+                ReadEmbeddedFile("ImGui.Forms.Resources.Shaders.DXIL.DistinctFaces.vert.dxil"),
+                ReadEmbeddedFile("ImGui.Forms.Resources.Shaders.DXIL.DistinctFaces.frag.dxil"),
                 SDLGPUShaderFormat.Dxil);
         }
 
         if ((format & SDLGPUShaderFormat.Spirv) != 0)
         {
             return (
-                ReadEmbeddedFile("ImGui.Forms.Resources.Shaders.SPIRV.PositionColorTransform.vert.spv"),
-                ReadEmbeddedFile("ImGui.Forms.Resources.Shaders.SPIRV.SolidColor.frag.spv"),
+                ReadEmbeddedFile("ImGui.Forms.Resources.Shaders.SPIRV.DistinctFaces.vert.spv"),
+                ReadEmbeddedFile("ImGui.Forms.Resources.Shaders.SPIRV.DistinctFaces.frag.spv"),
                 SDLGPUShaderFormat.Spirv);
         }
 
@@ -310,5 +314,12 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
     {
         public readonly Vector3 Position = position;
         public readonly Vector4 Color = color;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MeshTransformUniform
+    {
+        public Matrix4x4 World;
+        public Matrix4x4 WorldViewProjection;
     }
 }

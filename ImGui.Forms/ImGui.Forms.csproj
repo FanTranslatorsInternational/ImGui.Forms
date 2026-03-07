@@ -21,10 +21,6 @@
   <ItemGroup>
     <None Remove="Resources\Fonts\ProggyClean.ttf" />
     <None Remove="Resources\Images\error.png" />
-    <None Remove="Resources\Shaders\DXIL\DistinctFaces.vert.dxil" />
-    <None Remove="Resources\Shaders\SPIRV\DistinctFaces.vert.spv" />
-    <None Remove="Resources\Shaders\DXIL\DistinctFaces.frag.dxil" />
-    <None Remove="Resources\Shaders\SPIRV\DistinctFaces.frag.spv" />
   </ItemGroup>
 
   <ItemGroup>
@@ -34,18 +30,10 @@
     <EmbeddedResource Include="Resources\Images\error.png">
       <LogicalName>error.png</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Shaders\DXIL\DistinctFaces.vert.dxil">
-      <LogicalName>ImGui.Forms.Resources.Shaders.DXIL.DistinctFaces.vert.dxil</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Shaders\SPIRV\DistinctFaces.vert.spv">
-      <LogicalName>ImGui.Forms.Resources.Shaders.SPIRV.DistinctFaces.vert.spv</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Shaders\DXIL\DistinctFaces.frag.dxil">
-      <LogicalName>ImGui.Forms.Resources.Shaders.DXIL.DistinctFaces.frag.dxil</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Resources\Shaders\SPIRV\DistinctFaces.frag.spv">
-      <LogicalName>ImGui.Forms.Resources.Shaders.SPIRV.DistinctFaces.frag.spv</LogicalName>
-    </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Shaders\DXIL\Shader.frag.dxil" />
+    <EmbeddedResource Include="Resources\Shaders\DXIL\Shader.vert.dxil" />
+    <EmbeddedResource Include="Resources\Shaders\SPIRV\Shader.frag.spv" />
+    <EmbeddedResource Include="Resources\Shaders\SPIRV\Shader.vert.spv" />
   </ItemGroup>
 
   <ItemGroup>

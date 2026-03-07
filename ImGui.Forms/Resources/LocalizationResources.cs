@@ -18,6 +18,8 @@ static class LocalizationResources
     private const string ReplaceFileText_ = "Do you want to overwrite file {0}?";
     private const string CreateFolderCaption_ = "Create folder";
     private const string CreateFolderText_ = "New folder name:";
+    private const string ShowWireFrameText_ = "Show Wire Frame";
+    private const string ShowGridTextText_ = "Show Grid";
 
     private const string OkIdentifier_ = "ImGui.Button.Ok";
     private const string CancelIdentifier_ = "ImGui.Button.Cancel";
@@ -33,6 +35,8 @@ static class LocalizationResources
     private const string ReplaceFileTextIdentifier_ = "ImGui.FileDialog.ReplaceFile.Text";
     private const string CreateFolderCaptionIdentifier_ = "ImGui.FileDialog.CreateFolder.Caption";
     private const string CreateFolderTextIdentifier_ = "ImGui.FileDialog.CreateFolder.Text";
+    private const string ShowWireFrameTextIdentifier_ = "ImGui.Object3DView.WireFrame.Text";
+    private const string ShowGridTextIdentifier_ = "ImGui.Object3DView.Grid.Text";
 
     public static string Ok() => Localize(OkIdentifier_, Ok_);
     public static string Cancel() => Localize(CancelIdentifier_, Cancel_);
@@ -48,6 +52,8 @@ static class LocalizationResources
     public static string ReplaceFileText(string path) => Localize(ReplaceFileTextIdentifier_, ReplaceFileText_, path);
     public static string CreateFolderCaption() => Localize(CreateFolderCaptionIdentifier_, CreateFolderCaption_);
     public static string CreateFolderText() => Localize(CreateFolderTextIdentifier_, CreateFolderText_);
+    public static string ShowWireFrameText() => Localize(ShowWireFrameTextIdentifier_, ShowWireFrameText_);
+    public static string ShowGridText() => Localize(ShowGridTextIdentifier_, ShowGridTextText_);
 
     private static string Localize(string localizationId, string fallback, params object[] args)
     {

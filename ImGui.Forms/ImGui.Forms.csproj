@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -30,12 +30,17 @@
     <EmbeddedResource Include="Resources\Images\error.png">
       <LogicalName>error.png</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\Shaders\DXIL\Shader.frag.dxil" />
+    <EmbeddedResource Include="Resources\Shaders\DXIL\Shader.vert.dxil" />
+    <EmbeddedResource Include="Resources\Shaders\SPIRV\Shader.frag.spv" />
+    <EmbeddedResource Include="Resources\Shaders\SPIRV\Shader.vert.spv" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Hexa.NET.ImGui" Version="2.2.9" />
     <PackageReference Include="Hexa.NET.ImGui.Backends" Version="1.0.18" />
     <PackageReference Include="Hexa.NET.ImGui.Backends.SDL3" Version="1.0.18" />
+    <PackageReference Include="Hexa.NET.ImGuizmo" Version="2.2.9" />
     <PackageReference Include="Hexa.NET.SDL3" Version="1.2.17" />
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
   </ItemGroup>

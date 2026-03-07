@@ -1,11 +1,13 @@
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.SDL3;
+using Hexa.NET.ImGuizmo;
 using Hexa.NET.SDL3;
 using ImGui.Forms.Extensions;
 using ImGui.Forms.Factories;
 using ImGui.Forms.Localization;
 using ImGui.Forms.Support;
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -29,8 +31,14 @@ public class Application
 {
     private bool _isClosing;
     private bool _shouldClose;
+    private unsafe SDLGPUTexture* _depthTexture;
+    private int _depthTextureWidth;
+    private int _depthTextureHeight;
+    private SDLGPUTextureFormat _depthFormat;
 
     private ExecutionContext? _executionContext;
+    private readonly List<GpuPrepareAction> _gpuPrepareActions = [];
+    private readonly List<GpuRenderAction> _gpuRenderActions = [];
 
     private DragDropEvent[] _dragDropEvents = [];
     private bool[] _frameHandledDragDrops = [];
@@ -50,6 +58,8 @@ public class Application
     internal SDLWindowPtr? Window => _executionContext?.Window;
     internal ImageFactory? Images => _executionContext?.Images;
     internal IdFactory? Ids => _executionContext?.Ids;
+    internal unsafe SDLGPUDevice* GpuDevice => _executionContext == null ? (SDLGPUDevice*)0 : _executionContext.GpuDevice;
+    internal SDLGPUTextureFormat SwapchainFormat => _executionContext?.SwapchainFormat ?? default;
 
     public ILocalizer? Localizer { get; private set; }
 
@@ -109,6 +119,7 @@ public class Application
 
         var ctx = Hexa.NET.ImGui.ImGui.CreateContext();
         Hexa.NET.ImGui.ImGui.SetCurrentContext(ctx);
+        ImGuizmo.SetImGuiContext(ctx);
 
         ImGuiIOPtr io = Hexa.NET.ImGui.ImGui.GetIO();
         io.IniFilename = null;
@@ -126,7 +137,7 @@ public class Application
         platformIo.PlatformGetClipboardTextFn = (void*)Marshal.GetFunctionPointerForDelegate(Sdl2NativeExtensions.GetClipboardText);
         platformIo.PlatformSetClipboardTextFn = (void*)Marshal.GetFunctionPointerForDelegate(Sdl2NativeExtensions.SetClipboardText);
 
-        _executionContext = new ExecutionContext(form, window, new ImageFactory(gpuDevice), new IdFactory());
+        _executionContext = new ExecutionContext(form, window, new ImageFactory(gpuDevice), new IdFactory(), gpuDevice, SDL.GetGPUSwapchainTextureFormat(gpuDevice, window));
         FontFactory.Initialize(io);
 
         ImGuiImplSDL3.SetCurrentContext(ctx);
@@ -199,6 +210,7 @@ public class Application
             ImGuiImplSDL3.SDLGPU3NewFrame();
             ImGuiImplSDL3.NewFrame();
             Hexa.NET.ImGui.ImGui.NewFrame();
+            ImGuizmo.BeginFrame();
 
             // Render Form
             form.Update();
@@ -216,6 +228,11 @@ public class Application
             if (swapTexture != null && !isMinimized)
             {
                 ImGuiImplSDL3.SDLGPU3PrepareDrawData(drawData, (ImSDLGPUCommandBuffer*)commandBuffer);
+                ExecuteQueuedGpuPrepares(gpuDevice, commandBuffer);
+
+                int depthWidth = Math.Max(1, (int)(drawData->DisplaySize.X * drawData->FramebufferScale.X));
+                int depthHeight = Math.Max(1, (int)(drawData->DisplaySize.Y * drawData->FramebufferScale.Y));
+                EnsureDepthTarget(gpuDevice, depthWidth, depthHeight);
 
                 SDLGPUColorTargetInfo targetInfo = new()
                 {
@@ -234,8 +251,20 @@ public class Application
                     Cycle = 0
                 };
 
-                SDLGPURenderPass* renderPass = SDL.BeginGPURenderPass(commandBuffer, &targetInfo, 1, null);
+                SDLGPUDepthStencilTargetInfo depthTargetInfo = new()
+                {
+                    Texture = _depthTexture,
+                    ClearDepth = 1f,
+                    LoadOp = SDLGPULoadOp.Clear,
+                    StoreOp = SDLGPUStoreOp.Store,
+                    StencilLoadOp = SDLGPULoadOp.DontCare,
+                    StencilStoreOp = SDLGPUStoreOp.DontCare,
+                    Cycle = 0
+                };
+
+                SDLGPURenderPass* renderPass = SDL.BeginGPURenderPass(commandBuffer, &targetInfo, 1, &depthTargetInfo);
                 ImGuiImplSDL3.SDLGPU3RenderDrawData(drawData, (ImSDLGPUCommandBuffer*)commandBuffer, (ImSDLGPURenderPass*)renderPass, null);
+                ExecuteQueuedGpuRenders(gpuDevice, commandBuffer, renderPass);
                 SDL.EndGPURenderPass(renderPass);
             }
 
@@ -251,6 +280,7 @@ public class Application
         _executionContext.Images.Dispose();
 
         ImGuiSampler.Release(gpuDevice);
+        DestroyDepthTarget(gpuDevice);
 
         SDL.ReleaseWindowFromGPUDevice(gpuDevice, window);
         SDL.DestroyGPUDevice(gpuDevice);
@@ -280,6 +310,30 @@ public class Application
     {
         _dragDropEvents = [];
         _frameHandledDragDrops = [];
+        _gpuPrepareActions.Clear();
+        _gpuRenderActions.Clear();
+    }
+
+    internal void EnqueueGpuPrepareAction(GpuPrepareAction action)
+    {
+        _gpuPrepareActions.Add(action);
+    }
+
+    internal void EnqueueGpuRenderAction(GpuRenderAction action)
+    {
+        _gpuRenderActions.Add(action);
+    }
+
+    private unsafe void ExecuteQueuedGpuPrepares(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer)
+    {
+        foreach (var action in _gpuPrepareActions)
+            action(gpuDevice, commandBuffer);
+    }
+
+    private unsafe void ExecuteQueuedGpuRenders(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer, SDLGPURenderPass* renderPass)
+    {
+        foreach (var action in _gpuRenderActions)
+            action(gpuDevice, commandBuffer, renderPass);
     }
 
     #region Window event
@@ -336,6 +390,55 @@ public class Application
         UnhandledException?.Invoke(this, e.ExceptionObject as Exception);
     }
 
+    private unsafe void EnsureDepthTarget(SDLGPUDevice* gpuDevice, int width, int height)
+    {
+        if (_depthTexture != null && _depthTextureWidth == width && _depthTextureHeight == height)
+            return;
+
+        DestroyDepthTarget(gpuDevice);
+
+        _depthFormat = SelectDepthFormat(gpuDevice);
+        _depthTexture = SDL.CreateGPUTexture(gpuDevice, new SDLGPUTextureCreateInfo
+        {
+            Width = (uint)width,
+            Height = (uint)height,
+            Format = _depthFormat,
+            Type = SDLGPUTextureType.Texturetype2D,
+            LayerCountOrDepth = 1,
+            NumLevels = 1,
+            SampleCount = SDLGPUSampleCount.Samplecount1,
+            Usage = (uint)SDLGPUTextureUsageFlags.DepthStencilTarget
+        });
+
+        _depthTextureWidth = width;
+        _depthTextureHeight = height;
+    }
+
+    private unsafe void DestroyDepthTarget(SDLGPUDevice* gpuDevice)
+    {
+        if (_depthTexture == null)
+            return;
+
+        SDL.ReleaseGPUTexture(gpuDevice, _depthTexture);
+        _depthTexture = null;
+        _depthTextureWidth = 0;
+        _depthTextureHeight = 0;
+    }
+
+    private static unsafe SDLGPUTextureFormat SelectDepthFormat(SDLGPUDevice* gpuDevice)
+    {
+        SDLGPUTextureType textureType = SDLGPUTextureType.Texturetype2D;
+        uint usage = (uint)SDLGPUTextureUsageFlags.DepthStencilTarget;
+
+        if (SDL.GPUTextureSupportsFormat(gpuDevice, SDLGPUTextureFormat.D32Float, textureType, usage))
+            return SDLGPUTextureFormat.D32Float;
+
+        if (SDL.GPUTextureSupportsFormat(gpuDevice, SDLGPUTextureFormat.D24Unorm, textureType, usage))
+            return SDLGPUTextureFormat.D24Unorm;
+
+        throw new InvalidOperationException("No supported depth format was found for this GPU backend.");
+    }
+
     internal bool TryGetDragDrop(Rectangle controlRect, out string[] files)
     {
         files = new string[_dragDropEvents.Length];
@@ -358,7 +461,19 @@ public class Application
     }
 }
 
-record ExecutionContext(Form MainForm, SDLWindowPtr Window, ImageFactory Images, IdFactory Ids);
+internal unsafe delegate void GpuPrepareAction(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer);
+internal unsafe delegate void GpuRenderAction(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer, SDLGPURenderPass* renderPass);
+internal delegate void ImGuiRenderAction();
+
+internal unsafe sealed class ExecutionContext(Form mainForm, SDLWindowPtr window, ImageFactory images, IdFactory ids, SDLGPUDevice* gpuDevice, SDLGPUTextureFormat swapchainFormat)
+{
+    public Form MainForm { get; } = mainForm;
+    public SDLWindowPtr Window { get; } = window;
+    public ImageFactory Images { get; } = images;
+    public IdFactory Ids { get; } = ids;
+    public SDLGPUDevice* GpuDevice { get; } = gpuDevice;
+    public SDLGPUTextureFormat SwapchainFormat { get; } = swapchainFormat;
+}
 
 readonly struct DragDropEvent(string file, Vector2 mousePos)
 {

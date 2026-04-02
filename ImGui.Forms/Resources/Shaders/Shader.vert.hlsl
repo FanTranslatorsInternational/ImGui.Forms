@@ -5,8 +5,12 @@ cbuffer UBO : register(b0, space1)
     float4x4 WorldViewProjection : packoffset(c8);
     float4 RenderParams : packoffset(c12);
     float4 VertexDotColor : packoffset(c13);
-    float4 CameraRight : packoffset(c14);
-    float4 CameraUp : packoffset(c15);
+    float4 WireColor : packoffset(c14);
+    float4 LightDirection : packoffset(c15);
+    float4 LightColor : packoffset(c16);
+    float4 StyleParams : packoffset(c17);
+    float4 CameraRight : packoffset(c18);
+    float4 CameraUp : packoffset(c19);
 };
 
 struct Input
@@ -27,6 +31,11 @@ struct Output
     float GridEnabled : TEXCOORD5;
     float RenderPass : TEXCOORD6;
     float4 DotColor : TEXCOORD7;
+    float4 WireColor : TEXCOORD8;
+    float3 LightDirection : TEXCOORD9;
+    float3 LightColor : TEXCOORD10;
+    float WireThickness : TEXCOORD11;
+    float LightIntensity : TEXCOORD12;
     float4 Position : SV_Position;
 };
 
@@ -58,6 +67,11 @@ Output main(Input input)
     output.GridEnabled = RenderParams.y;
     output.RenderPass = RenderParams.z;
     output.DotColor = VertexDotColor;
+    output.WireColor = WireColor;
+    output.LightDirection = LightDirection.xyz;
+    output.LightColor = LightColor.xyz;
+    output.WireThickness = StyleParams.x;
+    output.LightIntensity = StyleParams.y;
 
     return output;
 }

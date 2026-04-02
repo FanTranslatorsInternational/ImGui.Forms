@@ -4,7 +4,6 @@ using ImGui.Forms.Models;
 using ImGui.Forms.Resources;
 using ImGui.Forms.Support;
 using System;
-using System.Collections.Generic;
 using System.Numerics;
 using Image = SixLabors.ImageSharp.Image<SixLabors.ImageSharp.PixelFormats.Rgba32>;
 using Rectangle = ImGui.Forms.Support.Rectangle;
@@ -14,13 +13,6 @@ namespace ImGui.Forms.Controls;
 
 public unsafe class Object3DView : Component
 {
-    private const float ZoomSpeed = 0.1f;
-    private const float MinDistance = 0.25f;
-    private const float MaxDistance = 100f;
-    private const float RotationSpeed = 0.005f;
-    private const float PanSpeed = 2f;
-    private const float PitchLimit = MathF.PI * 0.49f;
-
     private readonly SdlGpuMeshRenderer3D _renderer;
     private readonly OrbitCameraState _camera;
     private ObjectState? _state;
@@ -45,40 +37,7 @@ public unsafe class Object3DView : Component
         set => _renderer.SetTexture(value);
     }
 
-    public bool ShowWireFrame
-    {
-        get => _renderer.GetWireframeEnabled();
-        set => _renderer.SetWireframeEnabled(value);
-    }
-
-    public bool ShowGrid
-    {
-        get => _renderer.GetGridEnabled();
-        set => _renderer.SetGridEnabled(value);
-    }
-
-    public bool ShowVertices
-    {
-        get => _renderer.GetVerticesEnabled();
-        set => _renderer.SetVerticesEnabled(value);
-    }
-
-    public float VertexDotSize
-    {
-        get => _renderer.GetVertexDotSize();
-        set => _renderer.SetVertexDotSize(value);
-    }
-
-    public Vector4 VertexDotColor
-    {
-        get => _renderer.GetVertexDotColor();
-        set => _renderer.SetVertexDotColor(value);
-    }
-
-    public IEnumerable<Rectangle>? ScissorExclusions
-    {
-        set => _renderer.SetAdditionalScissorExclusions(value);
-    }
+    public SceneConfiguration SceneConfiguration => _renderer.SceneConfiguration;
 
     public Object3DView(Mesh3D? mesh = null)
     {
@@ -99,8 +58,10 @@ public unsafe class Object3DView : Component
         if (_mesh == null || _mesh.Vertices.Count == 0)
             return;
 
-        Process3DObject(contentRect);
-        ProcessOverlay(contentRect);
+        SceneConfiguration sceneConfiguration = SceneConfiguration;
+
+        Process3DObject(contentRect, sceneConfiguration);
+        ProcessOverlay(contentRect, sceneConfiguration);
     }
 
     public override void Destroy()
@@ -108,7 +69,7 @@ public unsafe class Object3DView : Component
         _renderer.Dispose();
     }
 
-    private void Process3DObject(Rectangle contentRect)
+    private void Process3DObject(Rectangle contentRect, SceneConfiguration sceneConfiguration)
     {
         int viewportWidth = Math.Max(1, (int)contentRect.Width);
         int viewportHeight = Math.Max(1, (int)contentRect.Height);
@@ -121,14 +82,16 @@ public unsafe class Object3DView : Component
         {
             var io = Hexa.NET.ImGui.ImGui.GetIO();
             var minViewportDimension = MathF.Max(1f, MathF.Min(viewportWidth, viewportHeight));
-            float panScale = _camera.Distance * PanSpeed / minViewportDimension;
+            float maxDistance = MathF.Max(0.01f, sceneConfiguration.MaxDistance);
+            float minDistance = Math.Clamp(sceneConfiguration.MinDistance, 0.01f, maxDistance);
+            float panScale = _camera.Distance * sceneConfiguration.PanSpeed / minViewportDimension;
 
             // Mouse wheel zooms the orbit camera.
             if (io.MouseWheel != 0f)
             {
-                float zoomFactor = 1f - (io.MouseWheel * ZoomSpeed);
+                float zoomFactor = 1f - (io.MouseWheel * sceneConfiguration.ZoomSpeed);
                 if (zoomFactor > 0f)
-                    _camera.Distance = Math.Clamp(_camera.Distance * zoomFactor, MinDistance, MaxDistance);
+                    _camera.Distance = Math.Clamp(_camera.Distance * zoomFactor, minDistance, maxDistance);
             }
 
             var (_, cameraRight, cameraUp) = GetCameraBasis(_camera.Yaw, _camera.Pitch);
@@ -142,8 +105,9 @@ public unsafe class Object3DView : Component
             // Right drag orbits camera around target.
             if (Hexa.NET.ImGui.ImGui.IsMouseDown(ImGuiMouseButton.Right))
             {
-                _camera.Yaw += io.MouseDelta.X * RotationSpeed;
-                _camera.Pitch = Math.Clamp(_camera.Pitch + -io.MouseDelta.Y * RotationSpeed, -PitchLimit, PitchLimit);
+                float pitchLimit = Math.Clamp(MathF.Abs(sceneConfiguration.PitchLimit), 0.01f, (MathF.PI / 2f) - 0.01f);
+                _camera.Yaw += io.MouseDelta.X * sceneConfiguration.RotationSpeed;
+                _camera.Pitch = Math.Clamp(_camera.Pitch + -io.MouseDelta.Y * sceneConfiguration.RotationSpeed, -pitchLimit, pitchLimit);
             }
         }
 
@@ -163,13 +127,13 @@ public unsafe class Object3DView : Component
         });
     }
 
-    private void ProcessOverlay(Rectangle contentRect)
+    private void ProcessOverlay(Rectangle contentRect, SceneConfiguration sceneConfiguration)
     {
         Hexa.NET.ImGui.ImGui.SetCursorScreenPos(contentRect.Position);
 
-        var showWireFrame = _renderer.GetWireframeEnabled();
-        var showGrid = _renderer.GetGridEnabled();
-        var showVertices = _renderer.GetVerticesEnabled();
+        var showWireFrame = sceneConfiguration.ShowWireFrame;
+        var showGrid = sceneConfiguration.ShowGrid;
+        var showVertices = sceneConfiguration.ShowVertices;
 
         Hexa.NET.ImGui.ImGui.PushID($"{Id}-wire");
         Hexa.NET.ImGui.ImGui.Checkbox(LocalizationResources.ShowWireFrameText(), ref showWireFrame);
@@ -192,9 +156,9 @@ public unsafe class Object3DView : Component
         Hexa.NET.ImGui.ImGui.NewLine();
         Hexa.NET.ImGui.ImGui.PopID();
 
-        _renderer.SetWireframeEnabled(showWireFrame);
-        _renderer.SetGridEnabled(showGrid);
-        _renderer.SetVerticesEnabled(showVertices);
+        sceneConfiguration.ShowWireFrame = showWireFrame;
+        sceneConfiguration.ShowGrid = showGrid;
+        sceneConfiguration.ShowVertices = showVertices;
 
         var overlayWidth = Math.Max(Math.Max(wireFrameLength, gridLength), verticesLength) - contentRect.Position.X;
         var overlayHeight = Hexa.NET.ImGui.ImGui.GetCursorScreenPos().Y - contentRect.Position.Y;

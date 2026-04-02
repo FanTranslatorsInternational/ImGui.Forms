@@ -38,13 +38,10 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
     private SDLGPUTexture* _fallbackTexture;
     private Image<Rgba32>? _sourceTexture;
     private bool _textureDirty = true;
-    private bool _wireframeEnabled = true;
-    private bool _gridEnabled;
-    private bool _verticesEnabled;
-    private float _vertexDotSize = 4f;
-    private Vector4 _vertexDotColor = Vector4.One;
     private readonly List<Rectangle> _additionalScissorExclusions = [];
     private readonly List<Rectangle> _scissorRenderRects = [];
+
+    public SceneConfiguration SceneConfiguration { get; } = new();
 
     public SdlGpuMeshRenderer3D(Mesh3D? mesh = null)
     {
@@ -93,7 +90,7 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
 
         _pointCenters = points;
         RebuildPointVertices();
-        _vertices = [..expandedVertices];
+        _vertices = [.. expandedVertices];
         _vertexDataDirty = true;
     }
 
@@ -101,60 +98,6 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
     {
         _sourceTexture = texture;
         _textureDirty = true;
-    }
-
-    public bool GetWireframeEnabled()
-    {
-        return _wireframeEnabled;
-    }
-
-    public void SetWireframeEnabled(bool enabled)
-    {
-        _wireframeEnabled = enabled;
-    }
-
-    public bool GetGridEnabled()
-    {
-        return _gridEnabled;
-    }
-
-    public void SetGridEnabled(bool enabled)
-    {
-        _gridEnabled = enabled;
-    }
-
-    public bool GetVerticesEnabled()
-    {
-        return _verticesEnabled;
-    }
-
-    public void SetVerticesEnabled(bool enabled)
-    {
-        _verticesEnabled = enabled;
-    }
-
-    public float GetVertexDotSize()
-    {
-        return _vertexDotSize;
-    }
-
-    public void SetVertexDotSize(float size)
-    {
-        float clampedSize = MathF.Max(1f, size);
-        if (Math.Abs(_vertexDotSize - clampedSize) < float.Epsilon)
-            return;
-
-        _vertexDotSize = clampedSize;
-    }
-
-    public Vector4 GetVertexDotColor()
-    {
-        return _vertexDotColor;
-    }
-
-    public void SetVertexDotColor(Vector4 color)
-    {
-        _vertexDotColor = color;
     }
 
     private void RebuildPointVertices()
@@ -173,7 +116,7 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
             AddBillboardDot(dotVertices, center);
         }
 
-        _pointVertices = [..dotVertices];
+        _pointVertices = [.. dotVertices];
         _pointVertexDataDirty = true;
     }
 
@@ -236,7 +179,7 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
     public void Render(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer, SDLGPURenderPass* renderPass, Rectangle contentSize, ObjectState state)
     {
         bool hasFaceData = _vertices.Length > 0 && _pipeline != null && _vertexBuffer != null;
-        bool hasPointData = _verticesEnabled && _pointVertices.Length > 0 && _pipeline != null && _pointVertexBuffer != null;
+        bool hasPointData = SceneConfiguration.ShowVertices && _pointVertices.Length > 0 && _pipeline != null && _pointVertexBuffer != null;
         if (!hasFaceData && !hasPointData)
             return;
 
@@ -266,8 +209,12 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
             ViewProjection = state.View * state.Projection,
             WorldViewProjection = state.Transformation * state.View * state.Projection,
             // x: wireframe, y: Y=0 grid enabled, z: render pass (0=mesh), w: unused
-            RenderParams = new Vector4(_wireframeEnabled ? 1f : 0f, _gridEnabled ? 1f : 0f, 0f, 0f),
-            VertexDotColor = _vertexDotColor,
+            RenderParams = new Vector4(SceneConfiguration.ShowWireFrame ? 1f : 0f, SceneConfiguration.ShowGrid ? 1f : 0f, 0f, 0f),
+            VertexDotColor = SceneConfiguration.VertexDotColor,
+            WireColor = NormalizeColor(SceneConfiguration.WireColor),
+            LightDirection = new Vector4(Vector3.Normalize(SceneConfiguration.LightDirection == Vector3.Zero ? new Vector3(1f, 0f, -1f) : SceneConfiguration.LightDirection), 0f),
+            LightColor = new Vector4(SceneConfiguration.LightColor, 1f),
+            StyleParams = new Vector4(MathF.Max(0.01f, SceneConfiguration.WireThickness), MathF.Max(0f, SceneConfiguration.LightIntensity), 0f, 0f),
             CameraRight = Vector4.Zero,
             CameraUp = Vector4.Zero
         };
@@ -292,7 +239,11 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
             WorldViewProjection = state.View * state.Projection,
             // Disable wireframe, keep grid enabled, mark this as dedicated grid pass (z=1).
             RenderParams = new Vector4(0f, 1f, 1f, 0f),
-            VertexDotColor = _vertexDotColor,
+            VertexDotColor = SceneConfiguration.VertexDotColor,
+            WireColor = NormalizeColor(SceneConfiguration.WireColor),
+            LightDirection = new Vector4(Vector3.Normalize(SceneConfiguration.LightDirection == Vector3.Zero ? new Vector3(1f, 0f, -1f) : SceneConfiguration.LightDirection), 0f),
+            LightColor = new Vector4(SceneConfiguration.LightColor, 1f),
+            StyleParams = new Vector4(MathF.Max(0.01f, SceneConfiguration.WireThickness), MathF.Max(0f, SceneConfiguration.LightIntensity), 0f, 0f),
             CameraRight = Vector4.Zero,
             CameraUp = Vector4.Zero
         };
@@ -303,14 +254,20 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
             Offset = 0
         };
 
+        float vertexDotSize = MathF.Max(1f, SceneConfiguration.VertexDotSize);
+
         MeshTransformUniform pointUniform = new()
         {
             World = state.Transformation,
             ViewProjection = state.View * state.Projection,
             WorldViewProjection = state.Transformation * state.View * state.Projection,
             // Dedicated vertex-marker pass (z=2).
-            RenderParams = new Vector4(0f, 0f, 2f, _vertexDotSize),
-            VertexDotColor = _vertexDotColor,
+            RenderParams = new Vector4(0f, 0f, 2f, vertexDotSize),
+            VertexDotColor = SceneConfiguration.VertexDotColor,
+            WireColor = NormalizeColor(SceneConfiguration.WireColor),
+            LightDirection = new Vector4(Vector3.Normalize(SceneConfiguration.LightDirection == Vector3.Zero ? new Vector3(1f, 0f, -1f) : SceneConfiguration.LightDirection), 0f),
+            LightColor = new Vector4(SceneConfiguration.LightColor, 1f),
+            StyleParams = new Vector4(MathF.Max(0.01f, SceneConfiguration.WireThickness), MathF.Max(0f, SceneConfiguration.LightIntensity), 0f, 0f),
             CameraRight = new Vector4(cameraRight, 0f),
             CameraUp = new Vector4(cameraUp, 0f)
         };
@@ -335,7 +292,7 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
                 SDL.DrawGPUPrimitives(renderPass, (uint)_vertices.Length, 1, 0, 0);
             }
 
-            if (_gridEnabled && _gridVertexBuffer != null)
+            if (SceneConfiguration.ShowGrid && _gridVertexBuffer != null)
             {
                 SDL.BindGPUGraphicsPipeline(renderPass, _pipeline);
                 SDL.BindGPUVertexBuffers(renderPass, 0, &gridBinding, 1);
@@ -930,6 +887,14 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
         up = Vector3.Normalize(new Vector3(inverseView.M21, inverseView.M22, inverseView.M23));
     }
 
+    private static Vector4 NormalizeColor(Vector4 color)
+    {
+        if (color.X > 1f || color.Y > 1f || color.Z > 1f || color.W > 1f)
+            return color / 255f;
+
+        return color;
+    }
+
     [StructLayout(LayoutKind.Sequential)]
     private readonly struct Mesh3DVertex
     {
@@ -963,6 +928,10 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
         public Matrix4x4 WorldViewProjection;
         public Vector4 RenderParams;
         public Vector4 VertexDotColor;
+        public Vector4 WireColor;
+        public Vector4 LightDirection;
+        public Vector4 LightColor;
+        public Vector4 StyleParams;
         public Vector4 CameraRight;
         public Vector4 CameraUp;
     }

@@ -23,6 +23,7 @@
         <dependency id="Hexa.NET.ImGui" version="2.2.9" />
         <dependency id="Hexa.NET.ImGui.Backends" version="1.0.18" />
         <dependency id="Hexa.NET.ImGui.Backends.SDL3" version="1.0.18" />
+        <dependency id="Hexa.NET.ImGuizmo" version="2.2.9" />
         <dependency id="Hexa.NET.SDL3" version="1.2.17" />
       </group>
     </dependencies>

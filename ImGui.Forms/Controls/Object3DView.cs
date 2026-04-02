@@ -57,6 +57,24 @@ public unsafe class Object3DView : Component
         set => _renderer.SetGridEnabled(value);
     }
 
+    public bool ShowVertices
+    {
+        get => _renderer.GetVerticesEnabled();
+        set => _renderer.SetVerticesEnabled(value);
+    }
+
+    public float VertexDotSize
+    {
+        get => _renderer.GetVertexDotSize();
+        set => _renderer.SetVertexDotSize(value);
+    }
+
+    public Vector4 VertexDotColor
+    {
+        get => _renderer.GetVertexDotColor();
+        set => _renderer.SetVertexDotColor(value);
+    }
+
     public IEnumerable<Rectangle>? ScissorExclusions
     {
         set => _renderer.SetAdditionalScissorExclusions(value);
@@ -78,7 +96,7 @@ public unsafe class Object3DView : Component
     {
         Hexa.NET.ImGui.ImGui.Dummy(contentRect.Size);
 
-        if (_mesh == null || _mesh.Faces.Count == 0)
+        if (_mesh == null || _mesh.Vertices.Count == 0)
             return;
 
         Process3DObject(contentRect);
@@ -95,10 +113,7 @@ public unsafe class Object3DView : Component
         int viewportWidth = Math.Max(1, (int)contentRect.Width);
         int viewportHeight = Math.Max(1, (int)contentRect.Height);
 
-        _state ??= new ObjectState
-        {
-            Projection = Matrix4x4.CreatePerspectiveFieldOfView(MathF.PI / 3f, viewportWidth / (float)viewportHeight, 0.1f, 100f)
-        };
+        _state ??= new ObjectState();
         _state.Projection = Matrix4x4.CreatePerspectiveFieldOfView(MathF.PI / 3f, viewportWidth / (float)viewportHeight, 0.1f, 100f);
 
         bool isFocused = Hexa.NET.ImGui.ImGui.IsItemHovered() || Hexa.NET.ImGui.ImGui.IsItemActive();
@@ -154,6 +169,7 @@ public unsafe class Object3DView : Component
 
         var showWireFrame = _renderer.GetWireframeEnabled();
         var showGrid = _renderer.GetGridEnabled();
+        var showVertices = _renderer.GetVerticesEnabled();
 
         Hexa.NET.ImGui.ImGui.PushID($"{Id}-wire");
         Hexa.NET.ImGui.ImGui.Checkbox(LocalizationResources.ShowWireFrameText(), ref showWireFrame);
@@ -169,10 +185,18 @@ public unsafe class Object3DView : Component
         Hexa.NET.ImGui.ImGui.NewLine();
         Hexa.NET.ImGui.ImGui.PopID();
 
+        Hexa.NET.ImGui.ImGui.PushID($"{Id}-vertices");
+        Hexa.NET.ImGui.ImGui.Checkbox(LocalizationResources.ShowVerticesText(), ref showVertices);
+        Hexa.NET.ImGui.ImGui.SameLine();
+        var verticesLength = Hexa.NET.ImGui.ImGui.GetCursorScreenPos().X;
+        Hexa.NET.ImGui.ImGui.NewLine();
+        Hexa.NET.ImGui.ImGui.PopID();
+
         _renderer.SetWireframeEnabled(showWireFrame);
         _renderer.SetGridEnabled(showGrid);
+        _renderer.SetVerticesEnabled(showVertices);
 
-        var overlayWidth = Math.Max(wireFrameLength, gridLength) - contentRect.Position.X;
+        var overlayWidth = Math.Max(Math.Max(wireFrameLength, gridLength), verticesLength) - contentRect.Position.X;
         var overlayHeight = Hexa.NET.ImGui.ImGui.GetCursorScreenPos().Y - contentRect.Position.Y;
         _renderer.SetAdditionalScissorExclusions([new Rectangle(contentRect.Position, new Vector2(overlayWidth, overlayHeight))]);
     }

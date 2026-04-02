@@ -6,7 +6,8 @@ struct Input
     float3 Barycentric : TEXCOORD3;
     float WireframeEnabled : TEXCOORD4;
     float GridEnabled : TEXCOORD5;
-    float GridPass : TEXCOORD6;
+    float RenderPass : TEXCOORD6;
+    float4 DotColor : TEXCOORD7;
     float4 Position : SV_Position;
 };
 
@@ -15,7 +16,18 @@ SamplerState FaceSampler : register(s0, space2);
 
 float4 main(Input input) : SV_Target0
 {
-    if (input.GridEnabled > 0.5f && input.GridPass > 0.5f)
+    // Dedicated pass for independent vertex markers.
+    if (input.RenderPass > 1.5f)
+    {
+        float2 centeredUv = (input.Uv * 2.0f) - 1.0f;
+        float distanceToCenter = length(centeredUv);
+        float edgeWidth = max(fwidth(distanceToCenter), 0.0001f);
+        float alpha = 1.0f - smoothstep(1.0f - edgeWidth, 1.0f + edgeWidth, distanceToCenter);
+        clip(alpha - 0.001f);
+        return float4(input.DotColor.rgb, input.DotColor.a * alpha);
+    }
+
+    if (input.GridEnabled > 0.5f && input.RenderPass > 0.5f)
     {
         float2 gridUv = input.WorldPos.xz;
 

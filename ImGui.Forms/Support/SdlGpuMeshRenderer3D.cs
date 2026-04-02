@@ -353,13 +353,6 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
             _fallbackTexture = null;
         }
 
-        //if (DepthTexture != null)
-        //{
-        //    SDL.ReleaseGPUTexture(gpuDevice, DepthTexture);
-        //    DepthTexture = null;
-        //    DepthTextureWidth = DepthTextureHeight = 0;
-        //}
-
         if (_vertexBuffer != null)
         {
             SDL.ReleaseGPUBuffer(gpuDevice, _vertexBuffer);

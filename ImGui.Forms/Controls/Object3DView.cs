@@ -131,16 +131,9 @@ public unsafe class Object3DView : Component
     {
         Hexa.NET.ImGui.ImGui.SetCursorScreenPos(contentRect.Position);
 
-        var showWireFrame = sceneConfiguration.ShowWireFrame;
         var showGrid = sceneConfiguration.ShowGrid;
         var showVertices = sceneConfiguration.ShowVertices;
-
-        Hexa.NET.ImGui.ImGui.PushID($"{Id}-wire");
-        Hexa.NET.ImGui.ImGui.Checkbox(LocalizationResources.ShowWireFrameText(), ref showWireFrame);
-        Hexa.NET.ImGui.ImGui.SameLine();
-        var wireFrameLength = Hexa.NET.ImGui.ImGui.GetCursorScreenPos().X;
-        Hexa.NET.ImGui.ImGui.NewLine();
-        Hexa.NET.ImGui.ImGui.PopID();
+        var showWireFrame = sceneConfiguration.ShowWireFrame;
 
         Hexa.NET.ImGui.ImGui.PushID($"{Id}-grid");
         Hexa.NET.ImGui.ImGui.Checkbox(LocalizationResources.ShowGridText(), ref showGrid);
@@ -156,9 +149,16 @@ public unsafe class Object3DView : Component
         Hexa.NET.ImGui.ImGui.NewLine();
         Hexa.NET.ImGui.ImGui.PopID();
 
-        sceneConfiguration.ShowWireFrame = showWireFrame;
+        Hexa.NET.ImGui.ImGui.PushID($"{Id}-wire");
+        Hexa.NET.ImGui.ImGui.Checkbox(LocalizationResources.ShowWireFrameText(), ref showWireFrame);
+        Hexa.NET.ImGui.ImGui.SameLine();
+        var wireFrameLength = Hexa.NET.ImGui.ImGui.GetCursorScreenPos().X;
+        Hexa.NET.ImGui.ImGui.NewLine();
+        Hexa.NET.ImGui.ImGui.PopID();
+
         sceneConfiguration.ShowGrid = showGrid;
         sceneConfiguration.ShowVertices = showVertices;
+        sceneConfiguration.ShowWireFrame = showWireFrame;
 
         var overlayWidth = Math.Max(Math.Max(wireFrameLength, gridLength), verticesLength) - contentRect.Position.X;
         var overlayHeight = Hexa.NET.ImGui.ImGui.GetCursorScreenPos().Y - contentRect.Position.Y;

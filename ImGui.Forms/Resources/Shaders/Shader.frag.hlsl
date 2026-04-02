@@ -6,7 +6,13 @@ struct Input
     float3 Barycentric : TEXCOORD3;
     float WireframeEnabled : TEXCOORD4;
     float GridEnabled : TEXCOORD5;
-    float GridPass : TEXCOORD6;
+    float RenderPass : TEXCOORD6;
+    float4 DotColor : TEXCOORD7;
+    float4 WireColor : TEXCOORD8;
+    float3 LightDirection : TEXCOORD9;
+    float3 LightColor : TEXCOORD10;
+    float WireThickness : TEXCOORD11;
+    float LightIntensity : TEXCOORD12;
     float4 Position : SV_Position;
 };
 
@@ -15,7 +21,18 @@ SamplerState FaceSampler : register(s0, space2);
 
 float4 main(Input input) : SV_Target0
 {
-    if (input.GridEnabled > 0.5f && input.GridPass > 0.5f)
+    // Dedicated pass for independent vertex markers.
+    if (input.RenderPass > 1.5f)
+    {
+        float2 centeredUv = (input.Uv * 2.0f) - 1.0f;
+        float distanceToCenter = length(centeredUv);
+        float edgeWidth = max(fwidth(distanceToCenter), 0.0001f);
+        float alpha = 1.0f - smoothstep(1.0f - edgeWidth, 1.0f + edgeWidth, distanceToCenter);
+        clip(alpha - 0.001f);
+        return float4(input.DotColor.rgb, input.DotColor.a * alpha);
+    }
+
+    if (input.GridEnabled > 0.5f && input.RenderPass > 0.5f)
     {
         float2 gridUv = input.WorldPos.xz;
 
@@ -53,17 +70,20 @@ float4 main(Input input) : SV_Target0
     float3 dpdy = ddy_fine(input.WorldPos);
     float3 faceNormal = normalize(cross(dpdx, dpdy));
 
-    // Keep directional contribution subtle for more equal-looking brightness.
-    float3 lightDir = normalize(float3(1.0f, 0.0f, -1.0f));
+    // Directional lighting with configurable color and direction.
+    // Keep legacy intensity response when lightColor is white.
+    float3 lightDir = normalize(input.LightDirection);
     float ndotl = saturate(dot(faceNormal, lightDir));
-    float lighting = 1.25f + 0.25f * ndotl;
+    float3 lightColor = max(input.LightColor, float3(0.0f, 0.0f, 0.0f));
+    float lightingIntensity = (1.25f + 0.25f * ndotl) * max(0.0f, input.LightIntensity);
+    float3 lighting = lightColor * lightingIntensity;
 
     float4 sampled = FaceTexture.Sample(FaceSampler, input.Uv);
     float3 shaded = input.Color.rgb * sampled.rgb * lighting;
     
     // Shader wireframe overlay from barycentric coordinates.
-    const float wireThickness = 1.25f;
-    const float3 wireColor = float3(1.0f, 1.0f, 1.0f);
+    float wireThickness = max(0.01f, input.WireThickness);
+    float3 wireColor = input.WireColor.rgb;
     float3 baryWidth = fwidth(input.Barycentric) * wireThickness;
     float3 baryBlend = smoothstep(0.0f, baryWidth, input.Barycentric);
     float edgeFactor = min(min(baryBlend.x, baryBlend.y), baryBlend.z);

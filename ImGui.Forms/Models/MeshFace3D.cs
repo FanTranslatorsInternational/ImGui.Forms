@@ -1,8 +1,8 @@
 namespace ImGui.Forms.Models;
 
-public readonly struct MeshFace3D(MeshVertex3D a, MeshVertex3D b, MeshVertex3D c)
+public readonly struct MeshFace3D(int aIndex, int bIndex, int cIndex)
 {
-    public MeshVertex3D A { get; } = a;
-    public MeshVertex3D B { get; } = b;
-    public MeshVertex3D C { get; } = c;
+    public int AIndex { get; } = aIndex;
+    public int BIndex { get; } = bIndex;
+    public int CIndex { get; } = cIndex;
 }

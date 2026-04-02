@@ -180,7 +180,8 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
     {
         bool hasFaceData = _vertices.Length > 0 && _pipeline != null && _vertexBuffer != null;
         bool hasPointData = SceneConfiguration.ShowVertices && _pointVertices.Length > 0 && _pipeline != null && _pointVertexBuffer != null;
-        if (!hasFaceData && !hasPointData)
+        bool hasGridData = SceneConfiguration.ShowGrid && _pipeline != null && _gridVertexBuffer != null;
+        if (!hasFaceData && !hasPointData && !hasGridData)
             return;
 
         int viewportWidth = Math.Max(1, (int)contentSize.Width);

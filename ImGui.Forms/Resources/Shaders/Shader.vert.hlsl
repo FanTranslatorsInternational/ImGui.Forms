@@ -34,6 +34,7 @@ struct Output
     float3 LightColor : TEXCOORD9;
     float WireThickness : TEXCOORD10;
     float LightIntensity : TEXCOORD11;
+    float TextureEnabled : TEXCOORD12;
     float4 Position : SV_Position;
 };
 
@@ -69,6 +70,7 @@ Output main(Input input)
     output.LightColor = LightColor.xyz;
     output.WireThickness = StyleParams.x;
     output.LightIntensity = StyleParams.y;
+    output.TextureEnabled = RenderParams.w;
 
     return output;
 }

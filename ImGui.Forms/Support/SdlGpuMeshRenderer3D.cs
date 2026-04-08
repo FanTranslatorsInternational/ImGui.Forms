@@ -231,8 +231,8 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
             World = state.Transformation,
             ViewProjection = state.View * state.Projection,
             WorldViewProjection = state.Transformation * state.View * state.Projection,
-            // x: wireframe, y: Y=0 grid enabled, z: render pass (0=mesh), w: unused
-            RenderParams = new Vector4(SceneConfiguration.ShowWireFrame ? 1f : 0f, SceneConfiguration.ShowGrid ? 1f : 0f, 0f, 0f),
+            // x: wireframe, y: Y=0 grid enabled, z: render pass (0=mesh), w: has texture
+            RenderParams = new Vector4(SceneConfiguration.ShowWireFrame ? 1f : 0f, SceneConfiguration.ShowGrid ? 1f : 0f, 0f, _texture != null ? 1f : 0f),
             WireColor = NormalizeColor(SceneConfiguration.WireColor),
             LightDirection = new Vector4(Vector3.Normalize(SceneConfiguration.LightDirection == Vector3.Zero ? new Vector3(1f, 0f, -1f) : SceneConfiguration.LightDirection), 0f),
             LightColor = new Vector4(SceneConfiguration.LightColor, 1f),

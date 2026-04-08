@@ -12,6 +12,7 @@ struct Input
     float3 LightColor : TEXCOORD9;
     float WireThickness : TEXCOORD10;
     float LightIntensity : TEXCOORD11;
+    float TextureEnabled : TEXCOORD12;
     float4 Position : SV_Position;
 };
 
@@ -78,7 +79,10 @@ float4 main(Input input) : SV_Target0
     float3 lighting = lightColor * lightingIntensity;
 
     float4 sampled = FaceTexture.Sample(FaceSampler, input.Uv);
-    float3 shaded = input.Color.rgb * sampled.rgb * lighting;
+    float3 albedo = sampled.rgb;
+    if (input.TextureEnabled < 0.5f)
+        albedo = float3(0.7f, 0.7f, 0.7f);
+    float3 shaded = input.Color.rgb * albedo * lighting;
     
     // Shader wireframe overlay from barycentric coordinates.
     float wireThickness = max(0.01f, input.WireThickness);

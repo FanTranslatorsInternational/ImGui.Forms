@@ -72,7 +72,9 @@ float4 main(Input input) : SV_Target0
 
     // Directional lighting with configurable color and direction.
     // Keep legacy intensity response when lightColor is white.
-    float3 lightDir = normalize(input.LightDirection);
+    // LightDirection points from origin toward the light marker.
+    // For shading we need the incoming light vector at the surface.
+    float3 lightDir = normalize(-input.LightDirection);
     float ndotl = saturate(dot(faceNormal, lightDir));
     float3 lightColor = max(input.LightColor, float3(0.0f, 0.0f, 0.0f));
     float lightingIntensity = (1.25f + 0.25f * ndotl) * max(0.0f, input.LightIntensity);

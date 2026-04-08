@@ -20,23 +20,6 @@ public unsafe class Object3DView : Component
 
     public Size Size { get; set; } = Size.Parent;
 
-    public Mesh3D? Mesh
-    {
-        get => GetMesh();
-        set
-        {
-            if (value == null)
-                return;
-
-            SetMesh(value);
-        }
-    }
-
-    public Image? Texture
-    {
-        set => SetTexture(value);
-    }
-
     public SceneConfiguration SceneConfiguration => _renderer.SceneConfiguration;
 
     public Object3DView(Mesh3D? mesh = null)

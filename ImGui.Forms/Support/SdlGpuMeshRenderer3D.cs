@@ -16,7 +16,9 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
 {
     private readonly Mesh3DVertex[] _gridVertices = CreateGridVertices();
     private static readonly Vector4 LightBillboardColor = new(180f, 140f, 40f, 255f);
-    private const float LightBillboardDistance = 2.5f;
+    private const float MinLightBillboardDistance = 0.5f;
+    private const float LightBillboardPaddingFactor = 0.1f;
+    private const float MinLightBillboardPadding = 0.25f;
 
     private Mesh3DVertex[] _vertices;
     private Mesh3DVertex[] _pointCenters;
@@ -939,12 +941,33 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
     private void UpdateLightBillboardVertices()
     {
         Vector3 lightDirection = Vector3.Normalize(SceneConfiguration.LightDirection == Vector3.Zero ? new Vector3(1f, 0f, -1f) : SceneConfiguration.LightDirection);
-        Vector3 lightPosition = lightDirection * LightBillboardDistance;
+        float lightDistance = GetLightBillboardDistance(lightDirection);
+        Vector3 lightPosition = lightDirection * lightDistance;
         var lightCenter = new Mesh3DVertex(lightPosition, LightBillboardColor, Vector2.Zero, Vector3.Zero);
         var vertices = new List<Mesh3DVertex>(6);
         AddBillboardDot(vertices, lightCenter);
         _lightVertices = [.. vertices];
         _lightVertexDataDirty = true;
+    }
+
+    private float GetLightBillboardDistance(Vector3 lightDirection)
+    {
+        if (_pointCenters.Length == 0)
+            return MinLightBillboardDistance;
+
+        float maxProjection = float.NegativeInfinity;
+        Vector3 minBounds = new(float.PositiveInfinity);
+        Vector3 maxBounds = new(float.NegativeInfinity);
+        foreach (Mesh3DVertex vertex in _pointCenters)
+        {
+            maxProjection = MathF.Max(maxProjection, Vector3.Dot(vertex.Position, lightDirection));
+            minBounds = Vector3.Min(minBounds, vertex.Position);
+            maxBounds = Vector3.Max(maxBounds, vertex.Position);
+        }
+
+        float diagonalLength = Vector3.Distance(minBounds, maxBounds);
+        float padding = MathF.Max(MinLightBillboardPadding, diagonalLength * LightBillboardPaddingFactor);
+        return MathF.Max(MinLightBillboardDistance, maxProjection + padding);
     }
 
     private static Vector4 NormalizeColor(Vector4 color)

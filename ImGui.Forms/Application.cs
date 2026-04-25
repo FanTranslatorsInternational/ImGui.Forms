@@ -40,8 +40,8 @@ public class Application
     private readonly List<GpuPrepareAction> _gpuPrepareActions = [];
     private readonly List<GpuRenderAction> _gpuRenderActions = [];
 
-    private DragDropEvent[] _dragDropEvents = [];
-    private bool[] _frameHandledDragDrops = [];
+    private readonly List<DragDropEvent> _dragDropEvents = [];
+    private readonly List<bool> _frameHandledDragDrops = [];
 
     #region Static properties
 
@@ -308,8 +308,8 @@ public class Application
 
     private void UpdateApplicationEvents()
     {
-        _dragDropEvents = [];
-        _frameHandledDragDrops = [];
+        _dragDropEvents.Clear();
+        _frameHandledDragDrops.Clear();
         _gpuPrepareActions.Clear();
         _gpuRenderActions.Clear();
     }
@@ -376,11 +376,8 @@ public class Application
         if (path == null)
             return;
 
-        Array.Resize(ref _frameHandledDragDrops, _frameHandledDragDrops.Length + 1);
-        _frameHandledDragDrops[^1] = false;
-
-        Array.Resize(ref _dragDropEvents, _dragDropEvents.Length + 1);
-        _dragDropEvents[^1] = new DragDropEvent(path, Hexa.NET.ImGui.ImGui.GetMousePos());
+        _frameHandledDragDrops.Add(false);
+        _dragDropEvents.Add(new DragDropEvent(path, Hexa.NET.ImGui.ImGui.GetMousePos()));
     }
 
     #endregion
@@ -441,10 +438,10 @@ public class Application
 
     internal bool TryGetDragDrop(Rectangle controlRect, out string[] files)
     {
-        files = new string[_dragDropEvents.Length];
+        files = new string[_dragDropEvents.Count];
         var index = 0;
 
-        for (var i = 0; i < _frameHandledDragDrops.Length; i++)
+        for (var i = 0; i < _frameHandledDragDrops.Count; i++)
         {
             if (_frameHandledDragDrops[i] || _dragDropEvents[i].IsEmpty)
                 continue;

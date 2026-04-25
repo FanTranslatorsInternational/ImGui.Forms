@@ -7,12 +7,12 @@ struct Input
     float WireframeEnabled : TEXCOORD4;
     float GridEnabled : TEXCOORD5;
     float RenderPass : TEXCOORD6;
-    float4 DotColor : TEXCOORD7;
-    float4 WireColor : TEXCOORD8;
-    float3 LightDirection : TEXCOORD9;
-    float3 LightColor : TEXCOORD10;
-    float WireThickness : TEXCOORD11;
-    float LightIntensity : TEXCOORD12;
+    float4 WireColor : TEXCOORD7;
+    float3 LightDirection : TEXCOORD8;
+    float3 LightColor : TEXCOORD9;
+    float WireThickness : TEXCOORD10;
+    float LightIntensity : TEXCOORD11;
+    float TextureEnabled : TEXCOORD12;
     float4 Position : SV_Position;
 };
 
@@ -29,7 +29,7 @@ float4 main(Input input) : SV_Target0
         float edgeWidth = max(fwidth(distanceToCenter), 0.0001f);
         float alpha = 1.0f - smoothstep(1.0f - edgeWidth, 1.0f + edgeWidth, distanceToCenter);
         clip(alpha - 0.001f);
-        return float4(input.DotColor.rgb, input.DotColor.a * alpha);
+        return float4(input.Color.rgb, input.Color.a * alpha);
     }
 
     if (input.GridEnabled > 0.5f && input.RenderPass > 0.5f)
@@ -72,14 +72,19 @@ float4 main(Input input) : SV_Target0
 
     // Directional lighting with configurable color and direction.
     // Keep legacy intensity response when lightColor is white.
-    float3 lightDir = normalize(input.LightDirection);
+    // LightDirection points from origin toward the light marker.
+    // For shading we need the incoming light vector at the surface.
+    float3 lightDir = normalize(-input.LightDirection);
     float ndotl = saturate(dot(faceNormal, lightDir));
     float3 lightColor = max(input.LightColor, float3(0.0f, 0.0f, 0.0f));
     float lightingIntensity = (1.25f + 0.25f * ndotl) * max(0.0f, input.LightIntensity);
     float3 lighting = lightColor * lightingIntensity;
 
     float4 sampled = FaceTexture.Sample(FaceSampler, input.Uv);
-    float3 shaded = input.Color.rgb * sampled.rgb * lighting;
+    float3 albedo = sampled.rgb;
+    if (input.TextureEnabled < 0.5f)
+        albedo = float3(0.7f, 0.7f, 0.7f);
+    float3 shaded = input.Color.rgb * albedo * lighting;
     
     // Shader wireframe overlay from barycentric coordinates.
     float wireThickness = max(0.01f, input.WireThickness);

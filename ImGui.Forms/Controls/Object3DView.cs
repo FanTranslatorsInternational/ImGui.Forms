@@ -20,23 +20,6 @@ public unsafe class Object3DView : Component
 
     public Size Size { get; set; } = Size.Parent;
 
-    public Mesh3D? Mesh
-    {
-        get => _mesh;
-        set
-        {
-            _mesh = value;
-            _renderer.SetMesh(_mesh);
-
-            ResetCamera();
-        }
-    }
-
-    public Image? Texture
-    {
-        set => _renderer.SetTexture(value);
-    }
-
     public SceneConfiguration SceneConfiguration => _renderer.SceneConfiguration;
 
     public Object3DView(Mesh3D? mesh = null)
@@ -51,6 +34,24 @@ public unsafe class Object3DView : Component
         return Size;
     }
 
+    public override void Destroy()
+    {
+        _renderer.Dispose();
+    }
+
+    public Mesh3D? GetMesh() => _mesh;
+
+    public void SetMesh(Mesh3D mesh, bool shouldResetCamera = true)
+    {
+        _mesh = mesh;
+        _renderer.SetMesh(mesh);
+
+        if (shouldResetCamera)
+            ResetCamera();
+    }
+
+    public void SetTexture(Image? texture) => _renderer.SetTexture(texture);
+
     protected override void UpdateInternal(Rectangle contentRect)
     {
         Hexa.NET.ImGui.ImGui.Dummy(contentRect.Size);
@@ -62,11 +63,6 @@ public unsafe class Object3DView : Component
 
         Process3DObject(contentRect, sceneConfiguration);
         ProcessOverlay(contentRect, sceneConfiguration);
-    }
-
-    public override void Destroy()
-    {
-        _renderer.Dispose();
     }
 
     private void Process3DObject(Rectangle contentRect, SceneConfiguration sceneConfiguration)

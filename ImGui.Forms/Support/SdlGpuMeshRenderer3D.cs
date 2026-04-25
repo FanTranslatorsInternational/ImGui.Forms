@@ -15,18 +15,26 @@ namespace ImGui.Forms.Support;
 internal unsafe class SdlGpuMeshRenderer3D : IDisposable
 {
     private readonly Mesh3DVertex[] _gridVertices = CreateGridVertices();
+    private static readonly Vector4 LightBillboardColor = new(180f, 140f, 40f, 255f);
+    private const float MinLightBillboardDistance = 0.5f;
+    private const float LightBillboardPaddingFactor = 0.1f;
+    private const float MinLightBillboardPadding = 0.25f;
 
     private Mesh3DVertex[] _vertices;
     private Mesh3DVertex[] _pointCenters;
     private Mesh3DVertex[] _pointVertices;
+    private Mesh3DVertex[] _lightVertices;
     private bool _vertexDataDirty = true;
     private bool _pointVertexDataDirty = true;
+    private bool _lightVertexDataDirty = true;
     private bool _gridVertexDataDirty = true;
 
     private SDLGPUBuffer* _vertexBuffer;
     private uint _vertexBufferSize;
     private SDLGPUBuffer* _pointVertexBuffer;
     private uint _pointVertexBufferSize;
+    private SDLGPUBuffer* _lightVertexBuffer;
+    private uint _lightVertexBufferSize;
     private SDLGPUBuffer* _gridVertexBuffer;
     private uint _gridVertexBufferSize;
 
@@ -48,6 +56,7 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
         _vertices = [];
         _pointCenters = [];
         _pointVertices = [];
+        _lightVertices = [];
         SetMesh(mesh);
     }
 
@@ -58,8 +67,10 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
             _vertices = [];
             _pointCenters = [];
             _pointVertices = [];
+            _lightVertices = [];
             _vertexDataDirty = true;
             _pointVertexDataDirty = true;
+            _lightVertexDataDirty = true;
             return;
         }
 
@@ -90,6 +101,7 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
 
         _pointCenters = points;
         RebuildPointVertices();
+        UpdateLightBillboardVertices();
         _vertices = [.. expandedVertices];
         _vertexDataDirty = true;
     }
@@ -150,14 +162,17 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
 
     public void Prepare(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer)
     {
-        if (_vertices.Length == 0 && _pointVertices.Length == 0)
+        if (_vertices.Length == 0 && _pointVertices.Length == 0 && _lightVertices.Length == 0)
             return;
 
+        UpdateLightBillboardVertices();
         CreatePipelineIfRequired(gpuDevice);
         if (_vertices.Length > 0)
             EnsureVertexBuffer(gpuDevice);
         if (_pointVertices.Length > 0)
             EnsurePointVertexBuffer(gpuDevice);
+        if (_lightVertices.Length > 0)
+            EnsureLightVertexBuffer(gpuDevice);
         EnsureGridVertexBuffer(gpuDevice, commandBuffer);
         EnsureSampler(gpuDevice);
         EnsureFallbackTexture(gpuDevice, commandBuffer);
@@ -174,14 +189,21 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
             UploadVertices(gpuDevice, commandBuffer, _pointVertexBuffer, _pointVertices);
             _pointVertexDataDirty = false;
         }
+
+        if (_lightVertexDataDirty && _lightVertexBuffer != null && _lightVertices.Length > 0)
+        {
+            UploadVertices(gpuDevice, commandBuffer, _lightVertexBuffer, _lightVertices);
+            _lightVertexDataDirty = false;
+        }
     }
 
     public void Render(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer, SDLGPURenderPass* renderPass, Rectangle contentSize, ObjectState state)
     {
         bool hasFaceData = _vertices.Length > 0 && _pipeline != null && _vertexBuffer != null;
         bool hasPointData = SceneConfiguration.ShowVertices && _pointVertices.Length > 0 && _pipeline != null && _pointVertexBuffer != null;
+        bool hasLightPointData = _lightVertices.Length > 0 && _pipeline != null && _lightVertexBuffer != null;
         bool hasGridData = SceneConfiguration.ShowGrid && _pipeline != null && _gridVertexBuffer != null;
-        if (!hasFaceData && !hasPointData && !hasGridData)
+        if (!hasFaceData && !hasPointData && !hasLightPointData && !hasGridData)
             return;
 
         int viewportWidth = Math.Max(1, (int)contentSize.Width);
@@ -209,9 +231,8 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
             World = state.Transformation,
             ViewProjection = state.View * state.Projection,
             WorldViewProjection = state.Transformation * state.View * state.Projection,
-            // x: wireframe, y: Y=0 grid enabled, z: render pass (0=mesh), w: unused
-            RenderParams = new Vector4(SceneConfiguration.ShowWireFrame ? 1f : 0f, SceneConfiguration.ShowGrid ? 1f : 0f, 0f, 0f),
-            VertexDotColor = SceneConfiguration.VertexDotColor,
+            // x: wireframe, y: Y=0 grid enabled, z: render pass (0=mesh), w: has texture
+            RenderParams = new Vector4(SceneConfiguration.ShowWireFrame ? 1f : 0f, SceneConfiguration.ShowGrid ? 1f : 0f, 0f, _texture != null ? 1f : 0f),
             WireColor = NormalizeColor(SceneConfiguration.WireColor),
             LightDirection = new Vector4(Vector3.Normalize(SceneConfiguration.LightDirection == Vector3.Zero ? new Vector3(1f, 0f, -1f) : SceneConfiguration.LightDirection), 0f),
             LightColor = new Vector4(SceneConfiguration.LightColor, 1f),
@@ -240,7 +261,6 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
             WorldViewProjection = state.View * state.Projection,
             // Disable wireframe, keep grid enabled, mark this as dedicated grid pass (z=1).
             RenderParams = new Vector4(0f, 1f, 1f, 0f),
-            VertexDotColor = SceneConfiguration.VertexDotColor,
             WireColor = NormalizeColor(SceneConfiguration.WireColor),
             LightDirection = new Vector4(Vector3.Normalize(SceneConfiguration.LightDirection == Vector3.Zero ? new Vector3(1f, 0f, -1f) : SceneConfiguration.LightDirection), 0f),
             LightColor = new Vector4(SceneConfiguration.LightColor, 1f),
@@ -264,7 +284,6 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
             WorldViewProjection = state.Transformation * state.View * state.Projection,
             // Dedicated vertex-marker pass (z=2).
             RenderParams = new Vector4(0f, 0f, 2f, vertexDotSize),
-            VertexDotColor = SceneConfiguration.VertexDotColor,
             WireColor = NormalizeColor(SceneConfiguration.WireColor),
             LightDirection = new Vector4(Vector3.Normalize(SceneConfiguration.LightDirection == Vector3.Zero ? new Vector3(1f, 0f, -1f) : SceneConfiguration.LightDirection), 0f),
             LightColor = new Vector4(SceneConfiguration.LightColor, 1f),
@@ -275,6 +294,12 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
         SDLGPUBufferBinding pointBinding = new()
         {
             Buffer = _pointVertexBuffer,
+            Offset = 0
+        };
+
+        SDLGPUBufferBinding lightBinding = new()
+        {
+            Buffer = _lightVertexBuffer,
             Offset = 0
         };
 
@@ -308,6 +333,14 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
                 SDL.BindGPUVertexBuffers(renderPass, 0, &pointBinding, 1);
                 SDL.PushGPUVertexUniformData(commandBuffer, 0, &pointUniform, (uint)sizeof(MeshTransformUniform));
                 SDL.DrawGPUPrimitives(renderPass, (uint)_pointVertices.Length, 1, 0, 0);
+            }
+
+            if (hasLightPointData)
+            {
+                SDL.BindGPUGraphicsPipeline(renderPass, _pipeline);
+                SDL.BindGPUVertexBuffers(renderPass, 0, &lightBinding, 1);
+                SDL.PushGPUVertexUniformData(commandBuffer, 0, &pointUniform, (uint)sizeof(MeshTransformUniform));
+                SDL.DrawGPUPrimitives(renderPass, (uint)_lightVertices.Length, 1, 0, 0);
             }
         }
     }
@@ -371,6 +404,12 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
             SDL.ReleaseGPUBuffer(gpuDevice, _pointVertexBuffer);
             _pointVertexBuffer = null;
         }
+
+        if (_lightVertexBuffer != null)
+        {
+            SDL.ReleaseGPUBuffer(gpuDevice, _lightVertexBuffer);
+            _lightVertexBuffer = null;
+        }
     }
 
     private void EnsureVertexBuffer(SDLGPUDevice* gpuDevice)
@@ -407,6 +446,24 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
         });
         _pointVertexBufferSize = requiredSize;
         _pointVertexDataDirty = true;
+    }
+
+    private void EnsureLightVertexBuffer(SDLGPUDevice* gpuDevice)
+    {
+        uint requiredSize = (uint)(_lightVertices.Length * Marshal.SizeOf<Mesh3DVertex>());
+        if (_lightVertexBuffer != null && _lightVertexBufferSize >= requiredSize)
+            return;
+
+        if (_lightVertexBuffer != null)
+            SDL.ReleaseGPUBuffer(gpuDevice, _lightVertexBuffer);
+
+        _lightVertexBuffer = SDL.CreateGPUBuffer(gpuDevice, new SDLGPUBufferCreateInfo
+        {
+            Usage = (int)SDLGPUBufferUsageFlags.Vertex,
+            Size = requiredSize
+        });
+        _lightVertexBufferSize = requiredSize;
+        _lightVertexDataDirty = true;
     }
 
     private static void UploadVertices(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer, SDLGPUBuffer* destinationBuffer, Mesh3DVertex[] vertices)
@@ -881,6 +938,38 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
         up = Vector3.Normalize(new Vector3(inverseView.M21, inverseView.M22, inverseView.M23));
     }
 
+    private void UpdateLightBillboardVertices()
+    {
+        Vector3 lightDirection = Vector3.Normalize(SceneConfiguration.LightDirection == Vector3.Zero ? new Vector3(1f, 0f, -1f) : SceneConfiguration.LightDirection);
+        float lightDistance = GetLightBillboardDistance(lightDirection);
+        Vector3 lightPosition = lightDirection * lightDistance;
+        var lightCenter = new Mesh3DVertex(lightPosition, LightBillboardColor, Vector2.Zero, Vector3.Zero);
+        var vertices = new List<Mesh3DVertex>(6);
+        AddBillboardDot(vertices, lightCenter);
+        _lightVertices = [.. vertices];
+        _lightVertexDataDirty = true;
+    }
+
+    private float GetLightBillboardDistance(Vector3 lightDirection)
+    {
+        if (_pointCenters.Length == 0)
+            return MinLightBillboardDistance;
+
+        float maxProjection = float.NegativeInfinity;
+        Vector3 minBounds = new(float.PositiveInfinity);
+        Vector3 maxBounds = new(float.NegativeInfinity);
+        foreach (Mesh3DVertex vertex in _pointCenters)
+        {
+            maxProjection = MathF.Max(maxProjection, Vector3.Dot(vertex.Position, lightDirection));
+            minBounds = Vector3.Min(minBounds, vertex.Position);
+            maxBounds = Vector3.Max(maxBounds, vertex.Position);
+        }
+
+        float diagonalLength = Vector3.Distance(minBounds, maxBounds);
+        float padding = MathF.Max(MinLightBillboardPadding, diagonalLength * LightBillboardPaddingFactor);
+        return MathF.Max(MinLightBillboardDistance, maxProjection + padding);
+    }
+
     private static Vector4 NormalizeColor(Vector4 color)
     {
         if (color.X > 1f || color.Y > 1f || color.Z > 1f || color.W > 1f)
@@ -921,7 +1010,6 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
         public Matrix4x4 ViewProjection;
         public Matrix4x4 WorldViewProjection;
         public Vector4 RenderParams;
-        public Vector4 VertexDotColor;
         public Vector4 WireColor;
         public Vector4 LightDirection;
         public Vector4 LightColor;

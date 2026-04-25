@@ -1,6 +1,5 @@
 using Hexa.NET.ImGui;
 using Hexa.NET.ImGui.Backends.SDL3;
-using Hexa.NET.ImGuizmo;
 using Hexa.NET.SDL3;
 using ImGui.Forms.Extensions;
 using ImGui.Forms.Factories;
@@ -119,7 +118,6 @@ public class Application
 
         var ctx = Hexa.NET.ImGui.ImGui.CreateContext();
         Hexa.NET.ImGui.ImGui.SetCurrentContext(ctx);
-        ImGuizmo.SetImGuiContext(ctx);
 
         ImGuiIOPtr io = Hexa.NET.ImGui.ImGui.GetIO();
         io.IniFilename = null;
@@ -210,7 +208,6 @@ public class Application
             ImGuiImplSDL3.SDLGPU3NewFrame();
             ImGuiImplSDL3.NewFrame();
             Hexa.NET.ImGui.ImGui.NewFrame();
-            ImGuizmo.BeginFrame();
 
             // Render Form
             form.Update();

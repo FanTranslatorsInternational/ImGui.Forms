@@ -10,7 +10,6 @@ public sealed class SceneConfiguration
     public bool ShowWireFrame { get; set; } = true;
 
     public float VertexDotSize { get; set; } = 4f;
-    public Vector4 VertexDotColor { get; set; } = Vector4.One;
 
     public float WireThickness { get; set; } = 1.25f;
     public Vector4 WireColor { get; set; } = Vector4.One;

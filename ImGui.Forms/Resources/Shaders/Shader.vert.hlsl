@@ -4,13 +4,12 @@ cbuffer UBO : register(b0, space1)
     float4x4 ViewProjection : packoffset(c4);
     float4x4 WorldViewProjection : packoffset(c8);
     float4 RenderParams : packoffset(c12);
-    float4 VertexDotColor : packoffset(c13);
-    float4 WireColor : packoffset(c14);
-    float4 LightDirection : packoffset(c15);
-    float4 LightColor : packoffset(c16);
-    float4 StyleParams : packoffset(c17);
-    float4 CameraRight : packoffset(c18);
-    float4 CameraUp : packoffset(c19);
+    float4 WireColor : packoffset(c13);
+    float4 LightDirection : packoffset(c14);
+    float4 LightColor : packoffset(c15);
+    float4 StyleParams : packoffset(c16);
+    float4 CameraRight : packoffset(c17);
+    float4 CameraUp : packoffset(c18);
 };
 
 struct Input
@@ -30,12 +29,12 @@ struct Output
     float WireframeEnabled : TEXCOORD4;
     float GridEnabled : TEXCOORD5;
     float RenderPass : TEXCOORD6;
-    float4 DotColor : TEXCOORD7;
-    float4 WireColor : TEXCOORD8;
-    float3 LightDirection : TEXCOORD9;
-    float3 LightColor : TEXCOORD10;
-    float WireThickness : TEXCOORD11;
-    float LightIntensity : TEXCOORD12;
+    float4 WireColor : TEXCOORD7;
+    float3 LightDirection : TEXCOORD8;
+    float3 LightColor : TEXCOORD9;
+    float WireThickness : TEXCOORD10;
+    float LightIntensity : TEXCOORD11;
+    float TextureEnabled : TEXCOORD12;
     float4 Position : SV_Position;
 };
 
@@ -44,7 +43,7 @@ Output main(Input input)
     Output output;
 
     float4 worldPos;
-    if (RenderParams.z > 1.5f)
+    if (RenderParams.z > 1.5)
     {
         float halfSize = max(0.0001f, RenderParams.w * 0.0025f);
         float2 cornerOffset = input.Barycentric.xy;
@@ -66,12 +65,12 @@ Output main(Input input)
     output.WireframeEnabled = RenderParams.x;
     output.GridEnabled = RenderParams.y;
     output.RenderPass = RenderParams.z;
-    output.DotColor = VertexDotColor;
     output.WireColor = WireColor;
     output.LightDirection = LightDirection.xyz;
     output.LightColor = LightColor.xyz;
     output.WireThickness = StyleParams.x;
     output.LightIntensity = StyleParams.y;
+    output.TextureEnabled = RenderParams.w;
 
     return output;
 }

@@ -151,6 +151,8 @@ public class Application
 
         ImGuiSampler.Initialize(gpuDevice);
 
+        var shouldInvokeLoad = false;
+
         while (!_shouldClose)
         {
             UpdateApplicationEvents();
@@ -179,7 +181,7 @@ public class Application
                         break;
 
                     case SDLEventType.WindowShown:
-                        form.OnLoad();
+                        shouldInvokeLoad = true;
                         break;
 
                     case SDLEventType.WindowResized:
@@ -208,6 +210,12 @@ public class Application
             ImGuiImplSDL3.SDLGPU3NewFrame();
             ImGuiImplSDL3.NewFrame();
             Hexa.NET.ImGui.ImGui.NewFrame();
+
+            if (shouldInvokeLoad)
+            {
+                form.OnLoad();
+                shouldInvokeLoad = false;
+            }
 
             // Render Form
             form.Update();

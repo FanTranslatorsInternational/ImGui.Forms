@@ -9,20 +9,20 @@ namespace ImGui.Forms.Localization;
 /// <remarks>This will never return <c>null</c>.</remarks>
 public struct LocalizedString
 {
-    private readonly string _id;
+    private readonly string? _id;
     private readonly Func<object>[] _args;
 
-    private readonly string _fixedText;
+    private readonly string? _fixedText;
 
-    private string _locale;
-    private string _localizedText;
+    private string? _locale;
+    private string? _localizedText;
 
     /// <summary>
     /// Determines, if this localized string has localization information set.
     /// </summary>
     public bool IsEmpty => string.IsNullOrEmpty(_fixedText) && (string.IsNullOrEmpty(_id) || _args == null);
 
-    private LocalizedString(string id, string fixedText, Func<object>[] args)
+    private LocalizedString(string? id, string? fixedText, Func<object>[] args)
     {
         _locale = null;
         _localizedText = null;
@@ -47,7 +47,7 @@ public struct LocalizedString
     /// <param name="localizationId">The ID of the localization to represent.</param>
     public static LocalizedString FromId(string localizationId)
     {
-        return new LocalizedString(localizationId, null, Array.Empty<Func<object>>());
+        return new LocalizedString(localizationId, null, []);
     }
 
     /// <summary>
@@ -64,9 +64,9 @@ public struct LocalizedString
     /// Set up a localized string, based on a fixed text.
     /// </summary>
     /// <param name="fixedText">The fixed text to represent.</param>
-    public static LocalizedString FromText(string fixedText)
+    public static LocalizedString FromText(string? fixedText)
     {
-        return new LocalizedString(null, fixedText ?? string.Empty, Array.Empty<Func<object>>());
+        return new LocalizedString(null, fixedText ?? string.Empty, []);
     }
 
     public override string ToString()
@@ -79,7 +79,7 @@ public struct LocalizedString
             return string.Empty;
 
         if (app.Localizer.CurrentLocale == _locale && _args.Length <= 0)
-            return _localizedText;
+            return _localizedText!;
 
         _locale = app.Localizer.CurrentLocale;
 

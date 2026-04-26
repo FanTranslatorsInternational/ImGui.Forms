@@ -17,6 +17,7 @@ public static class Style
 
     // HINT: Set to true initially, so ApplyStyle gets triggered by the first frame and sets every default style accordingly
     private static bool _hasChanges = true;
+    private static float _appliedScale = -1f;
 
     public static Theme Theme { get; private set; } = DefaultTheme_;
 
@@ -162,9 +163,13 @@ public static class Style
 
     #endregion
 
-    internal static void ApplyStyle()
+    internal static void ApplyStyle(float scaleFactor)
     {
-        if (!_hasChanges)
+        if (scaleFactor <= 0)
+            scaleFactor = 1f;
+
+        bool scaleChanged = Math.Abs(_appliedScale - scaleFactor) > 0.0001f;
+        if (!_hasChanges && !scaleChanged)
             return;
 
         switch (Theme)
@@ -234,6 +239,10 @@ public static class Style
             }
         }
 
+        stylePtr.ScaleAllSizes(scaleFactor);
+        stylePtr.FontScaleDpi = scaleFactor;
+
+        _appliedScale = scaleFactor;
         _hasChanges = false;
     }
 }

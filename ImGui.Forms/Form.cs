@@ -136,11 +136,9 @@ public abstract class Form
         float mainScale = SDL.GetDisplayContentScale(SDL.GetPrimaryDisplay());
 
         // Set up styles
-        Style.ApplyStyle();
+        Style.ApplyStyle(mainScale);
 
         var style = Hexa.NET.ImGui.ImGui.GetStyle();
-        style.ScaleAllSizes(mainScale);
-        style.FontScaleDpi = mainScale;
 
         style.WindowRounding = 0;
         style.FrameBorderSize = 0;

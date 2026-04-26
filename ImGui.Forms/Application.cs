@@ -89,9 +89,8 @@ public class Application
             return;
         }
 
-        float mainScale = SDL.GetDisplayContentScale(SDL.GetPrimaryDisplay());
         var windowFlags = SDLWindowFlags.Resizable | SDLWindowFlags.Hidden | SDLWindowFlags.HighPixelDensity;
-        SDLWindow* window = SDL.CreateWindow(form.Title, (int)(form.Width * mainScale), (int)(form.Height * mainScale), (ulong)windowFlags);
+        SDLWindow* window = SDL.CreateWindow(form.Title, form.Width, form.Height, (ulong)windowFlags);
         if (window == null)
         {
             Console.WriteLine($"Error: SDL_CreateWindow(): {SDL.GetErrorS()}");
@@ -122,7 +121,7 @@ public class Application
         ImGuiIOPtr io = Hexa.NET.ImGui.ImGui.GetIO();
         io.IniFilename = null;
         io.ConfigFlags |= ImGuiConfigFlags.NavEnableKeyboard
-                        | ImGuiConfigFlags.NavEnableGamepad;
+                          | ImGuiConfigFlags.NavEnableGamepad;
         io.ConfigErrorRecoveryEnableAssert = false;
         io.ConfigErrorRecovery = false;
         io.ConfigErrorRecoveryEnableDebugLog = false;

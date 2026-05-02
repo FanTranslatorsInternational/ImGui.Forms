@@ -73,10 +73,4 @@ public class ZLayout : Component
 
         Hexa.NET.ImGui.ImGui.EndChild();
     }
-
-    protected override void SetTabInactiveCore()
-    {
-        foreach (Component item in Items)
-            item?.SetTabInactiveInternal();
-    }
 }

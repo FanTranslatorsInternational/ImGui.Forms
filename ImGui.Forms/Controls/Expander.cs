@@ -73,11 +73,6 @@ public class Expander : Component
         }
     }
 
-    protected override void SetTabInactiveCore()
-    {
-        Content?.SetTabInactiveInternal();
-    }
-
     protected override int GetContentHeight(int parentWidth, int parentHeight, float layoutCorrection = 1)
     {
         if (!Expanded)

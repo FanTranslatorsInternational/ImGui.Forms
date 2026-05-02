@@ -157,7 +157,6 @@ public class Application
             UpdateApplicationEvents();
 
             _executionContext.Images.FreeTextures();
-            _executionContext.Ids.FreeUnused();
 
             SDLEvent e;
             while (SDL.PollEvent(&e))

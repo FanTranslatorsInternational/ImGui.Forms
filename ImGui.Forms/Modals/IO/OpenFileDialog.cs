@@ -247,7 +247,7 @@ public class OpenFileDialog : Modal
 
     private void UpdateFileView()
     {
-        _fileTable.Rows = GetDirectories(_currentDir).Concat(GetFiles(_currentDir)).Select(fe => new DataTableRow<FileEntry>(fe)).ToArray();
+        _fileTable.Rows = GetDirectories(_currentDir).Concat(GetFiles(_currentDir)).Select(fe => new DataTableRow<FileEntry>(fe)).ToList();
     }
 
     private void UpdateButtonEnablement()

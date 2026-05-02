@@ -77,10 +77,7 @@ public class TabControl : Component
                         var wasChanged = _selectedPage != page;
 
                         if (wasChanged && Enabled)
-                        {
-                            _selectedPage?.Content?.SetTabInactiveInternal();
                             _selectedPage = page;
-                        }
 
                         _selectedPageTemp = null;
 
@@ -112,11 +109,6 @@ public class TabControl : Component
 
                         Hexa.NET.ImGui.ImGui.EndTabItem();
                     }
-                }
-                else
-                {
-                    // If tab could not be rendered by ImGui, but it should still be shown, set it to inactive
-                    page.Content?.SetTabInactiveInternal();
                 }
 
                 Hexa.NET.ImGui.ImGui.PopID();

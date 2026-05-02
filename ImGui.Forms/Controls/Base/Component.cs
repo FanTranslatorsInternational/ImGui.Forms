@@ -7,8 +7,6 @@ namespace ImGui.Forms.Controls.Base;
 
 public abstract class Component
 {
-    private bool _tabInactive;
-
     #region Properties
 
     /// <summary>
@@ -55,10 +53,7 @@ public abstract class Component
     {
         // Handle visibility
         if (!Visible)
-        {
-            _tabInactive = false;
             return;
-        }
 
         // Handle drawing of component
         Hexa.NET.ImGui.ImGui.PushID(Id);
@@ -77,24 +72,10 @@ public abstract class Component
         // HINT: Drag and Drop only proceeds on the top active layer of form and modal windows
         // HINT: Don't handle Drag and Drop if the component either doesn't allow it or the component is marked as disabled.
         if (!AllowDragDrop || !Enabled)
-        {
-            _tabInactive = false;
             return;
-        }
 
         if (Application.Instance.MainForm.IsActiveLayer() && Application.Instance.TryGetDragDrop(contentRect, out string[] files))
             OnDragDrop(files);
-
-        _tabInactive = false;
-    }
-
-    /// <summary>
-    /// Determines if the current component is on an inactive <see cref="TabPage"/>.
-    /// </summary>
-    /// <returns>If the current component is on an inactive <see cref="TabPage"/>.</returns>
-    protected bool IsTabInactiveCore()
-    {
-        return _tabInactive;
     }
 
     /// <summary>
@@ -168,32 +149,9 @@ public abstract class Component
     protected virtual void RemoveStyles() { }
 
     /// <summary>
-    /// Used by <see cref="TabControl"/> to mark components as inactive,
-    /// due to them not being selected as the active page.
-    /// </summary>
-    internal void SetTabInactiveInternal()
-    {
-        SetTabInactive();
-    }
-
-    /// <summary>
-    /// Used by 3rd-party components to propagate <see cref="TabPage"/> inactivity to child components.
-    /// </summary>
-    public void SetTabInactive()
-    {
-        _tabInactive = true;
-        SetTabInactiveCore();
-    }
-
-    /// <summary>
     /// Used by 3rd-party code and components to destroy resources.
     /// </summary>
     public virtual void Destroy() { }
-
-    /// <summary>
-    /// Propagate the inactivity state from a <see cref="TabControl"/>
-    /// </summary>
-    protected virtual void SetTabInactiveCore() { }
 
     /// <summary>
     /// Invoke the DragDrop event of this component.

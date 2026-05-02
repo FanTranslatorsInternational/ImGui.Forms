@@ -11,7 +11,6 @@ public class UniformZLayout : Component
 {
     private readonly Vector2 _elementSize;
 
-    private float _scrollY;
     private int _scrollToItemIndex;
 
     #region Properties
@@ -111,14 +110,6 @@ public class UniformZLayout : Component
             return fixedScroll;
         }
 
-        float newScrollY = Hexa.NET.ImGui.ImGui.GetScrollY();
-
-        if (_scrollY == newScrollY)
-            return _scrollY;
-
-        if (IsTabInactiveCore())
-            Hexa.NET.ImGui.ImGui.SetScrollY(_scrollY);
-
-        return _scrollY = newScrollY;
+        return Hexa.NET.ImGui.ImGui.GetScrollY();
     }
 }

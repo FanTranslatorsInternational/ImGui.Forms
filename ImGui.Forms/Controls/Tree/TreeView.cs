@@ -15,8 +15,6 @@ public class TreeView<TNodeData> : Component
     private readonly TreeNode<TNodeData> _rootNode;
     private TreeNode<TNodeData> _selectedNode;
 
-    private float _scrollY;
-
     #region Properties
 
     public Models.Size Size { get; set; } = Models.Size.Parent;
@@ -65,16 +63,6 @@ public class TreeView<TNodeData> : Component
 
         if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}", new Vector2(contentRect.Width, contentRect.Height), ImGuiChildFlags.None, ImGuiWindowFlags.HorizontalScrollbar))
         {
-            float newScrollY = Hexa.NET.ImGui.ImGui.GetScrollY();
-
-            if (_scrollY != newScrollY)
-            {
-                if (IsTabInactiveCore())
-                    Hexa.NET.ImGui.ImGui.SetScrollY(_scrollY);
-
-                _scrollY = newScrollY;
-            }
-
             UpdateNodes(Nodes);
         }
 

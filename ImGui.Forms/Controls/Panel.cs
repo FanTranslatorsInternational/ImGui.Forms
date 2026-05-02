@@ -28,9 +28,4 @@ public class Panel : Component
     {
         Content?.Update(contentRect);
     }
-
-    protected override void SetTabInactiveCore()
-    {
-        Content?.SetTabInactiveInternal();
-    }
 }

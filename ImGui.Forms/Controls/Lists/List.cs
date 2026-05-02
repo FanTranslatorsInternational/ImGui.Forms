@@ -196,12 +196,6 @@ public class List<TItem> : Component where TItem : Component
             heights.Max();
     }
 
-    protected override void SetTabInactiveCore()
-    {
-        foreach (TItem item in Items)
-            item?.SetTabInactiveInternal();
-    }
-
     private void OnSelectedItemChanged()
     {
         SelectedItemChanged?.Invoke(this, EventArgs.Empty);

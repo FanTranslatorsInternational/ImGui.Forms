@@ -178,13 +178,6 @@ public class TableLayout : Component
         Hexa.NET.ImGui.ImGui.EndChild();
     }
 
-    protected override void SetTabInactiveCore()
-    {
-        foreach (TableRow row in _rows)
-        foreach (TableCell cell in row.Cells)
-            cell.Content?.SetTabInactiveInternal();
-    }
-
     #region Width calculation
 
     private int[] GetColumnWidths(int componentWidth, int componentHeight, float layoutCorrection)

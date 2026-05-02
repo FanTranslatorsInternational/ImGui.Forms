@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
@@ -17,19 +18,19 @@ public class DataTable<TData> : Component
 {
     private readonly KeyCommand _copyCommand = new(ImGuiKey.ModCtrl, ImGuiKey.C);
 
-    private readonly System.Collections.Generic.List<DataTableRow<TData>> _selectedRows = new();
+    private readonly System.Collections.Generic.List<DataTableRow<TData>> _selectedRows = [];
 
     private (int, int) _clickedCell = (-1, -1);
     private int _lastSelectedRow = -1;
-    private float _scrollY;
 
-    private IList<DataTableRow<TData>> _rows = new System.Collections.Generic.List<DataTableRow<TData>>();
+    private System.Collections.Generic.List<DataTableRow<TData>> _rows = [];
+    private DataTableColumn<TData>[]? _sortedColumns;
 
     #region Properties
 
-    public IList<DataTableColumn<TData>> Columns { get; } = new System.Collections.Generic.List<DataTableColumn<TData>>();
+    public System.Collections.Generic.List<DataTableColumn<TData>> Columns { get; } = [];
 
-    public IList<DataTableRow<TData>> Rows
+    public System.Collections.Generic.List<DataTableRow<TData>> Rows
     {
         get => _rows;
         set
@@ -43,13 +44,17 @@ public class DataTable<TData> : Component
 
     public IReadOnlyList<DataTableRow<TData>> SelectedRows => _selectedRows;
 
-    public bool IsResizable { get; set; }
+    public bool IsResizable { get; set; } = true;
 
     public bool IsSelectable { get; set; } = true;
 
+    public bool IsSortable { get; set; } = true;
+
     public bool ShowHeaders { get; set; } = true;
 
-    public bool CanSelectMultiple { get; set; }
+    public bool CanSelectMultiple { get; set; } = true;
+
+    public bool CanSortMultiple { get; set; } = true;
 
     public Size Size { get; set; } = Size.Parent;
 
@@ -61,38 +66,37 @@ public class DataTable<TData> : Component
 
     public event EventHandler SelectedRowsChanged;
     public event EventHandler DoubleClicked;
+    public event EventHandler<DataTableSortChangedEventArgs<TData>> SortChanged;
 
     #endregion
 
     public override Size GetSize() => Size;
 
+    private bool _isInitialSort = true;
+
     protected override void UpdateInternal(Rectangle contentRect)
     {
-        var localRows = _rows ?? new System.Collections.Generic.List<DataTableRow<TData>>();
+        var localRows = _rows ?? [];
 
         var flags = ImGuiTableFlags.BordersV;
         if (IsResizable) flags |= ImGuiTableFlags.Resizable;
+        if (IsSortable) flags |= ImGuiTableFlags.Sortable;
+        if (CanSortMultiple) flags |= ImGuiTableFlags.SortMulti;
 
         if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}c", contentRect.Size))
         {
-            float newScrollY = Hexa.NET.ImGui.ImGui.GetScrollY();
-
-            if (_scrollY != newScrollY)
-            {
-                if (IsTabInactiveCore())
-                    Hexa.NET.ImGui.ImGui.SetScrollY(_scrollY);
-
-                _scrollY = newScrollY;
-            }
-
-            if (Hexa.NET.ImGui.ImGui.BeginTable($"{Id}t", Columns.Count, flags))
+            if (Hexa.NET.ImGui.ImGui.BeginTable($"{Id}", Columns.Count, flags))
             {
                 if (ShowHeaders)
                 {
-                    foreach (var column in Columns)
-                        Hexa.NET.ImGui.ImGui.TableSetupColumn(column.Name);
+                    for (var i = 0; i < Columns.Count; i++)
+                        Hexa.NET.ImGui.ImGui.TableSetupColumn(Columns[i].Name, 0, 0f, (uint)(Id + i + 1));
+
                     Hexa.NET.ImGui.ImGui.TableHeadersRow();
                 }
+
+                if (IsSortable)
+                    ProcessSorting();
 
                 for (var r = 0; r < localRows.Count; r++)
                 {
@@ -223,6 +227,118 @@ public class DataTable<TData> : Component
         DoubleClicked?.Invoke(this, EventArgs.Empty);
     }
 
+    private void ProcessSorting()
+    {
+        if (_isInitialSort)
+        {
+            ProcessInitialSort();
+        }
+        else
+        {
+            ProcessSortedSpecs();
+        }
+    }
+
+    private void ProcessInitialSort()
+    {
+        if (Columns.All(x => x.SortOrder < 0))
+        {
+            _isInitialSort = false;
+            return;
+        }
+
+        var isFirstColumn = true;
+        foreach (DataTableColumn<TData> orderedColumn in Columns.OrderBy(x => x.SortOrder))
+        {
+            if (orderedColumn.SortOrder < 0)
+                continue;
+
+            ImGuiP.TableSetColumnSortDirection(Columns.IndexOf(orderedColumn), (ImGuiSortDirection)orderedColumn.SortDirection, !isFirstColumn);
+            isFirstColumn = false;
+        }
+
+        _sortedColumns = Columns.Where(x => x.SortOrder >= 0).OrderBy(x => x.SortOrder).ToArray();
+
+        SortRows(_sortedColumns);
+        OnSortChanged(_sortedColumns);
+
+        var tableSpecs = Hexa.NET.ImGui.ImGui.TableGetSortSpecs();
+        if (!tableSpecs.IsNull)
+        {
+            tableSpecs.SpecsDirty = false;
+            _isInitialSort = false;
+        }
+    }
+
+    private void ProcessSortedSpecs()
+    {
+        var tableSpecs = Hexa.NET.ImGui.ImGui.TableGetSortSpecs();
+        if (tableSpecs.IsNull || !tableSpecs.SpecsDirty)
+            return;
+
+        var columns = Columns.ToList<DataTableColumn<TData>?>();
+
+        _sortedColumns = new DataTableColumn<TData>[tableSpecs.SpecsCount];
+        for (var i = 0; i < tableSpecs.SpecsCount; i++)
+        {
+            var specs = tableSpecs.Specs[i];
+
+            var columnIndex = specs.ColumnIndex;
+            var column = columns[columnIndex]!;
+
+            column.SortOrder = i;
+            column.SortDirection = (SortDirection)specs.SortDirection;
+
+            _sortedColumns[i] = column;
+            columns[columnIndex] = null;
+        }
+
+        foreach (DataTableColumn<TData>? column in columns)
+        {
+            if (column is null)
+                continue;
+
+            column.SortOrder = -1;
+            column.SortDirection = SortDirection.Ascending;
+        }
+
+        SortRows(_sortedColumns);
+        OnSortChanged(_sortedColumns);
+
+        tableSpecs.SpecsDirty = false;
+    }
+
+    private void SortRows(IReadOnlyList<DataTableColumn<TData>> sortedColumns)
+    {
+        if (sortedColumns.Count <= 0)
+            return;
+
+        var orderedRows = sortedColumns[0].SortDirection switch
+        {
+            SortDirection.Ascending => _rows.OrderBy(r => (string)sortedColumns[0].Get(r)),
+            SortDirection.Descending => _rows.OrderByDescending(r => (string)sortedColumns[0].Get(r)),
+            _ => throw new InvalidOperationException($"Unsupported sort direction {sortedColumns[0].SortDirection}.")
+        };
+
+        for (var i = 1; i < sortedColumns.Count; i++)
+        {
+            int index = i;
+            orderedRows = sortedColumns[i].SortDirection switch
+            {
+                SortDirection.Ascending => orderedRows.ThenBy(r => (string)sortedColumns[index].Get(r)),
+                SortDirection.Descending => orderedRows.ThenByDescending(r => (string)sortedColumns[index].Get(r)),
+                _ => throw new InvalidOperationException($"Unsupported sort direction {sortedColumns[index].SortDirection}.")
+            };
+        }
+
+        _rows = orderedRows.ToList();
+    }
+
+    private void OnSortChanged(IReadOnlyList<DataTableColumn<TData>> sortedColumns)
+    {
+        SortChanged?.Invoke(this, new DataTableSortChangedEventArgs<TData>(sortedColumns));
+    }
+
     protected override int GetContentHeight(int parentWidth, int parentHeight, float layoutCorrection = 1)
     {
         var height = 0f;
@@ -237,5 +353,15 @@ public class DataTable<TData> : Component
         height += cellHeight * _rows.Count;
 
         return (int)Math.Ceiling(height);
+    }
+}
+
+public class DataTableSortChangedEventArgs<TData> : EventArgs
+{
+    public IReadOnlyList<DataTableColumn<TData>> SortedColumns { get; }
+
+    public DataTableSortChangedEventArgs(IReadOnlyList<DataTableColumn<TData>> sortedColumns)
+    {
+        SortedColumns = sortedColumns;
     }
 }

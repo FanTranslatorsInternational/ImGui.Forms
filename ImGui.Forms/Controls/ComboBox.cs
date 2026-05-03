@@ -88,8 +88,6 @@ public class ComboBox<TItem> : Component
         else
             maxShowItems = (uint)Math.Min(MaxShowItems, Items.Count);
 
-        Hexa.NET.ImGui.ImGui.PushID(Id);
-
         var arrowWidth = ButtonSizeX_ + Hexa.NET.ImGui.ImGui.GetStyle().FramePadding.X * 2;
         Hexa.NET.ImGui.ImGui.SetNextItemWidth(contentRect.Width - arrowWidth);
 
@@ -150,46 +148,47 @@ public class ComboBox<TItem> : Component
                 throw new InvalidOperationException($"Invalid combobox alignment {Alignment}.");
         }
 
-        Hexa.NET.ImGui.ImGui.SetNextWindowPos(popupPos);
-        Hexa.NET.ImGui.ImGui.SetNextWindowSize(popupSize);
-
-        if (enabled && Hexa.NET.ImGui.ImGui.BeginPopup("combobox", ImGuiWindowFlags.NoMove))
+        if (enabled)
         {
-            Vector2 itemPos = popupPos;
-            for (var i = 0; i < Items.Count; i++)
+            Hexa.NET.ImGui.ImGui.SetNextWindowPos(popupPos);
+            Hexa.NET.ImGui.ImGui.SetNextWindowSize(popupSize);
+
+            if (Hexa.NET.ImGui.ImGui.BeginPopup("combobox", ImGuiWindowFlags.NoMove))
             {
-                DropDownItem<TItem> item = Items[i];
-                bool isPreferred = PreferredItems.Contains(item);
-
-                // Set selectable with item name
-                Hexa.NET.ImGui.ImGui.PushID($"{Id}_item{i}");
-
-                bool isSelected = Hexa.NET.ImGui.ImGui.Selectable(item.Name);
-                if (isPreferred)
+                Vector2 itemPos = popupPos;
+                for (var i = 0; i < Items.Count; i++)
                 {
-                    var markerPos = new Vector2(size.X + arrowSize.X / 2, arrowSize.Y / 2);
-                    Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddCircleFilled(itemPos + markerPos, 3f, Color.White.ToUInt32());
+                    DropDownItem<TItem> item = Items[i];
+                    bool isPreferred = PreferredItems.Contains(item);
+
+                    // Set selectable with item name
+                    Hexa.NET.ImGui.ImGui.PushID($"{Id}_item{i}");
+
+                    bool isSelected = Hexa.NET.ImGui.ImGui.Selectable(item.Name);
+                    if (isPreferred)
+                    {
+                        var markerPos = new Vector2(size.X + arrowSize.X / 2, arrowSize.Y / 2);
+                        Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddCircleFilled(itemPos + markerPos, 3f, Color.White.ToUInt32());
+                    }
+
+                    Hexa.NET.ImGui.ImGui.PopID();
+
+                    itemPos += size with { X = 0 };
+                    if (!isSelected)
+                        continue;
+
+                    _input = item.Name;
+
+                    if (SelectedItem != item)
+                    {
+                        SelectedItem = item;
+                        OnSelectedItemChanged();
+                    }
                 }
 
-                Hexa.NET.ImGui.ImGui.PopID();
-
-                itemPos += size with { X = 0 };
-                if (!isSelected)
-                    continue;
-
-                _input = item.Name;
-
-                if (SelectedItem != item)
-                {
-                    SelectedItem = item;
-                    OnSelectedItemChanged();
-                }
+                Hexa.NET.ImGui.ImGui.EndPopup();
             }
-
-            Hexa.NET.ImGui.ImGui.EndPopup();
         }
-
-        Hexa.NET.ImGui.ImGui.PopID();
 
         RemoveStyles(enabled);
     }

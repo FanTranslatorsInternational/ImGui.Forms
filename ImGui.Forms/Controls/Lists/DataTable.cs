@@ -76,6 +76,17 @@ public class DataTable<TData> : Component
 
     protected override void UpdateInternal(Rectangle contentRect)
     {
+        if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}c", contentRect.Size))
+            UpdateTable();
+
+        Hexa.NET.ImGui.ImGui.EndChild();
+    }
+
+    private void UpdateTable()
+    {
+        if (Columns.Count <= 0)
+            return;
+
         var localRows = _rows ?? [];
 
         var flags = ImGuiTableFlags.BordersV;
@@ -83,112 +94,107 @@ public class DataTable<TData> : Component
         if (IsSortable) flags |= ImGuiTableFlags.Sortable;
         if (CanSortMultiple) flags |= ImGuiTableFlags.SortMulti;
 
-        if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}c", contentRect.Size))
+        if (Hexa.NET.ImGui.ImGui.BeginTable($"{Id}t", Columns.Count, flags))
         {
-            if (Hexa.NET.ImGui.ImGui.BeginTable($"{Id}", Columns.Count, flags))
+            if (ShowHeaders)
             {
-                if (ShowHeaders)
+                for (var i = 0; i < Columns.Count; i++)
+                    Hexa.NET.ImGui.ImGui.TableSetupColumn(Columns[i].Name);
+
+                Hexa.NET.ImGui.ImGui.TableHeadersRow();
+            }
+
+            if (IsSortable)
+                ProcessSorting();
+
+            for (var r = 0; r < localRows.Count; r++)
+            {
+                var row = localRows[r];
+                var isRowSelected = _selectedRows.Contains(row);
+
+                Hexa.NET.ImGui.ImGui.TableNextRow();
+
+                for (var c = 0; c < Columns.Count; c++)
                 {
-                    for (var i = 0; i < Columns.Count; i++)
-                        Hexa.NET.ImGui.ImGui.TableSetupColumn(Columns[i].Name, 0, 0f, (uint)(Id + i + 1));
+                    var column = Columns[c];
+                    Hexa.NET.ImGui.ImGui.TableSetColumnIndex(c);
 
-                    Hexa.NET.ImGui.ImGui.TableHeadersRow();
-                }
+                    var rowColor = row.TextColor;
+                    if (!rowColor.IsEmpty)
+                        Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.Text, row.TextColor.ToUInt32());
 
-                if (IsSortable)
-                    ProcessSorting();
-
-                for (var r = 0; r < localRows.Count; r++)
-                {
-                    var row = localRows[r];
-                    var isRowSelected = _selectedRows.Contains(row);
-
-                    Hexa.NET.ImGui.ImGui.TableNextRow();
-
-                    for (var c = 0; c < Columns.Count; c++)
+                    if (IsSelectable && row.CanSelect && c == 0)
                     {
-                        var column = Columns[c];
-                        Hexa.NET.ImGui.ImGui.TableSetColumnIndex(c);
+                        var isSelected = Hexa.NET.ImGui.ImGui.Selectable(column.Get(row), isRowSelected, ImGuiSelectableFlags.SpanAllColumns);
+                        isSelected |= Hexa.NET.ImGui.ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByPopup)
+                                      && (Hexa.NET.ImGui.ImGui.IsMouseClicked(ImGuiMouseButton.Left) || Hexa.NET.ImGui.ImGui.IsMouseClicked(ImGuiMouseButton.Right));
 
-                        var rowColor = row.TextColor;
-                        if (!rowColor.IsEmpty)
-                            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.Text, row.TextColor.ToUInt32());
-
-                        if (IsSelectable && row.CanSelect && c == 0)
+                        if (isSelected)
                         {
-                            var isSelected = Hexa.NET.ImGui.ImGui.Selectable(column.Get(row), isRowSelected, ImGuiSelectableFlags.SpanAllColumns);
-                            isSelected |= Hexa.NET.ImGui.ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenBlockedByPopup)
-                                          && (Hexa.NET.ImGui.ImGui.IsMouseClicked(ImGuiMouseButton.Left) || Hexa.NET.ImGui.ImGui.IsMouseClicked(ImGuiMouseButton.Right));
-
-                            if (isSelected)
+                            if (CanSelectMultiple && Hexa.NET.ImGui.ImGui.GetIO().KeyCtrl)
                             {
-                                if (CanSelectMultiple && Hexa.NET.ImGui.ImGui.GetIO().KeyCtrl)
+                                if (isRowSelected)
                                 {
-                                    if (isRowSelected)
-                                    {
-                                        _selectedRows.Remove(row);
-                                        _lastSelectedRow = -1;
-                                    }
-                                    else
-                                    {
-                                        _selectedRows.Add(row);
-                                        _lastSelectedRow = r;
-                                    }
-                                }
-                                else if (CanSelectMultiple && Hexa.NET.ImGui.ImGui.GetIO().KeyShift)
-                                {
-                                    if (_lastSelectedRow >= 0 && _lastSelectedRow != r)
-                                    {
-                                        _selectedRows.Clear();
-
-                                        var min = Math.Clamp(Math.Min(_lastSelectedRow, r), 0, localRows.Count);
-                                        var max = Math.Clamp(Math.Max(_lastSelectedRow, r), 0, localRows.Count - 1);
-
-                                        for (var i = min; i <= max; i++)
-                                            _selectedRows.Add(localRows[i]);
-                                    }
+                                    _selectedRows.Remove(row);
+                                    _lastSelectedRow = -1;
                                 }
                                 else
                                 {
-                                    _selectedRows.Clear();
                                     _selectedRows.Add(row);
-
                                     _lastSelectedRow = r;
                                 }
-
-                                OnSelectedRowsChanged();
                             }
+                            else if (CanSelectMultiple && Hexa.NET.ImGui.ImGui.GetIO().KeyShift)
+                            {
+                                if (_lastSelectedRow >= 0 && _lastSelectedRow != r)
+                                {
+                                    _selectedRows.Clear();
+
+                                    var min = Math.Clamp(Math.Min(_lastSelectedRow, r), 0, localRows.Count);
+                                    var max = Math.Clamp(Math.Max(_lastSelectedRow, r), 0, localRows.Count - 1);
+
+                                    for (var i = min; i <= max; i++)
+                                        _selectedRows.Add(localRows[i]);
+                                }
+                            }
+                            else
+                            {
+                                _selectedRows.Clear();
+                                _selectedRows.Add(row);
+
+                                _lastSelectedRow = r;
+                            }
+
+                            OnSelectedRowsChanged();
                         }
-                        else
-                        {
-                            Hexa.NET.ImGui.ImGui.Text(column.Get(row));
-                        }
-
-                        if (!rowColor.IsEmpty)
-                            Hexa.NET.ImGui.ImGui.PopStyleColor();
-
-                        if (IsCellClicked())
-                            _clickedCell = (r, c);
-
-                        // Add context menu
-                        if (IsSelectable && _clickedCell == (r, c))
-                            ContextMenu?.Update();
                     }
+                    else
+                    {
+                        Hexa.NET.ImGui.ImGui.Text(column.Get(row));
+                    }
+
+                    if (!rowColor.IsEmpty)
+                        Hexa.NET.ImGui.ImGui.PopStyleColor();
+
+                    if (IsCellClicked())
+                        _clickedCell = (r, c);
+
+                    // Add context menu
+                    if (IsSelectable && _clickedCell == (r, c))
+                        ContextMenu?.Update();
                 }
-
-                Hexa.NET.ImGui.ImGui.EndTable();
-
-                // Handle copy data
-                if (_copyCommand.IsPressed() && Application.Instance.MainForm.IsActiveLayer())
-                    CopySelectedRows();
-
-                // Handle double click event
-                if (Hexa.NET.ImGui.ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left) && Application.Instance.MainForm.IsActiveLayer())
-                    OnDoubleClicked();
             }
-        }
 
-        Hexa.NET.ImGui.ImGui.EndChild();
+            Hexa.NET.ImGui.ImGui.EndTable();
+
+            // Handle copy data
+            if (_copyCommand.IsPressed() && Application.Instance.MainForm.IsActiveLayer())
+                CopySelectedRows();
+
+            // Handle double click event
+            if (Hexa.NET.ImGui.ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left) && Application.Instance.MainForm.IsActiveLayer())
+                OnDoubleClicked();
+        }
     }
 
     private bool IsCellClicked()

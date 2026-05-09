@@ -51,7 +51,7 @@ public class MessageBox : Modal
     private static async Task<DialogResult> ShowAsync(LocalizedString caption = default, LocalizedString text = default, MessageBoxType type = MessageBoxType.Information, MessageBoxButton buttons = MessageBoxButton.Ok, bool blockFormClosing = false)
     {
         // Even though modal.Show already checks for null, we do that here, so the layout is not created only to be disposed again, when the Modal is about to be shown
-        if (Application.Instance?.MainForm == null)
+        if (Application.Instance.MainForm == null)
             return DialogResult.None;
 
         var msgBox = new MessageBox(caption, text, type, buttons);
@@ -86,7 +86,7 @@ public class MessageBox : Modal
         mainLayout.Items.Add(new StackItem(buttonLayout) { HorizontalAlignment = HorizontalAlignment.Right });
 
         // Add modal
-        var mainSize = Application.Instance.MainForm.Size;
+        var mainSize = Application.Instance.MainForm!.Size;
 
         var width = mainLayout.GetWidth((int)mainSize.X, (int)mainSize.Y) + (msgType?.GetWidth((int)mainSize.X, (int)mainSize.Y) ?? 0) + messageLayout.ItemSpacing;
         var height = mainLayout.GetHeight((int)mainSize.X, (int)mainSize.Y);
@@ -95,14 +95,12 @@ public class MessageBox : Modal
         Content = mainLayout;
     }
 
-    private Component GetTypeImage(MessageBoxType type)
+    private static Component? GetTypeImage(MessageBoxType type)
     {
         ThemedImageResource image;
         switch (type)
         {
             case MessageBoxType.Information:
-                return null;
-
             case MessageBoxType.Warning:
                 return null;
 

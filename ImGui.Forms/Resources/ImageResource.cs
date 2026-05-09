@@ -1,4 +1,5 @@
-﻿using SixLabors.ImageSharp.PixelFormats;
+﻿using System;
+using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp;
 using System.IO;
 using System.Numerics;
@@ -77,7 +78,10 @@ public class ImageResource
     /// <remarks>To load built-in images, see <see cref="ImageResources"/>.</remarks>
     public static ImageResource FromResource(Assembly assembly, string resourceName)
     {
-        return FromStream(assembly.GetManifestResourceStream(resourceName));
+        var resourceStream = assembly.GetManifestResourceStream(resourceName)
+                             ?? throw new InvalidOperationException($"Could not load resource {resourceName}.");
+
+        return FromStream(resourceStream);
     }
 
     /// <summary>
@@ -107,7 +111,7 @@ public class ImageResource
     public void Destroy()
     {
         if (_ptr != nint.Zero)
-            Application.Instance.Images.UnloadImage(_ptr);
+            Application.Instance.Images!.UnloadImage(_ptr);
 
         _ptr = nint.Zero;
     }
@@ -122,6 +126,6 @@ public class ImageResource
         if (_ptr != nint.Zero)
             return _ptr;
 
-        return _ptr = Application.Instance.Images.LoadImage(Image);
+        return _ptr = Application.Instance.Images!.LoadImage(Image);
     }
 }

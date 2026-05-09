@@ -5,13 +5,13 @@ using ImGui.Forms.Resources;
 
 namespace ImGui.Forms.Controls.Menu;
 
-public class MenuBarCheckBox : MenuBarItem
+public class MenuBarCheckBox(LocalizedString text = default) : MenuBarItem
 {
     private bool _checked;
 
     #region Properties
 
-    public LocalizedString Text { get; set; }
+    public LocalizedString Text { get; set; } = text;
 
     public FontResource? Font { get; set; }
 
@@ -31,14 +31,9 @@ public class MenuBarCheckBox : MenuBarItem
 
     #region Events
 
-    public event EventHandler CheckChanged;
+    public event EventHandler? CheckChanged;
 
     #endregion
-
-    public MenuBarCheckBox(LocalizedString text = default)
-    {
-        Text = text;
-    }
 
     protected override void UpdateInternal()
     {

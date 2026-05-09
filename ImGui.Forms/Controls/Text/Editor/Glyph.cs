@@ -1,6 +1,6 @@
 ﻿namespace ImGui.Forms.Controls.Text.Editor;
 
-class Glyph
+internal class Glyph
 {
     public char Character { get; }
     public PaletteIndex ColorIndex { get; set; }

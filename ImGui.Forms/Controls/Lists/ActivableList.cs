@@ -24,8 +24,11 @@ public class ActivableList<TItem> : List<TItem>
         e.Item.Activated -= Item_Activated;
     }
 
-    private void Item_Activated(object sender, EventArgs e)
+    private void Item_Activated(object? sender, EventArgs e)
     {
+        if (sender is null)
+            return;
+
         // Otherwise, reset activation of all items, except the current one
         var senderItem = (ActivableComponent)sender;
         foreach (var item in Items.ToArray())

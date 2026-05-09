@@ -6,11 +6,11 @@ using ImGui.Forms.Resources;
 
 namespace ImGui.Forms.Controls.Menu;
 
-public class MenuBarButton : MenuBarItem
+public class MenuBarButton(LocalizedString text = default) : MenuBarItem
 {
     #region Properties
 
-    public LocalizedString Text { get; set; }
+    public LocalizedString Text { get; set; } = text;
 
     public FontResource? Font { get; set; }
 
@@ -22,14 +22,9 @@ public class MenuBarButton : MenuBarItem
 
     #region Events
 
-    public event EventHandler Clicked;
+    public event EventHandler? Clicked;
 
     #endregion
-
-    public MenuBarButton(LocalizedString text = default)
-    {
-        Text = text;
-    }
 
     protected override void UpdateInternal()
     {

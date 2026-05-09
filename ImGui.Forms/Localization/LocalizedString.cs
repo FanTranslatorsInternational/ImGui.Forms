@@ -7,7 +7,7 @@ namespace ImGui.Forms.Localization;
 /// A localized string, that always returns either a fixed string, a string from the <see cref="ILocalizer"/> formatted by arguments, or <see cref="string.Empty"/>.
 /// </summary>
 /// <remarks>This will never return <c>null</c>.</remarks>
-public struct LocalizedString
+public struct LocalizedString : IEquatable<LocalizedString>
 {
     private readonly string? _id;
     private readonly Func<object>[] _args;
@@ -75,7 +75,7 @@ public struct LocalizedString
             return _fixedText;
 
         var app = Application.Instance;
-        if (app?.Localizer == null || _id == null || _args == null)
+        if (app.Localizer == null || _id == null || _args == null)
             return string.Empty;
 
         if (app.Localizer.CurrentLocale == _locale && _args.Length <= 0)
@@ -83,31 +83,38 @@ public struct LocalizedString
 
         _locale = app.Localizer.CurrentLocale;
 
-        object[] args = _args.Select(x => x?.Invoke() ?? string.Empty).ToArray();
+        object[] args = _args.Select(x => x.Invoke()).ToArray();
         return _localizedText = app.Localizer.Localize(_id, args);
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
-        if (!(obj is LocalizedString locStr))
-            return base.Equals(obj);
+        return obj is not LocalizedString locStr ? base.Equals(obj) : Equals(locStr);
+    }
 
+    public bool Equals(LocalizedString other)
+    {
         // Both need to have a fixed text set to be potentially equal
         if (_fixedText != null)
         {
-            if (locStr._fixedText != null)
-                return _fixedText == locStr._fixedText;
+            if (other._fixedText != null)
+                return _fixedText == other._fixedText;
 
             return false;
         }
 
         // If one has fixed text and not the other, they can't be equal
-        if (locStr._fixedText != null)
+        if (other._fixedText != null)
             return false;
 
-        return _id == locStr._id;
+        return _id == other._id;
     }
 
-    public static implicit operator LocalizedString(string s) => FromText(s);
+    public override int GetHashCode()
+    {
+        return HashCode.Combine(_id, _args, _fixedText, _locale, _localizedText);
+    }
+
+    public static implicit operator LocalizedString(string? s) => FromText(s);
     public static implicit operator string(LocalizedString s) => s.ToString();
 }

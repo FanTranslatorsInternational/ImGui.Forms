@@ -18,7 +18,7 @@ namespace ImGui.Forms.Controls.Text.Editor;
 
 public class TextEditor : Component
 {
-    private object _lock = new();
+    private readonly object _lock = new();
 
     private int _tabSize = 4;
 
@@ -33,9 +33,9 @@ public class TextEditor : Component
     private double _startTime = (DateTime.Now - DateTime.UnixEpoch).TotalMilliseconds;
     private SelectionMode _selectionMode;
 
-    private List<GlyphLine> _lines = new();
+    private List<GlyphLine> _lines = [];
     private string _lineBuffer = string.Empty;
-    private readonly List<(Regex, PaletteIndex)> _languageRegexList = new();
+    private readonly List<(Regex, PaletteIndex)> _languageRegexList = [];
 
     private int _colorRangeMin;
     private int _colorRangeMax;
@@ -45,12 +45,12 @@ public class TextEditor : Component
     private readonly uint[] _currentPalette = new uint[(int)PaletteIndex.Max];
 
     private int _undoIndex;
-    private readonly List<UndoRecord> _undoBuffer = new();
+    private readonly List<UndoRecord> _undoBuffer = [];
 
     private Dictionary<int, string> _errorMarkers = new();
-    private HashSet<int> _breakpoints = new();
+    private HashSet<int> _breakpoints = [];
 
-    internal EditorState mState;
+    internal EditorState State;
 
     private Vector2 _characterAdvance;
 
@@ -80,8 +80,8 @@ public class TextEditor : Component
 
     #region Events
 
-    public event EventHandler<string> TextChanged;
-    public event EventHandler<Coordinate> CursorPositionChanged;
+    public event EventHandler<string>? TextChanged;
+    public event EventHandler<Coordinate>? CursorPositionChanged;
 
     #endregion
 
@@ -168,7 +168,7 @@ public class TextEditor : Component
 
     private Coordinate GetActualCursorCoordinates()
     {
-        return SanitizeCoordinates(mState.CursorPosition);
+        return SanitizeCoordinates(State.CursorPosition);
     }
 
     public Coordinate GetCursorPosition() => GetActualCursorCoordinates();
@@ -284,7 +284,7 @@ public class TextEditor : Component
                     {
                         if (cindex < _lines[aWhere.Line].Length)
                         {
-                            GlyphLine newLine = InsertLine(aWhere.Line + 1);
+                            GlyphLine? newLine = InsertLine(aWhere.Line + 1);
                             GlyphLine line = _lines[aWhere.Line];
                             newLine?.Glyphs.InsertRange(0, line.Glyphs[cindex..]);
                             line.Glyphs.RemoveRange(cindex, line.Length - cindex);
@@ -623,7 +623,7 @@ public class TextEditor : Component
 
         _errorMarkers = etmp;
 
-        HashSet<int> btmp = new();
+        HashSet<int> btmp = [];
         foreach (int breakpoint in _breakpoints)
         {
             if (breakpoint >= aStart && breakpoint <= aEnd)
@@ -658,7 +658,7 @@ public class TextEditor : Component
 
         _errorMarkers = etmp;
 
-        HashSet<int> btmp = new();
+        HashSet<int> btmp = [];
         foreach (int breakpoint in _breakpoints)
         {
             if (breakpoint == aIndex)
@@ -676,7 +676,7 @@ public class TextEditor : Component
         _isTextChanged = true;
     }
 
-    private GlyphLine InsertLine(int aIndex)
+    private GlyphLine? InsertLine(int aIndex)
     {
         if (IsReadOnly)
             return null;
@@ -690,7 +690,7 @@ public class TextEditor : Component
 
         _errorMarkers = etmp;
 
-        HashSet<int> btmp = new();
+        HashSet<int> btmp = [];
         foreach (int breakpoint in _breakpoints)
             btmp.Add(breakpoint >= aIndex ? breakpoint + 1 : breakpoint);
 
@@ -847,7 +847,7 @@ public class TextEditor : Component
                 {
                     if (!ctrl)
                     {
-                        mState.CursorPosition = _interactiveStart =
+                        State.CursorPosition = _interactiveStart =
                             _interactiveEnd = ScreenPosToCoordinates(Hexa.NET.ImGui.ImGui.GetMousePos());
                         _selectionMode = SelectionMode.Line;
                         SetSelection(_interactiveStart, _interactiveEnd, _selectionMode);
@@ -864,7 +864,7 @@ public class TextEditor : Component
                 {
                     if (!ctrl)
                     {
-                        mState.CursorPosition = _interactiveStart =
+                        State.CursorPosition = _interactiveStart =
                             _interactiveEnd = ScreenPosToCoordinates(Hexa.NET.ImGui.ImGui.GetMousePos());
                         if (_selectionMode == SelectionMode.Line)
                             _selectionMode = SelectionMode.Normal;
@@ -882,7 +882,7 @@ public class TextEditor : Component
 
                 else if (click)
                 {
-                    mState.CursorPosition =
+                    State.CursorPosition =
                         _interactiveStart = _interactiveEnd = ScreenPosToCoordinates(Hexa.NET.ImGui.ImGui.GetMousePos());
                     if (ctrl)
                         _selectionMode = SelectionMode.Word;
@@ -896,7 +896,7 @@ public class TextEditor : Component
                 else if (Hexa.NET.ImGui.ImGui.IsMouseDragging(0) && Hexa.NET.ImGui.ImGui.IsMouseDown(0))
                 {
                     io.WantCaptureMouse = true;
-                    mState.CursorPosition = _interactiveEnd = ScreenPosToCoordinates(Hexa.NET.ImGui.ImGui.GetMousePos());
+                    State.CursorPosition = _interactiveEnd = ScreenPosToCoordinates(Hexa.NET.ImGui.ImGui.GetMousePos());
                     SetSelection(_interactiveStart, _interactiveEnd, _selectionMode);
                 }
             }
@@ -966,18 +966,18 @@ public class TextEditor : Component
                 float sstart = -1.0f;
                 float ssend = -1.0f;
 
-                if (mState.SelectionStart > mState.SelectionEnd)
+                if (State.SelectionStart > State.SelectionEnd)
                     throw new InvalidOperationException("Invalid selection.");
-                if (mState.SelectionStart <= lineEndCoord)
-                    sstart = mState.SelectionStart > lineStartCoord
-                        ? TextDistanceToLineStart(mState.SelectionStart)
+                if (State.SelectionStart <= lineEndCoord)
+                    sstart = State.SelectionStart > lineStartCoord
+                        ? TextDistanceToLineStart(State.SelectionStart)
                         : 0.0f;
-                if (mState.SelectionEnd > lineStartCoord)
-                    ssend = TextDistanceToLineStart(mState.SelectionEnd < lineEndCoord
-                        ? mState.SelectionEnd
+                if (State.SelectionEnd > lineStartCoord)
+                    ssend = TextDistanceToLineStart(State.SelectionEnd < lineEndCoord
+                        ? State.SelectionEnd
                         : lineEndCoord);
 
-                if (mState.SelectionEnd.Line > lineNo)
+                if (State.SelectionEnd.Line > lineNo)
                     ssend += _characterAdvance.X;
 
                 if (sstart != -1 && ssend != -1 && sstart < ssend)
@@ -998,7 +998,7 @@ public class TextEditor : Component
                 }
 
                 // Draw error markers
-                if (_errorMarkers.TryGetValue(lineNo + 1, out string errorIt))
+                if (_errorMarkers.TryGetValue(lineNo + 1, out string? errorIt))
                 {
                     var end = new Vector2(lineStartScreenPos.X + contentSize.X + 2.0f * scrollX,
                         lineStartScreenPos.Y + _characterAdvance.Y);
@@ -1029,7 +1029,7 @@ public class TextEditor : Component
                         _currentPalette[(int)PaletteIndex.LineNumber], lineText);
                 }
 
-                if (mState.CursorPosition.Line == lineNo)
+                if (State.CursorPosition.Line == lineNo)
                 {
                     bool focused = Hexa.NET.ImGui.ImGui.IsWindowFocused();
 
@@ -1053,8 +1053,8 @@ public class TextEditor : Component
                         if (elapsed > 400)
                         {
                             var width = 1.0f;
-                            int cindex = GetCharacterIndex(mState.CursorPosition);
-                            float cx = TextDistanceToLineStart(mState.CursorPosition);
+                            int cindex = GetCharacterIndex(State.CursorPosition);
+                            float cx = TextDistanceToLineStart(State.CursorPosition);
 
                             if (IsOverwrite && cindex < line.Length)
                             {
@@ -1231,7 +1231,7 @@ public class TextEditor : Component
             TextChanged?.Invoke(this, GetText());
 
         if (_isCursorPositionChanged)
-            CursorPositionChanged?.Invoke(this, mState.CursorPosition);
+            CursorPositionChanged?.Invoke(this, State.CursorPosition);
     }
 
     public override Size GetSize() => Size.Parent;
@@ -1290,7 +1290,7 @@ public class TextEditor : Component
             }
             else
             {
-                _lines = new List<GlyphLine>();
+                _lines = [];
 
                 for (var i = 0; i < aLines.Count; ++i)
                 {
@@ -1319,14 +1319,14 @@ public class TextEditor : Component
 
         UndoRecord u = new();
 
-        u.mBefore = mState;
+        u.MBefore = State;
 
         if (HasSelection())
         {
-            if (aChar == '\t' && mState.SelectionStart.Line != mState.SelectionEnd.Line)
+            if (aChar == '\t' && State.SelectionStart.Line != State.SelectionEnd.Line)
             {
-                Coordinate start = mState.SelectionStart;
-                Coordinate end = mState.SelectionEnd;
+                Coordinate start = State.SelectionStart;
+                Coordinate end = State.SelectionEnd;
                 Coordinate originalEnd = end;
 
                 if (start > end)
@@ -1343,9 +1343,9 @@ public class TextEditor : Component
                 //if (end.Column >= GetLineMaxColumn(end.Line))
                 //	end.Column = GetLineMaxColumn(end.Line) - 1;
 
-                u.mRemovedStart = start;
-                u.mRemovedEnd = end;
-                u.mRemoved = GetText(start, end);
+                u.MRemovedStart = start;
+                u.MRemovedEnd = end;
+                u.MRemoved = GetText(start, end);
 
                 var modified = false;
 
@@ -1386,21 +1386,21 @@ public class TextEditor : Component
                     {
                         end = new Coordinate(end.Line, GetLineMaxColumn(end.Line));
                         rangeEnd = end;
-                        u.mAdded = GetText(start, end);
+                        u.MAdded = GetText(start, end);
                     }
                     else
                     {
                         end = new Coordinate(originalEnd.Line, 0);
                         rangeEnd = new Coordinate(end.Line - 1, GetLineMaxColumn(end.Line - 1));
-                        u.mAdded = GetText(start, rangeEnd);
+                        u.MAdded = GetText(start, rangeEnd);
                     }
 
-                    u.mAddedStart = start;
-                    u.mAddedEnd = rangeEnd;
-                    u.mAfter = mState;
+                    u.MAddedStart = start;
+                    u.MAddedEnd = rangeEnd;
+                    u.MAfter = State;
 
-                    mState.SelectionStart = start;
-                    mState.SelectionEnd = end;
+                    State.SelectionStart = start;
+                    State.SelectionEnd = end;
                     AddUndo(u);
 
                     _isTextChanged = true;
@@ -1412,15 +1412,15 @@ public class TextEditor : Component
             } // c == '\t'
             else
             {
-                u.mRemoved = GetSelectedText();
-                u.mRemovedStart = mState.SelectionStart;
-                u.mRemovedEnd = mState.SelectionEnd;
+                u.MRemoved = GetSelectedText();
+                u.MRemovedStart = State.SelectionStart;
+                u.MRemovedEnd = State.SelectionEnd;
                 DeleteSelection();
             }
         } // HasSelection
 
         Coordinate coord = GetCursorPosition();
-        u.mAddedStart = coord;
+        u.MAddedStart = coord;
 
         if (_lines.Count <= 0)
             throw new InvalidOperationException("No more lines left.");
@@ -1440,7 +1440,7 @@ public class TextEditor : Component
             newLine.Glyphs.AddRange(line.Glyphs[cindex..]);
             line.Glyphs.RemoveRange(cindex, line.Length - cindex);
             SetCursorPosition(new Coordinate(coord.Line + 1, GetCharacterColumn(coord.Line + 1, whitespaceSize)));
-            u.mAdded = $"{aChar}";
+            u.MAdded = $"{aChar}";
         }
         else
         {
@@ -1449,25 +1449,25 @@ public class TextEditor : Component
 
             if (IsOverwrite && cindex < line.Length)
             {
-                u.mRemovedStart = mState.CursorPosition;
-                u.mRemovedEnd = new Coordinate(coord.Line, GetCharacterColumn(coord.Line, cindex + 1));
+                u.MRemovedStart = State.CursorPosition;
+                u.MRemovedEnd = new Coordinate(coord.Line, GetCharacterColumn(coord.Line, cindex + 1));
 
-                u.mRemoved += line[cindex].Character;
+                u.MRemoved += line[cindex].Character;
                 line.Glyphs.RemoveAt(cindex);
             }
 
             line.Glyphs.Insert(cindex, new Glyph(aChar));
 
             cindex++;
-            u.mAdded = $"{aChar}";
+            u.MAdded = $"{aChar}";
 
             SetCursorPosition(new Coordinate(coord.Line, GetCharacterColumn(coord.Line, cindex)));
         }
 
         _isTextChanged = true;
 
-        u.mAddedEnd = GetCursorPosition();
-        u.mAfter = mState;
+        u.MAddedEnd = GetCursorPosition();
+        u.MAfter = State;
 
         AddUndo(u);
 
@@ -1477,9 +1477,9 @@ public class TextEditor : Component
 
     public void SetCursorPosition(Coordinate aPosition)
     {
-        if (mState.CursorPosition != aPosition)
+        if (State.CursorPosition != aPosition)
         {
-            mState.CursorPosition = aPosition;
+            State.CursorPosition = aPosition;
             _isCursorPositionChanged = true;
             EnsureCursorVisible();
         }
@@ -1487,27 +1487,27 @@ public class TextEditor : Component
 
     public void SetSelectionStart(Coordinate aPosition)
     {
-        mState.SelectionStart = SanitizeCoordinates(aPosition);
-        if (mState.SelectionStart > mState.SelectionEnd)
-            (mState.SelectionStart, mState.SelectionEnd) = (mState.SelectionEnd, mState.SelectionStart);
+        State.SelectionStart = SanitizeCoordinates(aPosition);
+        if (State.SelectionStart > State.SelectionEnd)
+            (State.SelectionStart, State.SelectionEnd) = (State.SelectionEnd, State.SelectionStart);
     }
 
     public void SetSelectionEnd(Coordinate aPosition)
     {
-        mState.SelectionEnd = SanitizeCoordinates(aPosition);
-        if (mState.SelectionStart > mState.SelectionEnd)
-            (mState.SelectionStart, mState.SelectionEnd) = (mState.SelectionEnd, mState.SelectionStart);
+        State.SelectionEnd = SanitizeCoordinates(aPosition);
+        if (State.SelectionStart > State.SelectionEnd)
+            (State.SelectionStart, State.SelectionEnd) = (State.SelectionEnd, State.SelectionStart);
     }
 
     public void SetSelection(Coordinate aStart, Coordinate aEnd, SelectionMode aMode = SelectionMode.Normal)
     {
-        Coordinate oldSelStart = mState.SelectionStart;
-        Coordinate oldSelEnd = mState.SelectionEnd;
+        Coordinate oldSelStart = State.SelectionStart;
+        Coordinate oldSelEnd = State.SelectionEnd;
 
-        mState.SelectionStart = SanitizeCoordinates(aStart);
-        mState.SelectionEnd = SanitizeCoordinates(aEnd);
-        if (mState.SelectionStart > mState.SelectionEnd)
-            (mState.SelectionStart, mState.SelectionEnd) = (mState.SelectionEnd, mState.SelectionStart);
+        State.SelectionStart = SanitizeCoordinates(aStart);
+        State.SelectionEnd = SanitizeCoordinates(aEnd);
+        if (State.SelectionStart > State.SelectionEnd)
+            (State.SelectionStart, State.SelectionEnd) = (State.SelectionEnd, State.SelectionStart);
 
         switch (aMode)
         {
@@ -1515,25 +1515,25 @@ public class TextEditor : Component
                 break;
             case SelectionMode.Word:
                 {
-                    mState.SelectionStart = FindWordStart(mState.SelectionStart);
-                    if (!IsOnWordBoundary(mState.SelectionEnd))
-                        mState.SelectionEnd = FindWordEnd(FindWordStart(mState.SelectionEnd));
+                    State.SelectionStart = FindWordStart(State.SelectionStart);
+                    if (!IsOnWordBoundary(State.SelectionEnd))
+                        State.SelectionEnd = FindWordEnd(FindWordStart(State.SelectionEnd));
                     break;
                 }
             case SelectionMode.Line:
                 {
-                    int lineNo = mState.SelectionEnd.Line;
+                    int lineNo = State.SelectionEnd.Line;
                     int lineSize = lineNo < _lines.Count ? _lines[lineNo].Length : 0;
-                    mState.SelectionStart = new Coordinate(mState.SelectionStart.Line, 0);
-                    mState.SelectionEnd = new Coordinate(lineNo, GetLineMaxColumn(lineNo));
+                    State.SelectionStart = new Coordinate(State.SelectionStart.Line, 0);
+                    State.SelectionEnd = new Coordinate(lineNo, GetLineMaxColumn(lineNo));
                     break;
                 }
             default:
                 break;
         }
 
-        if (mState.SelectionStart != oldSelStart ||
-            mState.SelectionEnd != oldSelEnd)
+        if (State.SelectionStart != oldSelStart ||
+            State.SelectionEnd != oldSelEnd)
             _isCursorPositionChanged = true;
     }
 
@@ -1543,7 +1543,7 @@ public class TextEditor : Component
             return;
 
         Coordinate pos = GetCursorPosition();
-        Coordinate start = pos < mState.SelectionStart ? pos : mState.SelectionStart;
+        Coordinate start = pos < State.SelectionStart ? pos : State.SelectionStart;
         int totalLines = pos.Line - start.Line;
 
         totalLines += InsertTextAt(ref pos, aValue);
@@ -1555,35 +1555,35 @@ public class TextEditor : Component
 
     private void DeleteSelection()
     {
-        if (mState.SelectionEnd < mState.SelectionStart)
+        if (State.SelectionEnd < State.SelectionStart)
             throw new InvalidOperationException("Invalid selection range.");
 
-        if (mState.SelectionEnd == mState.SelectionStart)
+        if (State.SelectionEnd == State.SelectionStart)
             return;
 
-        DeleteRange(mState.SelectionStart, mState.SelectionEnd);
+        DeleteRange(State.SelectionStart, State.SelectionEnd);
 
-        SetSelection(mState.SelectionStart, mState.SelectionStart);
-        SetCursorPosition(mState.SelectionStart);
-        Colorize(mState.SelectionStart.Line, 1);
+        SetSelection(State.SelectionStart, State.SelectionStart);
+        SetCursorPosition(State.SelectionStart);
+        Colorize(State.SelectionStart.Line, 1);
     }
 
     public void MoveUp(int aAmount = 1, bool aSelect = false)
     {
-        Coordinate oldPos = mState.CursorPosition;
-        oldPos.Line = Math.Max(0, mState.CursorPosition.Line - aAmount);
+        Coordinate oldPos = State.CursorPosition;
+        oldPos.Line = Math.Max(0, State.CursorPosition.Line - aAmount);
 
-        if (oldPos != mState.CursorPosition)
+        if (oldPos != State.CursorPosition)
         {
             if (aSelect)
             {
                 if (oldPos == _interactiveStart)
-                    _interactiveStart = mState.CursorPosition;
+                    _interactiveStart = State.CursorPosition;
                 else if (oldPos == _interactiveEnd)
-                    _interactiveEnd = mState.CursorPosition;
+                    _interactiveEnd = State.CursorPosition;
                 else
                 {
-                    _interactiveStart = mState.CursorPosition;
+                    _interactiveStart = State.CursorPosition;
                     _interactiveEnd = oldPos;
                 }
             }
@@ -1595,29 +1595,29 @@ public class TextEditor : Component
             EnsureCursorVisible();
         }
 
-        mState.CursorPosition = oldPos;
+        State.CursorPosition = oldPos;
     }
 
     public void MoveDown(int aAmount = 1, bool aSelect = false)
     {
-        if (mState.CursorPosition.Column < 0)
+        if (State.CursorPosition.Column < 0)
             throw new InvalidOperationException("Invalid cursor position.");
 
-        Coordinate oldPos = mState.CursorPosition;
+        Coordinate oldPos = State.CursorPosition;
         oldPos.Line = Math.Max(0, Math.Min(_lines.Count - 1, oldPos.Line + aAmount));
 
-        if (mState.CursorPosition != oldPos)
+        if (State.CursorPosition != oldPos)
         {
             if (aSelect)
             {
                 if (oldPos == _interactiveEnd)
-                    _interactiveEnd = mState.CursorPosition;
+                    _interactiveEnd = State.CursorPosition;
                 else if (oldPos == _interactiveStart)
-                    _interactiveStart = mState.CursorPosition;
+                    _interactiveStart = State.CursorPosition;
                 else
                 {
                     _interactiveStart = oldPos;
-                    _interactiveEnd = mState.CursorPosition;
+                    _interactiveEnd = State.CursorPosition;
                 }
             }
             else
@@ -1628,7 +1628,7 @@ public class TextEditor : Component
             EnsureCursorVisible();
         }
 
-        mState.CursorPosition = oldPos;
+        State.CursorPosition = oldPos;
     }
 
     public void MoveLeft(int aAmount = 1, bool aSelect = false, bool aWordMode = false)
@@ -1636,10 +1636,10 @@ public class TextEditor : Component
         if (_lines.Count <= 0)
             return;
 
-        Coordinate oldPos = mState.CursorPosition;
-        mState.CursorPosition = GetCursorPosition();
-        int line = mState.CursorPosition.Line;
-        int cindex = GetCharacterIndex(mState.CursorPosition);
+        Coordinate oldPos = State.CursorPosition;
+        State.CursorPosition = GetCursorPosition();
+        int line = State.CursorPosition.Line;
+        int cindex = GetCharacterIndex(State.CursorPosition);
 
         while (aAmount-- > 0)
         {
@@ -1659,33 +1659,33 @@ public class TextEditor : Component
                 --cindex;
             }
 
-            mState.CursorPosition = new Coordinate(line, GetCharacterColumn(line, cindex));
+            State.CursorPosition = new Coordinate(line, GetCharacterColumn(line, cindex));
             if (aWordMode)
             {
-                mState.CursorPosition = FindWordStart(mState.CursorPosition);
-                cindex = GetCharacterIndex(mState.CursorPosition);
+                State.CursorPosition = FindWordStart(State.CursorPosition);
+                cindex = GetCharacterIndex(State.CursorPosition);
             }
         }
 
-        mState.CursorPosition = new Coordinate(line, GetCharacterColumn(line, cindex));
+        State.CursorPosition = new Coordinate(line, GetCharacterColumn(line, cindex));
 
-        if (mState.CursorPosition.Column < 0)
+        if (State.CursorPosition.Column < 0)
             throw new InvalidOperationException("Invalid cursor position.");
 
         if (aSelect)
         {
             if (oldPos == _interactiveStart)
-                _interactiveStart = mState.CursorPosition;
+                _interactiveStart = State.CursorPosition;
             else if (oldPos == _interactiveEnd)
-                _interactiveEnd = mState.CursorPosition;
+                _interactiveEnd = State.CursorPosition;
             else
             {
-                _interactiveStart = mState.CursorPosition;
+                _interactiveStart = State.CursorPosition;
                 _interactiveEnd = oldPos;
             }
         }
         else
-            _interactiveStart = _interactiveEnd = mState.CursorPosition;
+            _interactiveStart = _interactiveEnd = State.CursorPosition;
 
         SetSelection(_interactiveStart, _interactiveEnd,
             aSelect && aWordMode ? SelectionMode.Word : SelectionMode.Normal);
@@ -1695,7 +1695,7 @@ public class TextEditor : Component
 
     public void MoveRight(int aAmount = 1, bool aSelect = false, bool aWordMode = false)
     {
-        Coordinate cursorPos = mState.CursorPosition;
+        Coordinate cursorPos = State.CursorPosition;
 
         if (_lines.Count <= 0 || cursorPos.Line >= _lines.Count)
             return;
@@ -1715,7 +1715,7 @@ public class TextEditor : Component
                 }
                 else
                 {
-                    mState.CursorPosition = cursorPos;
+                    State.CursorPosition = cursorPos;
 
                     return;
                 }
@@ -1752,23 +1752,23 @@ public class TextEditor : Component
 
         EnsureCursorVisible();
 
-        mState.CursorPosition = cursorPos;
+        State.CursorPosition = cursorPos;
     }
 
     public void MoveTop(bool aSelect = false)
     {
-        Coordinate oldPos = mState.CursorPosition;
+        Coordinate oldPos = State.CursorPosition;
         SetCursorPosition(new Coordinate(0, 0));
 
-        if (mState.CursorPosition != oldPos)
+        if (State.CursorPosition != oldPos)
         {
             if (aSelect)
             {
                 _interactiveEnd = oldPos;
-                _interactiveStart = mState.CursorPosition;
+                _interactiveStart = State.CursorPosition;
             }
             else
-                _interactiveStart = _interactiveEnd = mState.CursorPosition;
+                _interactiveStart = _interactiveEnd = State.CursorPosition;
 
             SetSelection(_interactiveStart, _interactiveEnd);
         }
@@ -1792,25 +1792,25 @@ public class TextEditor : Component
 
     public void MoveHome(bool aSelect = false)
     {
-        Coordinate oldPos = mState.CursorPosition;
-        SetCursorPosition(new Coordinate(mState.CursorPosition.Line, 0));
+        Coordinate oldPos = State.CursorPosition;
+        SetCursorPosition(new Coordinate(State.CursorPosition.Line, 0));
 
-        if (mState.CursorPosition != oldPos)
+        if (State.CursorPosition != oldPos)
         {
             if (aSelect)
             {
                 if (oldPos == _interactiveStart)
-                    _interactiveStart = mState.CursorPosition;
+                    _interactiveStart = State.CursorPosition;
                 else if (oldPos == _interactiveEnd)
-                    _interactiveEnd = mState.CursorPosition;
+                    _interactiveEnd = State.CursorPosition;
                 else
                 {
-                    _interactiveStart = mState.CursorPosition;
+                    _interactiveStart = State.CursorPosition;
                     _interactiveEnd = oldPos;
                 }
             }
             else
-                _interactiveStart = _interactiveEnd = mState.CursorPosition;
+                _interactiveStart = _interactiveEnd = State.CursorPosition;
 
             SetSelection(_interactiveStart, _interactiveEnd);
         }
@@ -1818,25 +1818,25 @@ public class TextEditor : Component
 
     public void MoveEnd(bool aSelect = false)
     {
-        Coordinate oldPos = mState.CursorPosition;
-        SetCursorPosition(new Coordinate(mState.CursorPosition.Line, GetLineMaxColumn(oldPos.Line)));
+        Coordinate oldPos = State.CursorPosition;
+        SetCursorPosition(new Coordinate(State.CursorPosition.Line, GetLineMaxColumn(oldPos.Line)));
 
-        if (mState.CursorPosition != oldPos)
+        if (State.CursorPosition != oldPos)
         {
             if (aSelect)
             {
                 if (oldPos == _interactiveEnd)
-                    _interactiveEnd = mState.CursorPosition;
+                    _interactiveEnd = State.CursorPosition;
                 else if (oldPos == _interactiveStart)
-                    _interactiveStart = mState.CursorPosition;
+                    _interactiveStart = State.CursorPosition;
                 else
                 {
                     _interactiveStart = oldPos;
-                    _interactiveEnd = mState.CursorPosition;
+                    _interactiveEnd = State.CursorPosition;
                 }
             }
             else
-                _interactiveStart = _interactiveEnd = mState.CursorPosition;
+                _interactiveStart = _interactiveEnd = State.CursorPosition;
 
             SetSelection(_interactiveStart, _interactiveEnd);
         }
@@ -1851,13 +1851,13 @@ public class TextEditor : Component
             return;
 
         UndoRecord u = new();
-        u.mBefore = mState;
+        u.MBefore = State;
 
         if (HasSelection())
         {
-            u.mRemoved = GetSelectedText();
-            u.mRemovedStart = mState.SelectionStart;
-            u.mRemovedEnd = mState.SelectionEnd;
+            u.MRemoved = GetSelectedText();
+            u.MRemovedStart = State.SelectionStart;
+            u.MRemovedEnd = State.SelectionEnd;
 
             DeleteSelection();
         }
@@ -1872,9 +1872,9 @@ public class TextEditor : Component
                 if (pos.Line == _lines.Count - 1)
                     return;
 
-                u.mRemoved = "\n";
-                u.mRemovedStart = u.mRemovedEnd = GetCursorPosition();
-                Advance(ref u.mRemovedEnd);
+                u.MRemoved = "\n";
+                u.MRemovedStart = u.MRemovedEnd = GetCursorPosition();
+                Advance(ref u.MRemovedEnd);
 
                 GlyphLine nextLine = _lines[pos.Line + 1];
                 line.Glyphs.AddRange(nextLine.Glyphs);
@@ -1883,9 +1883,9 @@ public class TextEditor : Component
             else
             {
                 int cindex = GetCharacterIndex(pos);
-                u.mRemovedStart = u.mRemovedEnd = GetCursorPosition();
-                u.mRemovedEnd.Column++;
-                u.mRemoved = GetText(u.mRemovedStart, u.mRemovedEnd);
+                u.MRemovedStart = u.MRemovedEnd = GetCursorPosition();
+                u.MRemovedEnd.Column++;
+                u.MRemoved = GetText(u.MRemovedStart, u.MRemovedEnd);
 
                 line.Glyphs.RemoveAt(cindex);
             }
@@ -1895,7 +1895,7 @@ public class TextEditor : Component
             Colorize(pos.Line, 1);
         }
 
-        u.mAfter = mState;
+        u.MAfter = State;
         AddUndo(u);
     }
 
@@ -1908,13 +1908,13 @@ public class TextEditor : Component
             return;
 
         UndoRecord u = new();
-        u.mBefore = mState;
+        u.MBefore = State;
 
         if (HasSelection())
         {
-            u.mRemoved = GetSelectedText();
-            u.mRemovedStart = mState.SelectionStart;
-            u.mRemovedEnd = mState.SelectionEnd;
+            u.MRemoved = GetSelectedText();
+            u.MRemovedStart = State.SelectionStart;
+            u.MRemovedEnd = State.SelectionEnd;
 
             DeleteSelection();
         }
@@ -1923,45 +1923,45 @@ public class TextEditor : Component
             Coordinate pos = GetActualCursorCoordinates();
             SetCursorPosition(pos);
 
-            if (mState.CursorPosition.Column == 0)
+            if (State.CursorPosition.Column == 0)
             {
-                if (mState.CursorPosition.Line == 0)
+                if (State.CursorPosition.Line == 0)
                     return;
 
-                u.mRemoved = "\n";
-                u.mRemovedStart = u.mRemovedEnd = new Coordinate(pos.Line - 1, GetLineMaxColumn(pos.Line - 1));
-                Advance(ref u.mRemovedEnd);
+                u.MRemoved = "\n";
+                u.MRemovedStart = u.MRemovedEnd = new Coordinate(pos.Line - 1, GetLineMaxColumn(pos.Line - 1));
+                Advance(ref u.MRemovedEnd);
 
-                GlyphLine line = _lines[mState.CursorPosition.Line];
-                GlyphLine prevLine = _lines[mState.CursorPosition.Line - 1];
-                int prevSize = GetLineMaxColumn(mState.CursorPosition.Line - 1);
+                GlyphLine line = _lines[State.CursorPosition.Line];
+                GlyphLine prevLine = _lines[State.CursorPosition.Line - 1];
+                int prevSize = GetLineMaxColumn(State.CursorPosition.Line - 1);
                 prevLine.Glyphs.AddRange(line.Glyphs);
 
                 Dictionary<int, string> etmp = new();
                 foreach (KeyValuePair<int, string> i in _errorMarkers)
-                    etmp[i.Key - 1 == mState.CursorPosition.Line ? i.Key - 1 : i.Key] = i.Value;
+                    etmp[i.Key - 1 == State.CursorPosition.Line ? i.Key - 1 : i.Key] = i.Value;
                 _errorMarkers = etmp;
 
-                RemoveLine(mState.CursorPosition.Line);
+                RemoveLine(State.CursorPosition.Line);
 
-                Coordinate newPos = mState.CursorPosition;
+                Coordinate newPos = State.CursorPosition;
                 newPos.Line--;
                 newPos.Column = prevSize;
-                mState.CursorPosition = newPos;
+                State.CursorPosition = newPos;
             }
             else
             {
-                GlyphLine line = _lines[mState.CursorPosition.Line];
+                GlyphLine line = _lines[State.CursorPosition.Line];
                 int cindex = GetCharacterIndex(pos) - 1;
                 int cend = cindex + 1;
 
-                u.mRemovedStart = u.mRemovedEnd = GetCursorPosition();
-                --u.mRemovedStart.Column;
-                SetCursorPosition(new Coordinate(mState.CursorPosition.Line, GetCharacterColumn(mState.CursorPosition.Line, cindex)));
+                u.MRemovedStart = u.MRemovedEnd = GetCursorPosition();
+                --u.MRemovedStart.Column;
+                SetCursorPosition(new Coordinate(State.CursorPosition.Line, GetCharacterColumn(State.CursorPosition.Line, cindex)));
 
                 while (cindex < line.Length && cend-- > cindex)
                 {
-                    u.mRemoved += line[cindex].Character;
+                    u.MRemoved += line[cindex].Character;
                     line.Glyphs.RemoveAt(cindex);
                 }
             }
@@ -1969,10 +1969,10 @@ public class TextEditor : Component
             _isTextChanged = true;
 
             EnsureCursorVisible();
-            Colorize(mState.CursorPosition.Line, 1);
+            Colorize(State.CursorPosition.Line, 1);
         }
 
-        u.mAfter = mState;
+        u.MAfter = State;
         AddUndo(u);
     }
 
@@ -1989,7 +1989,7 @@ public class TextEditor : Component
 
     public bool HasSelection()
     {
-        return mState.SelectionEnd > mState.SelectionStart;
+        return State.SelectionEnd > State.SelectionStart;
     }
 
     public void Copy()
@@ -2022,15 +2022,15 @@ public class TextEditor : Component
             if (HasSelection())
             {
                 UndoRecord u = new();
-                u.mBefore = mState;
-                u.mRemoved = GetSelectedText();
-                u.mRemovedStart = mState.SelectionStart;
-                u.mRemovedEnd = mState.SelectionEnd;
+                u.MBefore = State;
+                u.MRemoved = GetSelectedText();
+                u.MRemovedStart = State.SelectionStart;
+                u.MRemovedEnd = State.SelectionEnd;
 
                 Copy();
                 DeleteSelection();
 
-                u.mAfter = mState;
+                u.MAfter = State;
                 AddUndo(u);
             }
         }
@@ -2045,23 +2045,23 @@ public class TextEditor : Component
         if (clipText != null && clipText.Length > 0)
         {
             UndoRecord u = new();
-            u.mBefore = mState;
+            u.MBefore = State;
 
             if (HasSelection())
             {
-                u.mRemoved = GetSelectedText();
-                u.mRemovedStart = mState.SelectionStart;
-                u.mRemovedEnd = mState.SelectionEnd;
+                u.MRemoved = GetSelectedText();
+                u.MRemovedStart = State.SelectionStart;
+                u.MRemovedEnd = State.SelectionEnd;
                 DeleteSelection();
             }
 
-            u.mAdded = clipText;
-            u.mAddedStart = GetCursorPosition();
+            u.MAdded = clipText;
+            u.MAddedStart = GetCursorPosition();
 
             InsertText(clipText);
 
-            u.mAddedEnd = GetCursorPosition();
-            u.mAfter = mState;
+            u.MAddedEnd = GetCursorPosition();
+            u.MAfter = State;
             AddUndo(u);
         }
     }
@@ -2090,8 +2090,8 @@ public class TextEditor : Component
 
     public static uint[] GetDarkPalette()
     {
-        return new uint[]
-        {
+        return
+        [
             0xff7f7f7f, // Default
             0xffd69c56, // Keyword	
             0xff00ff00, // Number
@@ -2112,14 +2112,14 @@ public class TextEditor : Component
             0xff707000, // Line number
             0x40000000, // Current line fill
             0x40808080, // Current line fill (inactive)
-            0x40a0a0a0, // Current line edge
-        };
+            0x40a0a0a0 // Current line edge
+        ];
     }
 
     public static uint[] GetLightPalette()
     {
-        return new uint[]
-        {
+        return
+        [
             0xff7f7f7f, // None
             0xffff0c06, // Keyword	
             0xff008000, // Number
@@ -2140,14 +2140,14 @@ public class TextEditor : Component
             0xff505000, // Line number
             0x40000000, // Current line fill
             0x40808080, // Current line fill (inactive)
-            0x40000000, // Current line edge
-        };
+            0x40000000 // Current line edge
+        ];
     }
 
     public static uint[] GetRetroBluePalette()
     {
-        return new uint[]
-        {
+        return
+        [
             0xff00ffff, // None
             0xffffff00, // Keyword	
             0xff00ff00, // Number
@@ -2168,8 +2168,8 @@ public class TextEditor : Component
             0xff808000, // Line number
             0x40000000, // Current line fill
             0x40808080, // Current line fill (inactive)
-            0x40000000, // Current line edge
-        };
+            0x40000000 // Current line edge
+        ];
     }
 
     public string GetText()
@@ -2198,15 +2198,15 @@ public class TextEditor : Component
 
     public string GetSelectedText()
     {
-        return GetText(mState.SelectionStart, mState.SelectionEnd);
+        return GetText(State.SelectionStart, State.SelectionEnd);
     }
 
     public string GetCurrentLineText()
     {
-        int lineLength = GetLineMaxColumn(mState.CursorPosition.Line);
+        int lineLength = GetLineMaxColumn(State.CursorPosition.Line);
         return GetText(
-            new Coordinate(mState.CursorPosition.Line, 0),
-            new Coordinate(mState.CursorPosition.Line, lineLength));
+            new Coordinate(State.CursorPosition.Line, 0),
+            new Coordinate(State.CursorPosition.Line, lineLength));
     }
 
     internal void Colorize(int aFroLine = 0, int aLines = -1)
@@ -2248,7 +2248,7 @@ public class TextEditor : Component
 
             for (int first = bufferBegin; first != last;)
             {
-                bool hasTokenizeResult = _languageDefinition.Tokenize(buffer, first, last, out int token_begin, out int token_end, out PaletteIndex token_color);
+                bool hasTokenizeResult = _languageDefinition.Tokenize(buffer, first, last, out int tokenBegin, out int tokenEnd, out PaletteIndex tokenColor);
 
                 if (!hasTokenizeResult)
                 {
@@ -2260,9 +2260,9 @@ public class TextEditor : Component
                             hasTokenizeResult = true;
 
                             Match v = results;
-                            token_begin = v.Index;
-                            token_end = v.Length + v.Index;
-                            token_color = p.Item2;
+                            tokenBegin = v.Index;
+                            tokenEnd = v.Length + v.Index;
+                            tokenColor = p.Item2;
                             break;
                         }
                     }
@@ -2274,11 +2274,11 @@ public class TextEditor : Component
                 }
                 else
                 {
-                    int token_length = token_end - token_begin;
+                    int tokenLength = tokenEnd - tokenBegin;
 
-                    if (token_color == PaletteIndex.Identifier)
+                    if (tokenColor == PaletteIndex.Identifier)
                     {
-                        string id = buffer[token_begin..token_end];
+                        string id = buffer[tokenBegin..tokenEnd];
 
                         // todo : allmost all language definitions use lower case to specify keywords, so shouldn't this use ::tolower ?
                         if (!_languageDefinition.IsCaseSensitive)
@@ -2287,27 +2287,27 @@ public class TextEditor : Component
                         if (!line[first - bufferBegin].IsPreprocessor)
                         {
                             if (_languageDefinition.Keywords.Contains(id))
-                                token_color = PaletteIndex.Keyword;
+                                tokenColor = PaletteIndex.Keyword;
                             else if (_languageDefinition.Identifiers.ContainsKey(id))
-                                token_color = PaletteIndex.KnownIdentifier;
+                                tokenColor = PaletteIndex.KnownIdentifier;
                             else if (_languageDefinition.Preprocessors.ContainsKey(id))
-                                token_color = PaletteIndex.PreprocessorIdentifier;
+                                tokenColor = PaletteIndex.PreprocessorIdentifier;
                         }
                         else
                         {
                             if (_languageDefinition.Preprocessors.ContainsKey(id))
-                                token_color = PaletteIndex.PreprocessorIdentifier;
+                                tokenColor = PaletteIndex.PreprocessorIdentifier;
                         }
                     }
 
-                    for (var j = 0; j < token_length; ++j)
+                    for (var j = 0; j < tokenLength; ++j)
                     {
-                        Glyph glyph = line[token_begin - bufferBegin + j];
-                        glyph.ColorIndex = token_color;
-                        line[token_begin - bufferBegin + j] = glyph;
+                        Glyph glyph = line[tokenBegin - bufferBegin + j];
+                        glyph.ColorIndex = tokenColor;
+                        line[tokenBegin - bufferBegin + j] = glyph;
                     }
 
-                    first = token_end;
+                    first = tokenEnd;
                 }
             }
         }
@@ -2507,7 +2507,7 @@ public class TextEditor : Component
             return;
         }
 
-        EnsureCoordinateVisible(mState.SelectionStart);
+        EnsureCoordinateVisible(State.SelectionStart);
     }
 
     private void EnsureCoordinateVisible(Coordinate aCoordinate)

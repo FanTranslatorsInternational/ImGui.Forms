@@ -4,7 +4,7 @@ namespace ImGui.Forms.Localization;
 
 public interface ILocalizer
 {
-    string CurrentLocale { get; }
+    string? CurrentLocale { get; }
 
     IList<string> GetLocales();
 

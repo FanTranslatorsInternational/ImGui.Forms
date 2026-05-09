@@ -7,11 +7,11 @@ using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls;
 
-public class ZoomablePictureBox : ZoomableComponent
+public class ZoomablePictureBox(ThemedImageResource? image = null) : ZoomableComponent
 {
     #region Properties
 
-    public ThemedImageResource? Image { get; private set; }
+    public ThemedImageResource? Image { get; private set; } = image;
 
     public bool ShowImageBorder { get; set; }
 
@@ -19,12 +19,7 @@ public class ZoomablePictureBox : ZoomableComponent
 
     #endregion
 
-    public ZoomablePictureBox(ThemedImageResource? image = null)
-    {
-        Image = image;
-    }
-
-    public void SetImage(ThemedImageResource imagResource, bool releaseOldImage = true)
+    public void SetImage(ThemedImageResource? imagResource, bool releaseOldImage = true)
     {
         if (releaseOldImage)
             Image?.Destroy();

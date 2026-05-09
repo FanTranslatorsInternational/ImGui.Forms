@@ -11,12 +11,12 @@ namespace ImGui.Forms.Modals.IO.Windows;
 public class WindowsSaveFileDialog
 {
     public LocalizedString Title { get; set; }
-    public string InitialDirectory { get; set; } = null;
-    public string InitialFileName { get; set; } = null;
+    public string? InitialDirectory { get; set; } = null;
+    public string? InitialFileName { get; set; } = null;
     public IList<FileFilter> Filters { get; set; } = new List<FileFilter> { new("All Files", "*") };
     public bool ShowHidden { get; set; } = false;
     public bool Success { get; private set; }
-    public string[] Files { get; private set; }
+    public string[] Files { get; private set; } = [];
 
     public async Task<DialogResult> ShowAsync()
     {
@@ -39,7 +39,7 @@ public class WindowsSaveFileDialog
 
         DialogResult result = await sfd.ShowAsync();
         if (result == DialogResult.Ok)
-            Files = [sfd.SelectedPath];
+            Files = [sfd.SelectedPath!];
 
         Success = result == DialogResult.Ok;
         return result;
@@ -47,10 +47,10 @@ public class WindowsSaveFileDialog
 
     private void ShowSaveFileDialog()
     {
-        const int MAX_FILE_LENGTH = 2048;
+        const int maxFileLength = 2048;
 
         Success = false;
-        Files = null;
+        Files = [];
 
         string currentDir = Environment.CurrentDirectory;
 
@@ -58,20 +58,20 @@ public class WindowsSaveFileDialog
 
         ofn.structSize = Marshal.SizeOf(ofn);
         ofn.filter = string.Join('\0', Filters.Select(f => f.Name + " (" + string.Join(';', f.Extensions.Select(e => "*." + e)) + ")\0" + string.Join(';', f.Extensions.Select(e => "*." + e)))) + "\0";
-        ofn.fileTitle = new string(new char[MAX_FILE_LENGTH]);
+        ofn.fileTitle = new string(new char[maxFileLength]);
         ofn.maxFileTitle = ofn.fileTitle.Length;
         ofn.initialDir = InitialDirectory;
         ofn.title = Title;
         ofn.flags = (int)(OpenFileNameFlags.HideReadOnly
                           | OpenFileNameFlags.Explorer
                           | OpenFileNameFlags.FileMustExist
-                          | OpenFileNameFlags.PathMustExist 
+                          | OpenFileNameFlags.PathMustExist
                           | OpenFileNameFlags.OverwritePrompt
                           | OpenFileNameFlags.LongNames);
 
         // Create buffer for file names
-        ofn.file = Marshal.AllocHGlobal(MAX_FILE_LENGTH * Marshal.SystemDefaultCharSize);
-        ofn.maxFile = MAX_FILE_LENGTH;
+        ofn.file = Marshal.AllocHGlobal(maxFileLength * Marshal.SystemDefaultCharSize);
+        ofn.maxFile = maxFileLength;
 
         var initFileLength = string.IsNullOrEmpty(InitialFileName) ? 0 : InitialFileName.Length * Marshal.SystemDefaultCharSize;
         var initFilePtr = Marshal.StringToHGlobalAuto(InitialFileName);
@@ -82,7 +82,7 @@ public class WindowsSaveFileDialog
             Marshal.WriteByte(ofn.file, i, Marshal.ReadByte(initFilePtr, i));
         }
 
-        for (int i = initFileLength; i < MAX_FILE_LENGTH * Marshal.SystemDefaultCharSize; i++)
+        for (int i = initFileLength; i < maxFileLength * Marshal.SystemDefaultCharSize; i++)
         {
             Marshal.WriteByte(ofn.file, i, 0);
         }
@@ -97,9 +97,9 @@ public class WindowsSaveFileDialog
         if (Success)
         {
             nint filePointer = ofn.file;
-            long pointer = (long)filePointer;
-            string file = Marshal.PtrToStringAuto(filePointer);
-            List<string> strList = new List<string>();
+            long pointer = filePointer;
+            string file = Marshal.PtrToStringAuto(filePointer) ?? string.Empty;
+            List<string> strList = [];
 
             // Retrieve file names
             while (file.Length > 0)
@@ -108,7 +108,7 @@ public class WindowsSaveFileDialog
 
                 pointer += file.Length * Marshal.SystemDefaultCharSize + Marshal.SystemDefaultCharSize;
                 filePointer = (nint)pointer;
-                file = Marshal.PtrToStringAuto(filePointer);
+                file = Marshal.PtrToStringAuto(filePointer) ?? string.Empty;
             }
 
             if (strList.Count > 1)
@@ -140,29 +140,29 @@ public class WindowsSaveFileDialog
         public nint dlgOwner = nint.Zero;
         public nint instance = nint.Zero;
 
-        public string filter;
-        public string customFilter;
+        public string? filter;
+        public string? customFilter;
         public int maxCustFilter = 0;
         public int filterIndex = 0;
 
         public nint file;
         public int maxFile = 0;
 
-        public string fileTitle;
+        public string? fileTitle;
         public int maxFileTitle = 0;
 
-        public string initialDir;
-        public string title;
+        public string? initialDir;
+        public string? title;
 
         public int flags = 0;
         public short fileOffset = 0;
         public short fileExtension = 0;
 
-        public string defExt;
+        public string? defExt;
 
         public nint custData = nint.Zero;
         public nint hook = nint.Zero;
-        public string templateName;
+        public string? templateName;
 
         public nint reservedPtr = nint.Zero;
         public int reservedInt = 0;
@@ -170,7 +170,7 @@ public class WindowsSaveFileDialog
     }
 
     [Flags]
-    enum OpenFileNameFlags
+    private enum OpenFileNameFlags
     {
         ReadOnly = 0x00000001,
         OverwritePrompt = 0x00000002,

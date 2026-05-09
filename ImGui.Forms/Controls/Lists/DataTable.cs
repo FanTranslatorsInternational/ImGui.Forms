@@ -58,15 +58,15 @@ public class DataTable<TData> : Component
 
     public Size Size { get; set; } = Size.Parent;
 
-    public ContextMenu ContextMenu { get; set; }
+    public ContextMenu? ContextMenu { get; set; }
 
     #endregion
 
     #region Events
 
-    public event EventHandler SelectedRowsChanged;
-    public event EventHandler DoubleClicked;
-    public event EventHandler<DataTableSortChangedEventArgs<TData>> SortChanged;
+    public event EventHandler? SelectedRowsChanged;
+    public event EventHandler? DoubleClicked;
+    public event EventHandler<DataTableSortChangedEventArgs<TData>>? SortChanged;
 
     #endregion
 
@@ -87,7 +87,7 @@ public class DataTable<TData> : Component
         if (Columns.Count <= 0)
             return;
 
-        var localRows = _rows ?? [];
+        var localRows = _rows;
 
         var flags = ImGuiTableFlags.BordersV;
         if (IsResizable) flags |= ImGuiTableFlags.Resizable;
@@ -98,8 +98,8 @@ public class DataTable<TData> : Component
         {
             if (ShowHeaders)
             {
-                for (var i = 0; i < Columns.Count; i++)
-                    Hexa.NET.ImGui.ImGui.TableSetupColumn(Columns[i].Name);
+                foreach (DataTableColumn<TData> column in Columns)
+                    Hexa.NET.ImGui.ImGui.TableSetupColumn(column.Name);
 
                 Hexa.NET.ImGui.ImGui.TableHeadersRow();
             }
@@ -188,16 +188,16 @@ public class DataTable<TData> : Component
             Hexa.NET.ImGui.ImGui.EndTable();
 
             // Handle copy data
-            if (_copyCommand.IsPressed() && Application.Instance.MainForm.IsActiveLayer())
+            if (_copyCommand.IsPressed() && Application.Instance.MainForm!.IsActiveLayer())
                 CopySelectedRows();
 
             // Handle double click event
-            if (Hexa.NET.ImGui.ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left) && Application.Instance.MainForm.IsActiveLayer())
+            if (Hexa.NET.ImGui.ImGui.IsMouseDoubleClicked(ImGuiMouseButton.Left) && Application.Instance.MainForm!.IsActiveLayer())
                 OnDoubleClicked();
         }
     }
 
-    private bool IsCellClicked()
+    private static bool IsCellClicked()
     {
         return (Hexa.NET.ImGui.ImGui.IsMouseReleased(ImGuiMouseButton.Right) || Hexa.NET.ImGui.ImGui.IsMouseReleased(ImGuiMouseButton.Left)) && Hexa.NET.ImGui.ImGui.IsItemHovered();
     }

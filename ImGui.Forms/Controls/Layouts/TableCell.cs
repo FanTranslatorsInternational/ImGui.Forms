@@ -3,7 +3,7 @@ using ImGui.Forms.Models;
 
 namespace ImGui.Forms.Controls.Layouts;
 
-public class TableCell
+public class TableCell(Component? content)
 {
     private Size _sizeValue;
     internal bool HasSize;
@@ -11,7 +11,7 @@ public class TableCell
     /// <summary>
     /// The content of the cell.
     /// </summary>
-    public Component Content { get; }
+    public Component? Content { get; } = content;
 
     /// <summary>
     /// The vertical alignment of the content inside the cell.
@@ -42,11 +42,6 @@ public class TableCell
     /// </summary>
     public bool ShowBorder { get; set; }
 
-    public TableCell(Component component)
-    {
-        Content = component;
-    }
-
     public int GetWidth(int parentWidth, int parentHeight, float layoutCorrection = 1f)
     {
         if (Size.Width.IsContentAligned)
@@ -63,5 +58,5 @@ public class TableCell
         return Component.GetDimension(Size.Height, parentHeight, layoutCorrection);
     }
 
-    public static implicit operator TableCell(Component c) => new(c);
+    public static implicit operator TableCell(Component? c) => new(c);
 }

@@ -2,7 +2,7 @@ using ImGui.Forms.Localization;
 
 namespace ImGui.Forms.Resources;
 
-static class LocalizationResources
+internal static class LocalizationResources
 {
     private const string Ok_ = "Ok";
     private const string Cancel_ = "Cancel";
@@ -60,12 +60,12 @@ static class LocalizationResources
 
     private static string Localize(string localizationId, string fallback, params object[] args)
     {
-        ILocalizer localizer = Application.Instance.Localizer;
-        var text = string.Empty;
+        ILocalizer? localizer = Application.Instance.Localizer;
+        string? text = null;
 
         if (!localizer?.TryLocalize(localizationId, out text, args) ?? true)
             text = string.Format(fallback, args);
 
-        return text;
+        return text ?? string.Empty;
     }
 }

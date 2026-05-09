@@ -11,13 +11,13 @@ public class ContextMenu
     /// <summary>
     /// The Id for this component.
     /// </summary>
-    public int Id => Application.Instance.Ids.Get(this);
+    public int Id => Application.Instance.Ids!.Get(this);
 
     public IList<MenuBarItem> Items { get; } = new List<MenuBarItem>();
 
     #region Events
 
-    public event EventHandler Show;
+    public event EventHandler? Show;
 
     #endregion
 

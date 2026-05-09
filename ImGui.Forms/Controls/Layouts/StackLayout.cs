@@ -61,10 +61,10 @@ public class StackLayout : Component
     public StackLayout()
     {
         var itemList = new ObservableList<StackItem>();
-        itemList.ItemAdded += (s, e) => AddItem(e.Item);
-        itemList.ItemRemoved += (s, e) => RemoveItem(e.Item);
-        itemList.ItemSet += (s, e) => SetItem(e.Item, e.Index);
-        itemList.ItemInserted += (s, e) => InsertItem(e.Item, e.Index);
+        itemList.ItemAdded += (_, e) => AddItem(e.Item);
+        itemList.ItemRemoved += (_, e) => RemoveItem(e.Item);
+        itemList.ItemSet += (_, e) => SetItem(e.Item, e.Index);
+        itemList.ItemInserted += (_, e) => InsertItem(e.Item, e.Index);
 
         Items = itemList;
 
@@ -118,7 +118,7 @@ public class StackLayout : Component
                     return;
 
                 foreach (var cell in _tableLayout.Rows[0].Cells)
-                    if (cell.Content == item.Content)
+                    if (cell?.Content == item.Content)
                     {
                         _tableLayout.Rows[0].Cells.Remove(cell);
                         break;
@@ -128,7 +128,7 @@ public class StackLayout : Component
 
             case Alignment.Vertical:
                 foreach (var row in _tableLayout.Rows)
-                    if (row.Cells.Count > 0 && row.Cells[0].Content == item.Content)
+                    if (row.Cells.Count > 0 && row.Cells[0]?.Content == item.Content)
                     {
                         _tableLayout.Rows.Remove(row);
                         break;
@@ -179,17 +179,17 @@ public class StackLayout : Component
     }
 }
 
-class ObservableList<TItem> : IList<TItem>
+internal class ObservableList<TItem> : IList<TItem>
 {
     private readonly IList<TItem> _items = new List<TItem>();
 
     public int Count => _items.Count;
     public bool IsReadOnly => _items.IsReadOnly;
 
-    public event EventHandler<ItemEventArgs<TItem>> ItemAdded;
-    public event EventHandler<ItemEventArgs<TItem>> ItemRemoved;
-    public event EventHandler<ItemSetEventArgs<TItem>> ItemSet;
-    public event EventHandler<ItemEventArgs<TItem>> ItemInserted;
+    public event EventHandler<ItemEventArgs<TItem>>? ItemAdded;
+    public event EventHandler<ItemEventArgs<TItem>>? ItemRemoved;
+    public event EventHandler<ItemSetEventArgs<TItem>>? ItemSet;
+    public event EventHandler<ItemEventArgs<TItem>>? ItemInserted;
 
     public IEnumerator<TItem> GetEnumerator()
     {

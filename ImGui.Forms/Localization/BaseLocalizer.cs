@@ -1,36 +1,40 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace ImGui.Forms.Localization;
 
 public abstract class BaseLocalizer : ILocalizer
 {
-    private IDictionary<string, LanguageInfo> _localizations;
+    private Dictionary<string, LanguageInfo>? _localizations;
 
     protected abstract string DefaultLocale { get; }
     protected abstract string UndefinedValue { get; }
 
-    public string CurrentLocale { get; private set; }
+    public string? CurrentLocale { get; private set; }
 
     public IList<string> GetLocales()
     {
-        return _localizations.Keys.ToArray();
+        return _localizations?.Keys.ToArray() ?? [];
     }
 
     public string GetLanguageName(string locale)
     {
-        if (!_localizations.TryGetValue(locale, out LanguageInfo language))
+        if (_localizations is null)
             return UndefinedValue;
 
-        return language.LanguageName;
+        return !_localizations.TryGetValue(locale, out LanguageInfo? language) ? UndefinedValue : language.LanguageName;
     }
 
     public void ChangeLocale(string locale)
     {
+        if (_localizations is null)
+            return;
+
         // Do nothing, if locale was not found
         if (!_localizations.ContainsKey(locale))
             return;
-            
+
         SetCurrentLocale(locale);
     }
 
@@ -42,9 +46,12 @@ public abstract class BaseLocalizer : ILocalizer
 
     public string Localize(string localizationId, params object[] args)
     {
+        if (_localizations is null || CurrentLocale is null)
+            return UndefinedValue;
+
         // Return localization of current locale
-        if (_localizations.TryGetValue(CurrentLocale, out LanguageInfo language)
-            && language.LocalizationEntries.TryGetValue(localizationId, out string localization))
+        if (_localizations.TryGetValue(CurrentLocale, out LanguageInfo? language)
+            && language.LocalizationEntries.TryGetValue(localizationId, out string? localization))
             return string.Format(localization, args);
 
         // Otherwise, return localization of default locale
@@ -56,6 +63,7 @@ public abstract class BaseLocalizer : ILocalizer
         return UndefinedValue;
     }
 
+    [MemberNotNull(nameof(_localizations))]
     protected void Initialize()
     {
         _localizations = GetLocalizations();
@@ -72,22 +80,22 @@ public abstract class BaseLocalizer : ILocalizer
         CurrentLocale = locale;
     }
 
-    private IDictionary<string, LanguageInfo> GetLocalizations()
+    private Dictionary<string, LanguageInfo> GetLocalizations()
     {
         return InitializeLocalizations().ToDictionary(x => x.Locale, y => y);
     }
 
     private string GetInitialLocale()
     {
+        if (_localizations is null)
+            return DefaultLocale;
+
         string locale = InitializeLocale();
 
         if (_localizations.ContainsKey(locale))
             return locale;
 
-        if (_localizations.ContainsKey(DefaultLocale))
-            return DefaultLocale;
-
-        return _localizations.FirstOrDefault().Key;
+        return _localizations.ContainsKey(DefaultLocale) ? DefaultLocale : _localizations.FirstOrDefault().Key;
     }
 }
 

@@ -6,7 +6,7 @@ namespace ImGui.Forms.Modals.IO;
 public class FileFilter
 {
     public LocalizedString Name { get; }
-    public IList<string> Extensions { get; } = new List<string>();
+    public IList<string> Extensions { get; } = [];
 
     public FileFilter(LocalizedString name, params string[] extensions)
     {
@@ -18,7 +18,7 @@ public class FileFilter
     public override string ToString()
     {
         var result = Name;
-        if ((Extensions?.Count ?? 0) > 0)
+        if (Extensions.Count > 0)
             result += " (" + string.Join(", ", Extensions) + ")";
 
         return result;

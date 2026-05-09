@@ -13,18 +13,18 @@ namespace ImGui.Forms.Controls;
 public class TabControl : Component
 {
     private int _selectedTabPageCount;
-    private TabPage _selectedPageTemp;
-    private TabPage _selectedPage;
+    private TabPage? _selectedPageTemp;
+    private TabPage? _selectedPage;
 
     private readonly Dictionary<TabPage, bool> _removeOverwrite = new();
 
-    private readonly List<TabPage> _pages = new();
+    private readonly List<TabPage> _pages = [];
 
     #region Properties
 
     public IReadOnlyList<TabPage> Pages => _pages;
 
-    public TabPage SelectedPage
+    public TabPage? SelectedPage
     {
         get => _selectedPageTemp ?? _selectedPage;
         set
@@ -41,9 +41,9 @@ public class TabControl : Component
 
     #region Events
 
-    public event EventHandler SelectedPageChanged;
-    public event Func<object, RemovingEventArgs, Task> PageRemoving;
-    public event EventHandler<RemoveEventArgs> PageRemoved;
+    public event EventHandler? SelectedPageChanged;
+    public event Func<object, RemovingEventArgs, Task>? PageRemoving;
+    public event EventHandler<RemoveEventArgs>? PageRemoved;
 
     #endregion
 
@@ -66,7 +66,7 @@ public class TabControl : Component
                 if (IsSelected(page, wasManuallyChanged))
                     pageFlags |= ImGuiTabItemFlags.SetSelected;
 
-                Hexa.NET.ImGui.ImGui.PushID(Application.Instance.Ids.Get(page));
+                Hexa.NET.ImGui.ImGui.PushID(Application.Instance.Ids!.Get(page));
 
                 var stillOpen = true;
                 if (Hexa.NET.ImGui.ImGui.BeginTabItem(page.Title, ref stillOpen, pageFlags))

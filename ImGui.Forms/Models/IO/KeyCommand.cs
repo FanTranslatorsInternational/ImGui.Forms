@@ -1,9 +1,10 @@
-﻿using Hexa.NET.ImGui;
+﻿using System;
+using Hexa.NET.ImGui;
 using ImGui.Forms.Localization;
 
 namespace ImGui.Forms.Models.IO;
 
-public readonly struct KeyCommand
+public readonly struct KeyCommand : IEquatable<KeyCommand>
 {
     private readonly ImGuiKey _modifiers;
     private readonly ImGuiMouseButton? _mouse = null;
@@ -105,9 +106,9 @@ public readonly struct KeyCommand
         return isReleased;
     }
 
-    private bool IsActive(bool onActiveLayer)
+    private static bool IsActive(bool onActiveLayer)
     {
-        return !onActiveLayer || Application.Instance.MainForm.IsActiveLayer();
+        return !onActiveLayer || Application.Instance.MainForm!.IsActiveLayer();
     }
 
     // ReSharper disable once BitwiseOperatorOnEnumWithoutFlags
@@ -138,5 +139,20 @@ public readonly struct KeyCommand
     public override string ToString()
     {
         return $"Mod: {_modifiers}, Key: {_key}";
+    }
+
+    public bool Equals(KeyCommand other)
+    {
+        return _modifiers == other._modifiers && _mouse == other._mouse && _key == other._key && _name.Equals(other._name);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        return obj is KeyCommand other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return HashCode.Combine((int)_modifiers, _mouse, (int)_key, _name);
     }
 }

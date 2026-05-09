@@ -10,11 +10,11 @@ using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls;
 
-public class Button : Component
+public class Button(LocalizedString text = default) : Component
 {
     #region Properties
 
-    public LocalizedString Text { get; set; }
+    public LocalizedString Text { get; set; } = text;
     public LocalizedString Tooltip { get; set; }
     public FontResource? Font { get; set; }
 
@@ -28,14 +28,9 @@ public class Button : Component
 
     #region Events
 
-    public event EventHandler Clicked;
+    public event EventHandler? Clicked;
 
     #endregion
-
-    public Button(LocalizedString text = default)
-    {
-        Text = text;
-    }
 
     public override Size GetSize()
     {

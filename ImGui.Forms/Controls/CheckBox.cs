@@ -8,13 +8,13 @@ using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls;
 
-public class CheckBox : Component
+public class CheckBox(LocalizedString text = default) : Component
 {
     private bool _checked;
 
     #region Properties
 
-    public LocalizedString Text { get; set; }
+    public LocalizedString Text { get; set; } = text;
     public LocalizedString Tooltip { get; set; }
     public FontResource? Font { get; set; }
 
@@ -32,14 +32,9 @@ public class CheckBox : Component
 
     #region Events
 
-    public event EventHandler CheckChanged;
+    public event EventHandler? CheckChanged;
 
     #endregion
-
-    public CheckBox(LocalizedString text = default)
-    {
-        Text = text;
-    }
 
     public override Size GetSize()
     {

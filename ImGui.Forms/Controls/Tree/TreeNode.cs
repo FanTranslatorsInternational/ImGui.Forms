@@ -37,20 +37,20 @@ public class TreeNode<TNodeData> : TreeNode
 {
     private readonly ObservableList<TreeNode<TNodeData>> _nodes;
 
-    private TreeView<TNodeData> _parentView;
+    private TreeView<TNodeData>? _parentView;
     private bool _isRoot;
 
     public bool IsRoot => Parent?._isRoot ?? true;
 
     public IList<TreeNode<TNodeData>> Nodes => _nodes;
 
-    public TreeNode<TNodeData> Parent { get; private set; }
+    public TreeNode<TNodeData>? Parent { get; private set; }
 
-    public TNodeData Data { get; set; }
+    public TNodeData? Data { get; set; }
 
     public TreeNode()
     {
-        _nodes = new ObservableList<TreeNode<TNodeData>>();
+        _nodes = [];
         _nodes.ItemAdded += _nodes_ItemAdded;
         _nodes.ItemRemoved += _nodes_ItemRemoved;
         _nodes.ItemSet += _nodes_ItemSet;
@@ -59,7 +59,7 @@ public class TreeNode<TNodeData> : TreeNode
 
     public void Remove()
     {
-        Parent.Nodes.Remove(this);
+        Parent?.Nodes.Remove(this);
     }
 
     internal static TreeNode<TNodeData> Create(TreeView<TNodeData> parent)
@@ -67,34 +67,34 @@ public class TreeNode<TNodeData> : TreeNode
         return new TreeNode<TNodeData> { _parentView = parent, _isRoot = true };
     }
 
-    private void _nodes_ItemAdded(object sender, ItemEventArgs<TreeNode<TNodeData>> e)
+    private void _nodes_ItemAdded(object? sender, ItemEventArgs<TreeNode<TNodeData>> e)
     {
         e.Item.Parent = this;
         SetParents(e.Item, _parentView);
     }
 
-    private void _nodes_ItemRemoved(object sender, ItemEventArgs<TreeNode<TNodeData>> e)
+    private void _nodes_ItemRemoved(object? sender, ItemEventArgs<TreeNode<TNodeData>> e)
     {
-        if (_parentView.SelectedNode == e.Item)
+        if (_parentView?.SelectedNode == e.Item)
             _parentView.SelectedNode = null;
 
         e.Item.Parent = null;
         SetParents(e.Item, null);
     }
 
-    private void _nodes_ItemInserted(object sender, ItemEventArgs<TreeNode<TNodeData>> e)
+    private void _nodes_ItemInserted(object? sender, ItemEventArgs<TreeNode<TNodeData>> e)
     {
         e.Item.Parent = this;
         SetParents(e.Item, _parentView);
     }
 
-    private void _nodes_ItemSet(object sender, ItemEventArgs<TreeNode<TNodeData>> e)
+    private void _nodes_ItemSet(object? sender, ItemEventArgs<TreeNode<TNodeData>> e)
     {
         e.Item.Parent = this;
         SetParents(e.Item, _parentView);
     }
 
-    private void SetParents(TreeNode<TNodeData> input, TreeView<TNodeData> parent)
+    private void SetParents(TreeNode<TNodeData> input, TreeView<TNodeData>? parent)
     {
         input._parentView = parent;
 

@@ -5,7 +5,7 @@ public abstract class MenuBarItem
     /// <summary>
     /// The Id for this component.
     /// </summary>
-    protected int Id => Application.Instance.Ids.Get(this);
+    protected int Id => Application.Instance.Ids!.Get(this);
 
     /// <summary>
     /// The height of the menu bar item.

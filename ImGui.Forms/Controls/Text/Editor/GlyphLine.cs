@@ -2,7 +2,7 @@
 
 namespace ImGui.Forms.Controls.Text.Editor;
 
-class GlyphLine
+internal class GlyphLine
 {
     public bool HasCarriageReturn { get; set; }
     public List<Glyph> Glyphs { get; } = new();

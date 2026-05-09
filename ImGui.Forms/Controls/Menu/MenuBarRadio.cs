@@ -19,7 +19,7 @@ public class MenuBarRadio : MenuBarItem
         set => _radioMenu.Text = value;
     }
 
-    public FontResource Font
+    public FontResource? Font
     {
         get => _radioMenu.Font;
         set => _radioMenu.Font = value;
@@ -27,7 +27,7 @@ public class MenuBarRadio : MenuBarItem
 
     public IList<MenuBarCheckBox> CheckItems { get; }
 
-    public MenuBarCheckBox SelectedItem { get; private set; }
+    public MenuBarCheckBox? SelectedItem { get; private set; }
 
     public override bool Enabled
     {
@@ -39,7 +39,7 @@ public class MenuBarRadio : MenuBarItem
 
     #region Events
 
-    public event EventHandler SelectedItemChanged;
+    public event EventHandler? SelectedItemChanged;
 
     #endregion
 
@@ -79,7 +79,7 @@ public class MenuBarRadio : MenuBarItem
         return height;
     }
 
-    private void CheckItems_ItemAdded(object sender, ItemEventArgs<MenuBarCheckBox> e)
+    private void CheckItems_ItemAdded(object? sender, ItemEventArgs<MenuBarCheckBox> e)
     {
         e.Item.CheckChanged -= Item_CheckChanged;
         e.Item.CheckChanged += Item_CheckChanged;
@@ -87,14 +87,14 @@ public class MenuBarRadio : MenuBarItem
         _radioMenu.Items.Add(e.Item);
     }
 
-    private void CheckItems_ItemRemoved(object sender, ItemEventArgs<MenuBarCheckBox> e)
+    private void CheckItems_ItemRemoved(object? sender, ItemEventArgs<MenuBarCheckBox> e)
     {
         e.Item.CheckChanged -= Item_CheckChanged;
 
         _radioMenu.Items.Remove(e.Item);
     }
 
-    private void CheckItems_ItemInserted(object sender, ItemEventArgs<MenuBarCheckBox> e)
+    private void CheckItems_ItemInserted(object? sender, ItemEventArgs<MenuBarCheckBox> e)
     {
         e.Item.CheckChanged -= Item_CheckChanged;
         e.Item.CheckChanged += Item_CheckChanged;
@@ -102,7 +102,7 @@ public class MenuBarRadio : MenuBarItem
         _radioMenu.Items.Insert(e.Index, e.Item);
     }
 
-    private void CheckItems_ItemSet(object sender, ItemEventArgs<MenuBarCheckBox> e)
+    private void CheckItems_ItemSet(object? sender, ItemEventArgs<MenuBarCheckBox> e)
     {
         e.Item.CheckChanged -= Item_CheckChanged;
         e.Item.CheckChanged += Item_CheckChanged;
@@ -110,7 +110,7 @@ public class MenuBarRadio : MenuBarItem
         _radioMenu.Items[e.Index] = e.Item;
     }
 
-    private void Item_CheckChanged(object sender, EventArgs e)
+    private void Item_CheckChanged(object? sender, EventArgs e)
     {
         foreach (MenuBarCheckBox checkbox in _radioMenu.Items.Cast<MenuBarCheckBox>())
         {
@@ -119,7 +119,7 @@ public class MenuBarRadio : MenuBarItem
             checkbox.CheckChanged += Item_CheckChanged;
         }
 
-        SelectedItem = (MenuBarCheckBox)sender;
+        SelectedItem = (MenuBarCheckBox?)sender;
         SelectedItemChanged?.Invoke(this, EventArgs.Empty);
     }
 }

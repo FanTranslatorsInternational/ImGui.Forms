@@ -15,7 +15,7 @@ public class ColorPicker : Component
 
     public Rgba32 PickedColor { get; set; }
 
-    public event EventHandler ColorChanged;
+    public event EventHandler? ColorChanged;
 
     public override Size GetSize() => Size.Parent;
 

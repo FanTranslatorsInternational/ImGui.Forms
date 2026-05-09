@@ -7,7 +7,7 @@ namespace ImGui.Forms.Support;
 internal static class ImGuiSampler
 {
     [StructLayout(LayoutKind.Sequential)]
-    private struct ImGuiImplSDLGPU3RenderState
+    private struct ImGuiImplSdlgpu3RenderState
     {
         public nint Device;
         public nint SamplerDefault;
@@ -42,7 +42,7 @@ internal static class ImGuiSampler
     private static unsafe void SetNearestSampler(ImDrawList* _, ImDrawCmd* __)
     {
         var platformIo = Hexa.NET.ImGui.ImGui.GetPlatformIO();
-        var renderState = (ImGuiImplSDLGPU3RenderState*)platformIo.RendererRenderState;
+        var renderState = (ImGuiImplSdlgpu3RenderState*)platformIo.RendererRenderState;
         if (renderState == null)
             return;
 

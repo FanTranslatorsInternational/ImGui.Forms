@@ -17,7 +17,7 @@ public class List<TItem> : Component where TItem : Component
     #region Properties
 
     public IList<TItem> Items { get; protected set; }
-    public TItem SelectedItem { get; set; }
+    public TItem? SelectedItem { get; set; }
 
     public Alignment Alignment { get; set; } = Alignment.Vertical;
 
@@ -34,7 +34,7 @@ public class List<TItem> : Component where TItem : Component
 
     #region Events
 
-    public event EventHandler SelectedItemChanged;
+    public event EventHandler? SelectedItemChanged;
 
     #endregion
 
@@ -54,8 +54,8 @@ public class List<TItem> : Component where TItem : Component
 
     protected override void UpdateInternal(Rectangle contentRect)
     {
-        TItem selectedItem = null;
-        var localItems = Items?.ToArray() ?? Array.Empty<TItem>();
+        TItem? selectedItem = null;
+        var localItems = Items.ToArray();
 
         var listDimension = localItems.Sum(i => GetDimension(i, contentRect)) + Math.Max(0, localItems.Length - 1) * ItemSpacing + (int)(GetPadding() * 2);
         var scrollableDimension = GetScrollableDimension(contentRect);
@@ -245,17 +245,17 @@ public class List<TItem> : Component where TItem : Component
 
     #region Observable events
 
-    private void Items_NewItem(object sender, ItemEventArgs<TItem> e)
+    private void Items_NewItem(object? sender, ItemEventArgs<TItem> e)
     {
         OnItemAdded(e);
     }
 
-    private void Items_ItemSet(object sender, ItemSetEventArgs<TItem> e)
+    private void Items_ItemSet(object? sender, ItemSetEventArgs<TItem> e)
     {
         OnItemSet(e);
     }
 
-    private void Items_ItemRemoved(object sender, ItemEventArgs<TItem> e)
+    private void Items_ItemRemoved(object? sender, ItemEventArgs<TItem> e)
     {
         OnItemRemoved(e);
     }

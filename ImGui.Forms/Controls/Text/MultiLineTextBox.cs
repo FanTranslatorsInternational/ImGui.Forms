@@ -44,7 +44,7 @@ public class MultiLineTextBox : Component
 
     #region Events
 
-    public event EventHandler TextChanged;
+    public event EventHandler? TextChanged;
 
     #endregion
 

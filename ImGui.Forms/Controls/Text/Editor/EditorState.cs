@@ -1,6 +1,6 @@
 ﻿namespace ImGui.Forms.Controls.Text.Editor;
 
-struct EditorState
+internal struct EditorState
 {
     public Coordinate SelectionStart { get; set; }
     public Coordinate SelectionEnd { get; set; }

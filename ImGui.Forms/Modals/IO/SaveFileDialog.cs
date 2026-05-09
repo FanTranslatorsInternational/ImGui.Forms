@@ -21,8 +21,8 @@ public class SaveFileDialog : Modal
     private const string ItemTypeDirectory_ = "D";
     private const string ItemTypeFile_ = "F";
 
-    private History<string> _dictHistory;
-    private string _currentDir;
+    private History<string>? _dictHistory;
+    private string? _currentDir;
 
     private readonly ArrowButton _backBtn;
     private readonly ArrowButton _forBtn;
@@ -36,10 +36,10 @@ public class SaveFileDialog : Modal
     private readonly Button _cancelBtn;
     private readonly Button _saveBtn;
 
-    public string InitialDirectory { get; set; }
-    public string InitialFileName { get; set; }
+    public string? InitialDirectory { get; set; }
+    public string? InitialFileName { get; set; }
 
-    public string SelectedPath { get; private set; }
+    public string? SelectedPath { get; private set; }
 
     public SaveFileDialog()
     {
@@ -182,22 +182,32 @@ public class SaveFileDialog : Modal
         return Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
     }
 
-    private string GetNodePath(TreeNode<string> node)
+    private static string GetNodePath(TreeNode<string>? node)
     {
-        if (node.Parent != null)
+        if (node?.Parent != null)
             return Path.Combine(GetNodePath(node.Parent), node.Data ?? string.Empty);
 
-        return node.Data ?? string.Empty;
+        return node?.Data ?? string.Empty;
     }
 
-    private IEnumerable<FileEntry> GetDirectories(string dir)
+    private static IEnumerable<FileEntry> GetDirectories(string? dir)
     {
+        if (dir is null)
+            return [];
+
         return Directory.EnumerateDirectories(dir).Select(x => new FileEntry
-            { Name = Path.GetFileName(x), Type = ItemTypeDirectory_, DateModified = Directory.GetLastAccessTime(x) });
+        {
+            Name = Path.GetFileName(x),
+            Type = ItemTypeDirectory_,
+            DateModified = Directory.GetLastAccessTime(x)
+        });
     }
 
-    private IEnumerable<FileEntry> GetFiles(string dir)
+    private IEnumerable<FileEntry> GetFiles(string? dir)
     {
+        if (dir is null)
+            return [];
+
         // Get files in directory
         var searchTerm = string.IsNullOrEmpty(_searchTextBox.Text) ? "*" : _searchTextBox.Text;
         var files = Directory.EnumerateFiles(dir, searchTerm);
@@ -205,7 +215,7 @@ public class SaveFileDialog : Modal
         return files.Select(x => new FileEntry { Name = Path.GetFileName(x), Type = ItemTypeFile_, DateModified = File.GetLastWriteTime(x) });
     }
 
-    private async Task<bool> ShouldOverwrite(string path)
+    private static async Task<bool> ShouldOverwrite(string? path)
     {
         if (!File.Exists(path))
             return true;
@@ -224,8 +234,8 @@ public class SaveFileDialog : Modal
 
     private void UpdateButtonEnablement()
     {
-        _backBtn.Enabled = !_dictHistory.IsFirstItem();
-        _forBtn.Enabled = !_dictHistory.IsLastItem();
+        _backBtn.Enabled = !_dictHistory?.IsFirstItem() ?? false;
+        _forBtn.Enabled = !_dictHistory?.IsLastItem() ?? false;
     }
 
     #endregion
@@ -234,7 +244,7 @@ public class SaveFileDialog : Modal
 
     #region File Table
 
-    private void _fileTable_SelectedRowsChanged(object sender, EventArgs e)
+    private void _fileTable_SelectedRowsChanged(object? sender, EventArgs e)
     {
         if (!_fileTable.SelectedRows.Any())
             return;
@@ -242,7 +252,7 @@ public class SaveFileDialog : Modal
         _selectedFileTextBox.Text = _fileTable.SelectedRows.First().Data.Name;
     }
 
-    private async void _fileTable_DoubleClicked(object sender, EventArgs e)
+    private async void _fileTable_DoubleClicked(object? sender, EventArgs e)
     {
         if (!_fileTable.SelectedRows.Any())
             return;
@@ -253,7 +263,7 @@ public class SaveFileDialog : Modal
             _currentDir = _dirTextBox.Text = SelectedPath;
 
             // Push given directory to history
-            _dictHistory.PushItem(SelectedPath);
+            _dictHistory?.PushItem(SelectedPath);
 
             // Update file view
             UpdateFileView();
@@ -275,7 +285,7 @@ public class SaveFileDialog : Modal
 
     #region Tree View
 
-    private void _treeView_SelectedNodeChanged(object sender, EventArgs e)
+    private void _treeView_SelectedNodeChanged(object? sender, EventArgs e)
     {
         var node = _treeView.SelectedNode;
         var path = GetNodePath(node);
@@ -287,7 +297,7 @@ public class SaveFileDialog : Modal
         _currentDir = _dirTextBox.Text = path;
 
         // Push given directory to history
-        _dictHistory.PushItem(path);
+        _dictHistory?.PushItem(path);
 
         // Update file view
         UpdateFileView();
@@ -296,7 +306,7 @@ public class SaveFileDialog : Modal
         UpdateButtonEnablement();
     }
 
-    private void _treeView_NodeExpanded(object sender, NodeEventArgs<string> e)
+    private void _treeView_NodeExpanded(object? sender, NodeEventArgs<string> e)
     {
         var node = e.Node;
 
@@ -322,11 +332,11 @@ public class SaveFileDialog : Modal
 
     #region Buttons
 
-    private void _backBtn_Clicked(object sender, EventArgs e)
+    private void _backBtn_Clicked(object? sender, EventArgs e)
     {
         // Get previous path
-        _dictHistory.MoveBackward();
-        _currentDir = _dictHistory.GetCurrentItem();
+        _dictHistory?.MoveBackward();
+        _currentDir = _dictHistory?.GetCurrentItem();
 
         // Update path text box
         _dirTextBox.Text = _currentDir;
@@ -338,11 +348,11 @@ public class SaveFileDialog : Modal
         UpdateButtonEnablement();
     }
 
-    private void _forBtn_Clicked(object sender, EventArgs e)
+    private void _forBtn_Clicked(object? sender, EventArgs e)
     {
         // Get next path
-        _dictHistory.MoveForward();
-        _currentDir = _dictHistory.GetCurrentItem();
+        _dictHistory?.MoveForward();
+        _currentDir = _dictHistory?.GetCurrentItem();
 
         // Update path text box
         _dirTextBox.Text = _currentDir;
@@ -354,9 +364,11 @@ public class SaveFileDialog : Modal
         UpdateButtonEnablement();
     }
 
-    private async void SaveBtnClicked(object sender, EventArgs e)
+    private async void SaveBtnClicked(object? sender, EventArgs e)
     {
-        // TODO: Rethink usage and setting of SelectedPath throughout control
+        if (_currentDir is null || _selectedFileTextBox.Text is null)
+            return;
+
         SelectedPath = Path.Combine(_currentDir, _selectedFileTextBox.Text);
 
         if (!await ShouldOverwrite(SelectedPath))
@@ -366,7 +378,7 @@ public class SaveFileDialog : Modal
         Close();
     }
 
-    private void CnlBtn_Clicked(object sender, EventArgs e)
+    private void CnlBtn_Clicked(object? sender, EventArgs e)
     {
         SelectedPath = null;
 
@@ -378,7 +390,7 @@ public class SaveFileDialog : Modal
 
     #region Textboxes
 
-    private void _dirTextBox_FocusLost(object sender, EventArgs e)
+    private void _dirTextBox_FocusLost(object? sender, EventArgs e)
     {
         if (_currentDir == _dirTextBox.Text)
             return;
@@ -392,7 +404,7 @@ public class SaveFileDialog : Modal
         }
 
         // Push given directory to history
-        _dictHistory.PushItem(_dirTextBox.Text);
+        _dictHistory?.PushItem(_dirTextBox.Text);
 
         // Update current directory
         _currentDir = _dirTextBox.Text;
@@ -404,14 +416,17 @@ public class SaveFileDialog : Modal
         UpdateButtonEnablement();
     }
 
-    private void _selectedFileTextBox_TextChanged(object sender, EventArgs e)
+    private void _selectedFileTextBox_TextChanged(object? sender, EventArgs e)
     {
+        if (_currentDir is null || _selectedFileTextBox.Text is null)
+            return;
+
         SelectedPath = Path.Combine(_currentDir, _selectedFileTextBox.Text);
 
         _saveBtn.Enabled = !string.IsNullOrEmpty(_selectedFileTextBox.Text);
     }
 
-    private void _searchTextBox_TextChanged(object sender, EventArgs e)
+    private void _searchTextBox_TextChanged(object? sender, EventArgs e)
     {
         UpdateFileView();
     }
@@ -422,8 +437,8 @@ public class SaveFileDialog : Modal
 
     private class FileEntry
     {
-        public string Name { get; set; }
-        public string Type { get; set; }
-        public DateTime DateModified { get; set; }
+        public required string Name { get; init; }
+        public required string Type { get; init; }
+        public DateTime DateModified { get; init; }
     }
 }

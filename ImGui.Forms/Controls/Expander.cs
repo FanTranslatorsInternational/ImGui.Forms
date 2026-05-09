@@ -9,16 +9,16 @@ using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls;
 
-public class Expander : Component
+public class Expander(Component? content, LocalizedString caption = default) : Component
 {
     #region Properties
 
-    public LocalizedString Caption { get; set; }
+    public LocalizedString Caption { get; set; } = caption;
     public Size Size { get; set; } = Size.WidthAlign;
 
     public int WidthIndent { get; set; } = 5;
 
-    public Component? Content { get; set; }
+    public Component? Content { get; set; } = content;
 
     public bool Expanded { get; set; }
 
@@ -26,15 +26,9 @@ public class Expander : Component
 
     #region Events
 
-    public event EventHandler ExpandedChanged;
+    public event EventHandler? ExpandedChanged;
 
     #endregion
-
-    public Expander(Component? content, LocalizedString caption = default)
-    {
-        Content = content;
-        Caption = caption;
-    }
 
     public override Size GetSize()
     {

@@ -2,72 +2,72 @@
 
 namespace ImGui.Forms.Controls.Text.Editor;
 
-struct UndoRecord
+internal struct UndoRecord
 {
-    public string mAdded = string.Empty;
-    public Coordinate mAddedStart;
-    public Coordinate mAddedEnd;
+    public string MAdded = string.Empty;
+    public Coordinate MAddedStart;
+    public Coordinate MAddedEnd;
 
-    public string mRemoved = string.Empty;
-    public Coordinate mRemovedStart;
-    public Coordinate mRemovedEnd;
+    public string MRemoved = string.Empty;
+    public Coordinate MRemovedStart;
+    public Coordinate MRemovedEnd;
 
-    public EditorState mBefore;
-    public EditorState mAfter;
+    public EditorState MBefore;
+    public EditorState MAfter;
 
     public UndoRecord() { }
 
     public UndoRecord(string aAdded, Coordinate aAddedStart, Coordinate aAddedEnd, string aRemoved,
         Coordinate aRemovedStart, Coordinate aRemovedEnd, EditorState aBefore, EditorState aAfter)
     {
-        mAdded = aAdded;
-        mAddedStart = aAddedStart;
-        mAddedEnd = aAddedEnd;
-        mRemoved = aRemoved;
-        mRemovedStart = aRemovedStart;
-        mRemovedEnd = aRemovedEnd;
-        mBefore = aBefore;
-        mAfter = aAfter;
+        MAdded = aAdded;
+        MAddedStart = aAddedStart;
+        MAddedEnd = aAddedEnd;
+        MRemoved = aRemoved;
+        MRemovedStart = aRemovedStart;
+        MRemovedEnd = aRemovedEnd;
+        MBefore = aBefore;
+        MAfter = aAfter;
 
-        if (mAddedStart <= mAddedEnd) throw new InvalidOperationException("Added range invalid.");
-        if (mRemovedStart <= mRemovedEnd) throw new InvalidOperationException("Remove range invalid.");
+        if (MAddedStart <= MAddedEnd) throw new InvalidOperationException("Added range invalid.");
+        if (MRemovedStart <= MRemovedEnd) throw new InvalidOperationException("Remove range invalid.");
     }
 
     public void Undo(TextEditor aEditor)
     {
-        if (mAdded.Length > 0)
+        if (MAdded.Length > 0)
         {
-            aEditor.DeleteRange(mAddedStart, mAddedEnd);
-            aEditor.Colorize(mAddedStart.Line - 1, mAddedEnd.Line - mAddedStart.Line + 2);
+            aEditor.DeleteRange(MAddedStart, MAddedEnd);
+            aEditor.Colorize(MAddedStart.Line - 1, MAddedEnd.Line - MAddedStart.Line + 2);
         }
 
-        if (mRemoved.Length > 0)
+        if (MRemoved.Length > 0)
         {
-            var start = mRemovedStart;
-            aEditor.InsertTextAt(ref start, mRemoved);
-            aEditor.Colorize(mRemovedStart.Line - 1, mRemovedEnd.Line - mRemovedStart.Line + 2);
+            var start = MRemovedStart;
+            aEditor.InsertTextAt(ref start, MRemoved);
+            aEditor.Colorize(MRemovedStart.Line - 1, MRemovedEnd.Line - MRemovedStart.Line + 2);
         }
 
-        aEditor.mState = mBefore;
+        aEditor.State = MBefore;
         aEditor.EnsureCursorVisible();
     }
 
     public void Redo(TextEditor aEditor)
     {
-        if (mRemoved.Length > 0)
+        if (MRemoved.Length > 0)
         {
-            aEditor.DeleteRange(mRemovedStart, mRemovedEnd);
-            aEditor.Colorize(mRemovedStart.Line - 1, mRemovedEnd.Line - mRemovedStart.Line + 1);
+            aEditor.DeleteRange(MRemovedStart, MRemovedEnd);
+            aEditor.Colorize(MRemovedStart.Line - 1, MRemovedEnd.Line - MRemovedStart.Line + 1);
         }
 
-        if (mAdded.Length > 0)
+        if (MAdded.Length > 0)
         {
-            var start = mAddedStart;
-            aEditor.InsertTextAt(ref start, mAdded);
-            aEditor.Colorize(mAddedStart.Line - 1, mAddedEnd.Line - mAddedStart.Line + 1);
+            var start = MAddedStart;
+            aEditor.InsertTextAt(ref start, MAdded);
+            aEditor.Colorize(MAddedStart.Line - 1, MAddedEnd.Line - MAddedStart.Line + 1);
         }
 
-        aEditor.mState = mAfter;
+        aEditor.State = MAfter;
         aEditor.EnsureCursorVisible();
     }
 }

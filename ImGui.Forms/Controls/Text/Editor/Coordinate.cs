@@ -56,7 +56,7 @@ public struct Coordinate
     {
         return Line == other.Line && Column == other.Column;
     }
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return obj is Coordinate other && Equals(other);
     }

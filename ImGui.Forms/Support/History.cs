@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace ImGui.Forms.Support;
 
-class History<T>
+internal class History<T>
 {
     private readonly IList<T> _items;
     private int _index;

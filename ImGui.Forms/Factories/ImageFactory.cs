@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace ImGui.Forms.Factories;
 
-class ImageFactory(SDLGPUDevicePtr gpuDevice)
+internal class ImageFactory(SDLGPUDevicePtr gpuDevice)
 {
     private readonly Dictionary<Image<Rgba32>, nint> _inputPointers = [];
     private readonly Dictionary<nint, Image<Rgba32>> _inputPointersReverse = [];

@@ -12,7 +12,7 @@ public abstract class Component
     /// <summary>
     /// The Id for this component.
     /// </summary>
-    public int Id => Application.Instance.Ids.Get(this);
+    public int Id => Application.Instance.Ids!.Get(this);
 
     /// <summary>
     /// Declares if a component is visible and should be drawn with its content.
@@ -42,7 +42,7 @@ public abstract class Component
     /// <summary>
     /// The event to intercept DragDrop actions.
     /// </summary>
-    public event EventHandler<string[]> DragDrop;
+    public event EventHandler<string[]>? DragDrop;
 
     #endregion
 
@@ -74,7 +74,7 @@ public abstract class Component
         if (!AllowDragDrop || !Enabled)
             return;
 
-        if (Application.Instance.MainForm.IsActiveLayer() && Application.Instance.TryGetDragDrop(contentRect, out string[] files))
+        if (Application.Instance.MainForm!.IsActiveLayer() && Application.Instance.TryGetDragDrop(contentRect, out string[] files))
             OnDragDrop(files);
     }
 

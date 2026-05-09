@@ -13,7 +13,7 @@ namespace ImGui.Forms.Controls.Tree;
 public class TreeView<TNodeData> : Component
 {
     private readonly TreeNode<TNodeData> _rootNode;
-    private TreeNode<TNodeData> _selectedNode;
+    private TreeNode<TNodeData>? _selectedNode;
 
     #region Properties
 
@@ -21,7 +21,7 @@ public class TreeView<TNodeData> : Component
 
     public IList<TreeNode<TNodeData>> Nodes => _rootNode.Nodes;
 
-    public TreeNode<TNodeData> SelectedNode
+    public TreeNode<TNodeData>? SelectedNode
     {
         get => _selectedNode;
         set
@@ -34,15 +34,15 @@ public class TreeView<TNodeData> : Component
         }
     }
 
-    public ContextMenu ContextMenu { get; set; }
+    public ContextMenu? ContextMenu { get; set; }
 
     #endregion
 
     #region Events
 
-    public event EventHandler SelectedNodeChanged;
-    public event EventHandler<NodeEventArgs<TNodeData>> NodeExpanded;
-    public event EventHandler<NodeEventArgs<TNodeData>> NodeCollapsed;
+    public event EventHandler? SelectedNodeChanged;
+    public event EventHandler<NodeEventArgs<TNodeData>>? NodeExpanded;
+    public event EventHandler<NodeEventArgs<TNodeData>>? NodeCollapsed;
 
     #endregion
 

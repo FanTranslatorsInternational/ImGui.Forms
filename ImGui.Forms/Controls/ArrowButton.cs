@@ -8,7 +8,7 @@ using Size = ImGui.Forms.Models.Size;
 
 namespace ImGui.Forms.Controls;
 
-public class ArrowButton : Component
+public class ArrowButton(ImGuiDir direction = ImGuiDir.None) : Component
 {
     private const int ButtonSizeX_ = 11;
     private const int ButtonSizeY_ = 13;
@@ -17,7 +17,7 @@ public class ArrowButton : Component
 
     public KeyCommand KeyAction { get; set; }
 
-    public ImGuiDir Direction { get; set; }
+    public ImGuiDir Direction { get; set; } = direction;
 
     public Vector2 Padding { get; set; } = new(4, 3);
 
@@ -25,14 +25,9 @@ public class ArrowButton : Component
 
     #region Events
 
-    public event EventHandler Clicked;
+    public event EventHandler? Clicked;
 
     #endregion
-
-    public ArrowButton(ImGuiDir direction = ImGuiDir.None)
-    {
-        Direction = direction;
-    }
 
     public override Size GetSize()
     {

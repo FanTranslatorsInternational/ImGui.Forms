@@ -17,7 +17,7 @@ public class InputBox : Modal
 
     private readonly TextBox _textBox;
 
-    public string Input { get; private set; }
+    public string? Input { get; private set; }
 
     private InputBox(LocalizedString caption, LocalizedString text, string preset, LocalizedString? placeholder, int maxCharacters)
     {
@@ -81,28 +81,28 @@ public class InputBox : Modal
             }
         };
 
-        var height = Content.GetHeight(Application.Instance.MainForm.Width, Application.Instance.MainForm.Height);
+        var height = Content.GetHeight(Application.Instance.MainForm!.Width, Application.Instance.MainForm.Height);
         Size = new Size(SizeValue.Relative(.8f), SizeValue.Absolute(height));
     }
 
-    private void TextBox_TextChanged(object sender, EventArgs e)
+    private void TextBox_TextChanged(object? sender, EventArgs e)
     {
         Input = _textBox.Text;
     }
 
-    private void CancelButton_Clicked(object sender, EventArgs e)
+    private void CancelButton_Clicked(object? sender, EventArgs e)
     {
         Result = DialogResult.Cancel;
         Close();
     }
 
-    private void OkButton_Clicked(object sender, EventArgs e)
+    private void OkButton_Clicked(object? sender, EventArgs e)
     {
         Result = DialogResult.Ok;
         Close();
     }
 
-    public static async Task<string> ShowAsync(LocalizedString caption, LocalizedString text, string preset = "", LocalizedString? placeHolder = null, int maxCharacters = -1)
+    public static async Task<string?> ShowAsync(LocalizedString caption, LocalizedString text, string preset = "", LocalizedString? placeHolder = null, int maxCharacters = -1)
     {
         var inputBox = new InputBox(caption, text, preset, placeHolder, maxCharacters);
         await inputBox.ShowAsync();

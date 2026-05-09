@@ -22,7 +22,7 @@ public class ComboBox<TItem> : Component
     private const int ButtonSizeX_ = 11;
 
     private string _input = string.Empty;
-    private DropDownItem<TItem> _selected;
+    private DropDownItem<TItem>? _selected;
 
     #region Properties
 
@@ -30,7 +30,7 @@ public class ComboBox<TItem> : Component
 
     public IList<DropDownItem<TItem>> PreferredItems { get; } = new List<DropDownItem<TItem>>();
 
-    public DropDownItem<TItem> SelectedItem
+    public DropDownItem<TItem>? SelectedItem
     {
         get => _selected;
         set
@@ -61,7 +61,7 @@ public class ComboBox<TItem> : Component
 
     #region Events
 
-    public event EventHandler SelectedItemChanged;
+    public event EventHandler? SelectedItemChanged;
 
     #endregion
 
@@ -96,7 +96,7 @@ public class ComboBox<TItem> : Component
         bool isFinal = Hexa.NET.ImGui.ImGui.InputText("##in", ref localInput, MaxCharacters, ImGuiInputTextFlags.CallbackAlways | ImGuiInputTextFlags.EnterReturnsTrue, Propose);
         if (enabled && isFinal)
         {
-            DropDownItem<TItem> selectedItem = Items.FirstOrDefault(i => i.Name == localInput);
+            DropDownItem<TItem>? selectedItem = Items.FirstOrDefault(i => i.Name == localInput);
             if (SelectedItem != selectedItem)
             {
                 SelectedItem = selectedItem;
@@ -129,7 +129,7 @@ public class ComboBox<TItem> : Component
         switch (Alignment)
         {
             case ComboBoxAlignment.Auto:
-                if (popupPos.Y + size.Y + popupSize.Y > Application.Instance.MainForm.Height)
+                if (popupPos.Y + size.Y + popupSize.Y > Application.Instance.MainForm!.Height)
                     popupPos.Y -= popupSize.Y;
                 else
                     popupPos.Y += size.Y;
@@ -219,12 +219,11 @@ public class ComboBox<TItem> : Component
     }
 
     private string? _prevBuffer;
-    private string? _prevMatch;
 
     private unsafe int Propose(ImGuiInputTextCallbackData* data)
     {
         var dataPtr = new ImGuiInputTextCallbackDataPtr(data);
-        string bufferString = Marshal.PtrToStringUTF8((nint)dataPtr.Buf);
+        string? bufferString = Marshal.PtrToStringUTF8((nint)dataPtr.Buf);
         if (bufferString == null)
             return 0;
 
@@ -274,7 +273,6 @@ public class ComboBox<TItem> : Component
         }
 
         _prevBuffer = bufferString;
-        _prevMatch = itemName;
 
         if (itemName == null)
             return 0;
@@ -315,17 +313,11 @@ public class ComboBox<TItem> : Component
     }
 }
 
-public class DropDownItem<TItem>
+public class DropDownItem<TItem>(TItem content, LocalizedString name = default)
 {
-    public TItem Content { get; }
+    public TItem Content { get; } = content;
 
-    public LocalizedString Name { get; }
-
-    public DropDownItem(TItem content, LocalizedString name = default)
-    {
-        Content = content;
-        Name = name.IsEmpty ? (LocalizedString)content.ToString() : name;
-    }
+    public LocalizedString Name { get; } = name.IsEmpty ? (LocalizedString)(content?.ToString() ?? string.Empty) : name;
 
     public static implicit operator DropDownItem<TItem>(TItem o) => new(o);
 }

@@ -21,9 +21,9 @@ public class ZoomableComponent : Component
 
     #region Events
 
-    public event EventHandler ContentZoomed;
+    public event EventHandler? ContentZoomed;
 
-    public event EventHandler ContentMoved;
+    public event EventHandler? ContentMoved;
 
     #endregion
 

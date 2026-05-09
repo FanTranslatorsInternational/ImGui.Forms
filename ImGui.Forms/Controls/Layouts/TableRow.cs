@@ -4,11 +4,11 @@ namespace ImGui.Forms.Controls.Layouts;
 
 public class TableRow
 {
-    internal TableLayout _parent;
+    internal TableLayout? Parent;
 
-    private readonly ObservableList<TableCell> _cells = new();
+    private readonly ObservableList<TableCell?> _cells = [];
 
-    public IList<TableCell> Cells => _cells;
+    public IList<TableCell?> Cells => _cells;
 
     public TableRow()
     {
@@ -18,23 +18,23 @@ public class TableRow
         _cells.ItemInserted += _cells_ItemInserted;
     }
 
-    private void _cells_ItemAdded(object sender, ItemEventArgs<TableCell> e)
+    private void _cells_ItemAdded(object? sender, ItemEventArgs<TableCell?> e)
     {
-        _parent?.Cells_ItemAdded();
+        Parent?.Cells_ItemAdded();
     }
 
-    private void _cells_ItemRemoved(object sender, ItemEventArgs<TableCell> e)
+    private void _cells_ItemRemoved(object? sender, ItemEventArgs<TableCell?> e)
     {
-        _parent?.Cells_ItemRemoved();
+        Parent?.Cells_ItemRemoved();
     }
 
-    private void _cells_ItemInserted(object sender, ItemEventArgs<TableCell> e)
+    private void _cells_ItemInserted(object? sender, ItemEventArgs<TableCell?> e)
     {
-        _parent?.Cells_ItemInserted();
+        Parent?.Cells_ItemInserted();
     }
 
-    private void _cells_ItemSet(object sender, ItemEventArgs<TableCell> e)
+    private void _cells_ItemSet(object? sender, ItemEventArgs<TableCell?> e)
     {
-        _parent?.Cells_ItemSet();
+        Parent?.Cells_ItemSet();
     }
 }

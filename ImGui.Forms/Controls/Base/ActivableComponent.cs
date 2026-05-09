@@ -9,7 +9,7 @@ public abstract class ActivableComponent : Component
     /// </summary>
     public bool Active { get; set; }
 
-    internal event EventHandler Activated;
+    internal event EventHandler? Activated;
 
     /// <summary>
     /// Receive the absolute activation state for this component.

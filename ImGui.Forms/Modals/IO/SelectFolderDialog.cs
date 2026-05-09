@@ -12,13 +12,13 @@ namespace ImGui.Forms.Modals.IO;
 
 public class SelectFolderDialog : Modal
 {
-    private TreeView<string> _treeView;
+    private readonly TreeView<string> _treeView;
 
-    private Button _newFolderButton;
-    private Button _okButton;
-    private Button _cancelButton;
+    private readonly Button _newFolderButton;
+    private readonly Button _okButton;
+    private readonly Button _cancelButton;
 
-    public string Directory { get; set; }
+    public string? Directory { get; set; }
 
     public SelectFolderDialog()
     {
@@ -100,7 +100,7 @@ public class SelectFolderDialog : Modal
 
     #region Events
 
-    private async void _newFolderButton_Clicked(object sender, EventArgs e)
+    private async void _newFolderButton_Clicked(object? sender, EventArgs e)
     {
         var path = GetNodePath(_treeView.SelectedNode);
         var newFolderName = await InputBox.ShowAsync(LocalizationResources.CreateFolderCaption(), LocalizationResources.CreateFolderText());
@@ -114,22 +114,22 @@ public class SelectFolderDialog : Modal
             return;
 
         System.IO.Directory.CreateDirectory(newDir);
-        _treeView.SelectedNode.Nodes.Add(new TreeNode<string> { Text = newFolderName, Data = Path.Combine(path, newFolderName) });
+        _treeView.SelectedNode?.Nodes.Add(new TreeNode<string> { Text = newFolderName, Data = Path.Combine(path, newFolderName) });
     }
 
-    private void _okButton_Clicked(object sender, EventArgs e)
+    private void _okButton_Clicked(object? sender, EventArgs e)
     {
         Result = DialogResult.Ok;
         Close();
     }
 
-    private void _cancelButton_Clicked(object sender, EventArgs e)
+    private void _cancelButton_Clicked(object? sender, EventArgs e)
     {
         Result = DialogResult.Cancel;
         Close();
     }
 
-    private void _treeView_SelectedNodeChanged(object sender, EventArgs e)
+    private void _treeView_SelectedNodeChanged(object? sender, EventArgs e)
     {
         var node = _treeView.SelectedNode;
         Directory = GetNodePath(node);
@@ -141,7 +141,7 @@ public class SelectFolderDialog : Modal
         _okButton.Enabled = dirExists;
     }
 
-    private void _treeView_NodeExpanded(object sender, NodeEventArgs<string> e)
+    private void _treeView_NodeExpanded(object? sender, NodeEventArgs<string> e)
     {
         var node = e.Node;
 
@@ -175,12 +175,12 @@ public class SelectFolderDialog : Modal
         return Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
     }
 
-    private string GetNodePath(TreeNode<string> node)
+    private static string GetNodePath(TreeNode<string>? node)
     {
-        if (node.Parent != null)
+        if (node?.Parent != null)
             return Path.Combine(GetNodePath(node.Parent), node.Data ?? string.Empty);
 
-        return node.Data ?? string.Empty;
+        return node?.Data ?? string.Empty;
     }
 
     #endregion

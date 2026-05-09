@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using ImGui.Forms.Localization;
+#pragma warning disable CA1416
 
 namespace ImGui.Forms.Modals.IO.Windows;
 
@@ -18,9 +19,9 @@ public class WindowsSelectFolderDialog
     private const uint BffmSetSelectionW = 0x467;
 
     public LocalizedString Title { get; set; }
-    public string InitialDirectory { get; set; } = null;
+    public string? InitialDirectory { get; set; } = null;
     public bool Success { get; private set; }
-    public string Directory { get; private set; }
+    public string? Directory { get; private set; }
 
     public async Task<DialogResult> ShowAsync()
     {
@@ -87,7 +88,7 @@ public class WindowsSelectFolderDialog
             ? InitialDirectory
             : null;
 
-        BrowseCallbackProc callback = null;
+        BrowseCallbackProc? callback = null;
         if (initialDirectory != null)
         {
             callback = (hwnd, msg, _, _) =>
@@ -97,7 +98,7 @@ public class WindowsSelectFolderDialog
                     nint pathPtr = Marshal.StringToHGlobalUni(initialDirectory);
                     try
                     {
-                        SendMessage(hwnd, BffmSetSelectionW, (nint)1, pathPtr);
+                        SendMessage(hwnd, BffmSetSelectionW, 1, pathPtr);
                     }
                     finally
                     {
@@ -160,7 +161,7 @@ public class WindowsSelectFolderDialog
         public string lpszTitle;
 
         public uint ulFlags;
-        public BrowseCallbackProc lpfn;
+        public BrowseCallbackProc? lpfn;
         public nint lParam;
         public int iImage;
     }

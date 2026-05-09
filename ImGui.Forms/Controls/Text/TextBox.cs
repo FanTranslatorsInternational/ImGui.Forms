@@ -13,7 +13,7 @@ namespace ImGui.Forms.Controls.Text;
 public class TextBox : Component
 {
     private bool _activePreviousFrame;
-    private string _text = string.Empty;
+    private string? _text;
     private bool _currentFrameChanged;
 
     #region Properties
@@ -21,12 +21,12 @@ public class TextBox : Component
     /// <summary>
     /// The text that was set or changed in this component.
     /// </summary>
-    public string Text
+    public string? Text
     {
         get => _text;
         set
         {
-            _text = value ?? string.Empty;
+            _text = value;
             _currentFrameChanged = true;
             OnTextChanged();
         }
@@ -76,8 +76,8 @@ public class TextBox : Component
 
     #region Events
 
-    public event EventHandler TextChanged;
-    public event EventHandler FocusLost;
+    public event EventHandler? TextChanged;
+    public event EventHandler? FocusLost;
 
     #endregion
 
@@ -124,7 +124,7 @@ public class TextBox : Component
             Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
         }
 
-        string currentText = _text;
+        string currentText = _text ?? string.Empty;
 
         bool isChanged = !string.IsNullOrEmpty(Placeholder)
             ? Hexa.NET.ImGui.ImGui.InputTextWithHint($"##{Id}", Placeholder, ref currentText, MaxCharacters, flags)

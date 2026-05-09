@@ -475,7 +475,7 @@ internal unsafe sealed class ExecutionContext(Form mainForm, SDLWindowPtr window
     public SDLGPUTextureFormat SwapchainFormat { get; } = swapchainFormat;
 }
 
-readonly struct DragDropEvent(string file, Vector2 mousePos)
+internal readonly struct DragDropEvent(string file, Vector2 mousePos)
 {
     public string File { get; } = file;
     public Vector2 MousePosition { get; } = mousePos;

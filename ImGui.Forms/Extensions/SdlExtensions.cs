@@ -5,7 +5,7 @@ using SixLabors.ImageSharp.PixelFormats;
 
 namespace ImGui.Forms.Extensions;
 
-static class Sdl2NativeExtensions
+internal static class Sdl2NativeExtensions
 {
     public static unsafe void SetWindowIcon(SDLWindowPtr window, Image<Rgba32>? icon)
     {
@@ -37,9 +37,9 @@ static class Sdl2NativeExtensions
 
     private static unsafe bool SetClipboardText_Wrap(nint _, byte* textPtr) => SDL.SetClipboardText(textPtr);
 
-    public unsafe delegate byte* ImGui_GetClipboardText(nint context);
-    public unsafe delegate bool ImGui_SetClipboardText(nint context, byte* textPtr);
+    public unsafe delegate byte* ImGuiGetClipboardText(nint context);
+    public unsafe delegate bool ImGuiSetClipboardText(nint context, byte* textPtr);
 
-    public static unsafe ImGui_GetClipboardText GetClipboardText = GetClipboardText_Wrap;
-    public static unsafe ImGui_SetClipboardText SetClipboardText = SetClipboardText_Wrap;
+    public static unsafe ImGuiGetClipboardText GetClipboardText = GetClipboardText_Wrap;
+    public static unsafe ImGuiSetClipboardText SetClipboardText = SetClipboardText_Wrap;
 }

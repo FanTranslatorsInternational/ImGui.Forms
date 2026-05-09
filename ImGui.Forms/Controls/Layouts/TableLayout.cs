@@ -11,7 +11,7 @@ namespace ImGui.Forms.Controls.Layouts;
 
 public class TableLayout : Component
 {
-    private readonly ObservableList<TableRow> _rows = new();
+    private readonly ObservableList<TableRow> _rows = [];
 
     #region Properties
 
@@ -48,23 +48,23 @@ public class TableLayout : Component
         return Math.Min(parentHeight, heights.Sum(x => x) + (heights.Length - 1) * (int)Spacing.Y);
     }
 
-    public IEnumerable<TableCell> GetCellsByRow(int row)
+    public IEnumerable<TableCell?> GetCellsByRow(int row)
     {
         if (row < 0 || row >= Rows.Count)
-            return Array.Empty<TableCell>();
+            return [];
 
         return Rows[row].Cells.ToArray();
     }
 
-    public IEnumerable<TableCell> GetCellsByColumn(int col)
+    public IEnumerable<TableCell?> GetCellsByColumn(int col)
     {
         if (col < 0 || col >= GetMaxColumnCount())
-            return Array.Empty<TableCell>();
+            return [];
 
         return Rows.Select(x => x.Cells.Count <= col ? null : x.Cells[col]);
     }
 
-    public TableCell GetCell(int row, int col)
+    public TableCell? GetCell(int row, int col)
     {
         var rows = GetCellsByRow(row).ToArray();
         if (rows.Length <= col)
@@ -478,24 +478,24 @@ public class TableLayout : Component
 
     #region Event Methods
 
-    private void Rows_ItemAdded(object sender, ItemEventArgs<TableRow> e)
+    private void Rows_ItemAdded(object? sender, ItemEventArgs<TableRow> e)
     {
-        e.Item._parent = this;
+        e.Item.Parent = this;
     }
 
-    private void Rows_ItemRemoved(object sender, ItemEventArgs<TableRow> e)
+    private static void Rows_ItemRemoved(object? sender, ItemEventArgs<TableRow> e)
     {
-        e.Item._parent = null;
+        e.Item.Parent = null;
     }
 
-    private void _rows_ItemSet(object sender, ItemEventArgs<TableRow> e)
+    private void _rows_ItemSet(object? sender, ItemEventArgs<TableRow> e)
     {
-        e.Item._parent = this;
+        e.Item.Parent = this;
     }
 
-    private void _rows_ItemInserted(object sender, ItemEventArgs<TableRow> e)
+    private void _rows_ItemInserted(object? sender, ItemEventArgs<TableRow> e)
     {
-        e.Item._parent = this;
+        e.Item.Parent = this;
     }
 
     #endregion

@@ -38,7 +38,7 @@ public class ImageButton : Component
 
     #region Events
 
-    public event EventHandler Clicked;
+    public event EventHandler? Clicked;
 
     #endregion
 

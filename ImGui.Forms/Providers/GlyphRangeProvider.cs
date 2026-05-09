@@ -6,14 +6,14 @@ namespace ImGui.Forms.Providers;
 
 internal class GlyphRangeProvider
 {
-    private static readonly StringBuilder _sb = new();
+    private static readonly StringBuilder Sb = new();
 
-    private static readonly ushort[] _latinRange = new ushort[]
+    private static readonly ushort[] LatinRange = new ushort[]
     {
         0x0020,0x024f
     };
 
-    private static readonly ushort[] _cyrillicRange = new ushort[]
+    private static readonly ushort[] CyrillicRange = new ushort[]
     {
         0x0400,0x04ff,
         0x0500,0x052f,
@@ -26,7 +26,7 @@ internal class GlyphRangeProvider
         //0x1e030,0x1e08f
     };
 
-    private static readonly ushort[] _cjRange = new ushort[]
+    private static readonly ushort[] CjRange = new ushort[]
     {
         0x2026,0x2026,
         0x2e80,0x2fd5,
@@ -42,13 +42,13 @@ internal class GlyphRangeProvider
         0xff01,0xff9f
     };
 
-    private static readonly ushort[] _koreanRange = new ushort[]
+    private static readonly ushort[] KoreanRange = new ushort[]
     {
         0x3131, 0x3163,
         0xac00, 0xd79d
     };
 
-    private static readonly ushort[] _greekRange = new ushort[]
+    private static readonly ushort[] GreekRange = new ushort[]
     {
         0x0370,0x03ff,
         0x1d26,0x1d2a,
@@ -63,12 +63,12 @@ internal class GlyphRangeProvider
         //0x1d200,0x1d245
     };
 
-    private static readonly ushort[] _thaiRange = new ushort[]
+    private static readonly ushort[] ThaiRange = new ushort[]
     {
         0x0e00,0x0e7f
     };
 
-    private static readonly ushort[] _vietnameseRange = new ushort[]
+    private static readonly ushort[] VietnameseRange = new ushort[]
     {
         0x0020, 0x00FF,
         0x0102, 0x0103,
@@ -80,7 +80,7 @@ internal class GlyphRangeProvider
         0x1EA0, 0x1EF9
     };
 
-    private static readonly ushort[] _symbolRange = new ushort[]
+    private static readonly ushort[] SymbolRange = new ushort[]
     {
         0x2000,0x206f,
         0x2150,0x218f,
@@ -89,42 +89,42 @@ internal class GlyphRangeProvider
 
     public static nint GetLatinRange()
     {
-        return GetPointer(_latinRange);
+        return GetPointer(LatinRange);
     }
 
     public static nint GetCyrillicRange()
     {
-        return GetPointer(_cyrillicRange);
+        return GetPointer(CyrillicRange);
     }
 
     public static nint GetCjRange()
     {
-        return GetPointer(_cjRange);
+        return GetPointer(CjRange);
     }
 
     public static nint GetKoreanRange()
     {
-        return GetPointer(_koreanRange);
+        return GetPointer(KoreanRange);
     }
 
     public static nint GetGreekRange()
     {
-        return GetPointer(_greekRange);
+        return GetPointer(GreekRange);
     }
 
     public static nint GetThaiRange()
     {
-        return GetPointer(_thaiRange);
+        return GetPointer(ThaiRange);
     }
 
     public static nint GetVietnameseRange()
     {
-        return GetPointer(_vietnameseRange);
+        return GetPointer(VietnameseRange);
     }
 
     public static nint GetSymbolRange()
     {
-        return GetPointer(_symbolRange);
+        return GetPointer(SymbolRange);
     }
 
     private static nint GetPointer(ushort[] ranges)

@@ -17,7 +17,7 @@ public class ComboInputBox : Modal
 
     private readonly ComboBox<LocalizedString> _comboBox;
 
-    public LocalizedString SelectedItem { get; private set; }
+    public LocalizedString? SelectedItem { get; private set; }
 
     private ComboInputBox(LocalizedString caption, LocalizedString text, LocalizedString[] items, LocalizedString? preset)
     {
@@ -67,7 +67,7 @@ public class ComboInputBox : Modal
 
         Content = mainLayout;
 
-        var mainSize = Application.Instance.MainForm.Size;
+        var mainSize = Application.Instance.MainForm!.Size;
 
         var width = mainLayout.GetWidth((int)mainSize.X, (int)mainSize.Y);
         var height = mainLayout.GetHeight((int)mainSize.X, (int)mainSize.Y);
@@ -75,18 +75,18 @@ public class ComboInputBox : Modal
         Size = new Size(SizeValue.Absolute(width), SizeValue.Absolute(height));
     }
 
-    private void ComboBox_SelectedItemChanged(object sender, EventArgs e)
+    private void ComboBox_SelectedItemChanged(object? sender, EventArgs e)
     {
-        SelectedItem = _comboBox.SelectedItem.Content;
+        SelectedItem = _comboBox.SelectedItem?.Content;
     }
 
-    private void CancelButton_Clicked(object sender, EventArgs e)
+    private void CancelButton_Clicked(object? sender, EventArgs e)
     {
         Result = DialogResult.Cancel;
         Close();
     }
 
-    private void OkButton_Clicked(object sender, EventArgs e)
+    private void OkButton_Clicked(object? sender, EventArgs e)
     {
         Result = DialogResult.Ok;
         Close();

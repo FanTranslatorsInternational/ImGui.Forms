@@ -2,7 +2,7 @@
 
 namespace ImGui.Forms.Models;
 
-public readonly struct Size
+public readonly struct Size(SizeValue width, SizeValue height)
 {
     /// <summary>
     /// An empty size with width and height 0.
@@ -32,12 +32,12 @@ public readonly struct Size
     /// <summary>
     /// The width of this instance.
     /// </summary>
-    public readonly SizeValue Width;
+    public readonly SizeValue Width = width;
 
     /// <summary>
     /// The height of this instance.
     /// </summary>
-    public readonly SizeValue Height;
+    public readonly SizeValue Height = height;
 
     /// <summary>
     /// Determines if the given size should conform to the content.
@@ -54,18 +54,12 @@ public readonly struct Size
     /// </summary>
     public bool IsVisible => Width.IsVisible && Height.IsVisible;
 
-    public Size(SizeValue width, SizeValue height)
-    {
-        Width = width;
-        Height = height;
-    }
-
     public bool Equals(Size other)
     {
         return Width.Equals(other.Width) && Height.Equals(other.Height);
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return obj is Size other && Equals(other);
     }
@@ -145,7 +139,7 @@ public readonly struct SizeValue
         return Value.Equals(other.Value) && IsAbsolute == other.IsAbsolute;
     }
 
-    public override bool Equals(object obj)
+    public override bool Equals(object? obj)
     {
         return obj is SizeValue other && Equals(other);
     }

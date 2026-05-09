@@ -20,8 +20,8 @@ public class OpenFileDialog : Modal
     private const string ItemTypeDirectory_ = "D";
     private const string ItemTypeFile_ = "F";
 
-    private History<string> _dictHistory;
-    private string _currentDir;
+    private History<string>? _history;
+    private string? _currentDir;
 
     private readonly ArrowButton _backBtn;
     private readonly ArrowButton _forBtn;
@@ -35,12 +35,12 @@ public class OpenFileDialog : Modal
 
     private readonly Button _openBtn;
 
-    public string InitialDirectory { get; set; }
-    public string InitialFileName { get; set; }
+    public string? InitialDirectory { get; set; }
+    public string? InitialFileName { get; set; }
 
     public IList<FileFilter> FileFilters { get; }
 
-    public string SelectedPath { get; private set; }
+    public string? SelectedPath { get; private set; }
 
     public OpenFileDialog()
     {
@@ -162,7 +162,7 @@ public class OpenFileDialog : Modal
     {
         // Initialize fields
         _currentDir = GetInitialDirectory();
-        _dictHistory = new History<string>(_currentDir);
+        _history = new History<string>(_currentDir);
 
         _dirTextBox.Text = _currentDir;
         _selectedFileTextBox.Text = InitialFileName;
@@ -187,34 +187,41 @@ public class OpenFileDialog : Modal
         return Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
     }
 
-    private string GetNodePath(TreeNode<string> node)
+    private static string GetNodePath(TreeNode<string>? node)
     {
-        if (node.Parent != null)
+        if (node?.Parent != null)
             return Path.Combine(GetNodePath(node.Parent), node.Data ?? string.Empty);
 
-        return node.Data ?? string.Empty;
+        return node?.Data ?? string.Empty;
     }
 
-    private IEnumerable<FileEntry> GetDirectories(string dir)
+    private static IEnumerable<FileEntry> GetDirectories(string? dir)
     {
+        if (string.IsNullOrEmpty(dir))
+            return [];
+
         return Directory.EnumerateDirectories(dir).Select(x => new FileEntry
-            { Name = Path.GetFileName(x), Type = ItemTypeDirectory_, DateModified = Directory.GetLastAccessTime(x) });
+        {
+            Name = Path.GetFileName(x),
+            Type = ItemTypeDirectory_,
+            DateModified = Directory.GetLastAccessTime(x)
+        });
     }
 
-    private IEnumerable<FileEntry> GetFiles(string dir)
+    private IEnumerable<FileEntry> GetFiles(string? dir)
     {
         var useSearch = !string.IsNullOrEmpty(_searchTextBox.Text);
         var searchTerm = string.IsNullOrEmpty(_searchTextBox.Text) ? "*" : _searchTextBox.Text;
 
         // Get files in directory
-        var files = Directory.EnumerateFiles(dir, searchTerm);
+        var files = dir is null ? [] : Directory.EnumerateFiles(dir, searchTerm);
 
         // Apply extension filter, if set
         if (!useSearch && _fileFilters.SelectedItem != null)
         {
             IList<string> extensions = _fileFilters.SelectedItem.Content.Extensions;
             if (extensions.All(e => e != "*"))
-                files = files.Where(f => GetFileExtensions(f).Any(e => extensions.Contains(e)));
+                files = files.Where(f => GetFileExtensions(f).Any(extensions.Contains));
         }
 
         return files.Select(x => new FileEntry { Name = Path.GetFileName(x), Type = ItemTypeFile_, DateModified = File.GetLastWriteTime(x) });
@@ -252,8 +259,8 @@ public class OpenFileDialog : Modal
 
     private void UpdateButtonEnablement()
     {
-        _backBtn.Enabled = !_dictHistory.IsFirstItem();
-        _forBtn.Enabled = !_dictHistory.IsLastItem();
+        _backBtn.Enabled = !_history?.IsFirstItem() ?? false;
+        _forBtn.Enabled = !_history?.IsLastItem() ?? false;
     }
 
     #endregion
@@ -262,27 +269,27 @@ public class OpenFileDialog : Modal
 
     #region File Filters
 
-    private void Filters_ItemAdded(object sender, ItemEventArgs<FileFilter> e)
+    private void Filters_ItemAdded(object? sender, ItemEventArgs<FileFilter> e)
     {
         _fileFilters.Items.Add(new DropDownItem<FileFilter>(e.Item));
     }
 
-    private void Filters_ItemRemoved(object sender, ItemEventArgs<FileFilter> e)
+    private void Filters_ItemRemoved(object? sender, ItemEventArgs<FileFilter> e)
     {
         _fileFilters.Items.Remove(e.Item);
     }
 
-    private void Filters_ItemInserted(object sender, ItemEventArgs<FileFilter> e)
+    private void Filters_ItemInserted(object? sender, ItemEventArgs<FileFilter> e)
     {
         _fileFilters.Items.Insert(e.Index, new DropDownItem<FileFilter>(e.Item));
     }
 
-    private void Filters_ItemSet(object sender, ItemEventArgs<FileFilter> e)
+    private void Filters_ItemSet(object? sender, ItemEventArgs<FileFilter> e)
     {
         _fileFilters.Items[e.Index] = new DropDownItem<FileFilter>(e.Item);
     }
 
-    private void _fileFilters_SelectedItemChanged(object sender, EventArgs e)
+    private void _fileFilters_SelectedItemChanged(object? sender, EventArgs e)
     {
         UpdateFileView();
     }
@@ -291,15 +298,15 @@ public class OpenFileDialog : Modal
 
     #region File Table
 
-    private void _fileTable_SelectedRowsChanged(object sender, EventArgs e)
+    private void _fileTable_SelectedRowsChanged(object? sender, EventArgs e)
     {
-        if (!_fileTable.SelectedRows.Any())
+        if (_fileTable.SelectedRows.Count <= 0)
             return;
 
-        _selectedFileTextBox.Text = _fileTable.SelectedRows.First().Data.Name;
+        _selectedFileTextBox.Text = _fileTable.SelectedRows[0].Data.Name;
     }
 
-    private void _fileTable_DoubleClicked(object sender, EventArgs e)
+    private void _fileTable_DoubleClicked(object? sender, EventArgs e)
     {
         if (!_fileTable.SelectedRows.Any())
             return;
@@ -310,7 +317,7 @@ public class OpenFileDialog : Modal
             _currentDir = _dirTextBox.Text = SelectedPath;
 
             // Push given directory to history
-            _dictHistory.PushItem(SelectedPath);
+            _history?.PushItem(SelectedPath);
 
             // Update file view
             UpdateFileView();
@@ -329,7 +336,7 @@ public class OpenFileDialog : Modal
 
     #region Tree View
 
-    private void _treeView_SelectedNodeChanged(object sender, EventArgs e)
+    private void _treeView_SelectedNodeChanged(object? sender, EventArgs e)
     {
         var node = _treeView.SelectedNode;
         var path = GetNodePath(node);
@@ -341,7 +348,7 @@ public class OpenFileDialog : Modal
         _currentDir = _dirTextBox.Text = path;
 
         // Push given directory to history
-        _dictHistory.PushItem(path);
+        _history?.PushItem(path);
 
         // Update file view
         UpdateFileView();
@@ -350,7 +357,7 @@ public class OpenFileDialog : Modal
         UpdateButtonEnablement();
     }
 
-    private void _treeView_NodeExpanded(object sender, NodeEventArgs<string> e)
+    private void _treeView_NodeExpanded(object? sender, NodeEventArgs<string> e)
     {
         var node = e.Node;
 
@@ -376,11 +383,11 @@ public class OpenFileDialog : Modal
 
     #region Buttons
 
-    private void _backBtn_Clicked(object sender, EventArgs e)
+    private void _backBtn_Clicked(object? sender, EventArgs e)
     {
         // Get previous path
-        _dictHistory.MoveBackward();
-        _currentDir = _dictHistory.GetCurrentItem();
+        _history?.MoveBackward();
+        _currentDir = _history?.GetCurrentItem();
 
         // Update path text box
         _dirTextBox.Text = _currentDir;
@@ -392,11 +399,11 @@ public class OpenFileDialog : Modal
         UpdateButtonEnablement();
     }
 
-    private void _forBtn_Clicked(object sender, EventArgs e)
+    private void _forBtn_Clicked(object? sender, EventArgs e)
     {
         // Get next path
-        _dictHistory.MoveForward();
-        _currentDir = _dictHistory.GetCurrentItem();
+        _history?.MoveForward();
+        _currentDir = _history?.GetCurrentItem();
 
         // Update path text box
         _dirTextBox.Text = _currentDir;
@@ -408,13 +415,13 @@ public class OpenFileDialog : Modal
         UpdateButtonEnablement();
     }
 
-    private void OpenBtnClicked(object sender, EventArgs e)
+    private void OpenBtnClicked(object? sender, EventArgs e)
     {
         Result = DialogResult.Ok;
         Close();
     }
 
-    private void CnlBtn_Clicked(object sender, EventArgs e)
+    private void CnlBtn_Clicked(object? sender, EventArgs e)
     {
         SelectedPath = null;
 
@@ -426,7 +433,7 @@ public class OpenFileDialog : Modal
 
     #region Textboxes
 
-    private void _dirTextBox_FocusLost(object sender, EventArgs e)
+    private void _dirTextBox_FocusLost(object? sender, EventArgs e)
     {
         if (_currentDir == _dirTextBox.Text)
             return;
@@ -440,7 +447,7 @@ public class OpenFileDialog : Modal
         }
 
         // Push given directory to history
-        _dictHistory.PushItem(_dirTextBox.Text);
+        _history?.PushItem(_dirTextBox.Text);
 
         // Update current directory
         _currentDir = _dirTextBox.Text;
@@ -452,8 +459,11 @@ public class OpenFileDialog : Modal
         UpdateButtonEnablement();
     }
 
-    private void _selectedFileTextBox_TextChanged(object sender, EventArgs e)
+    private void _selectedFileTextBox_TextChanged(object? sender, EventArgs e)
     {
+        if (_currentDir is null || _selectedFileTextBox.Text is null)
+            return;
+
         var fullPath = Path.Combine(_currentDir, _selectedFileTextBox.Text);
 
         _openBtn.Enabled = !string.IsNullOrEmpty(_selectedFileTextBox.Text) && File.Exists(fullPath);
@@ -461,7 +471,7 @@ public class OpenFileDialog : Modal
         SelectedPath = fullPath;
     }
 
-    private void _searchTextBox_TextChanged(object sender, EventArgs e)
+    private void _searchTextBox_TextChanged(object? sender, EventArgs e)
     {
         UpdateFileView();
     }
@@ -470,10 +480,10 @@ public class OpenFileDialog : Modal
 
     #endregion
 
-    class FileEntry
+    private class FileEntry
     {
-        public string Name { get; set; }
-        public string Type { get; set; }
-        public DateTime DateModified { get; set; }
+        public required string Name { get; init; }
+        public required string Type { get; init; }
+        public DateTime DateModified { get; init; }
     }
 }

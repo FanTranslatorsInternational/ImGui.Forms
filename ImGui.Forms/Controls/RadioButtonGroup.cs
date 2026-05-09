@@ -18,11 +18,11 @@ public class RadioButtonGroup : Component
 
     public IList<RadioButtonItem> Items { get; } = new List<RadioButtonItem>();
 
-    public RadioButtonItem SelectedItem { get; set; }
+    public RadioButtonItem? SelectedItem { get; set; }
 
     public Alignment Alignment { get; set; } = Alignment.Horizontal;
 
-    public event EventHandler SelectedItemChanged;
+    public event EventHandler? SelectedItemChanged;
 
     public override Size GetSize()
     {
@@ -66,7 +66,7 @@ public class RadioButtonGroup : Component
 
     protected override void UpdateInternal(Rectangle contentRect)
     {
-        RadioButtonItem selected = SelectedItem;
+        RadioButtonItem? selected = SelectedItem;
 
         foreach (RadioButtonItem item in Items)
         {

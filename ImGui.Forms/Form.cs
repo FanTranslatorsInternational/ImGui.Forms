@@ -30,7 +30,7 @@ public abstract class Form
 
     #region Properties
 
-    public int Id => Application.Instance.Ids.Get(this);
+    public int Id => Application.Instance.Ids!.Get(this);
 
     public LocalizedString Title { get; set; } = string.Empty;
     public Vector2 Size { get; set; } = new(700, 400);
@@ -69,10 +69,10 @@ public abstract class Form
 
     #region Events
 
-    public event EventHandler<string[]> DragDrop;
-    public event EventHandler Load;
-    public event EventHandler Resized;
-    public event Func<object, ClosingEventArgs, Task> Closing;
+    public event EventHandler<string[]>? DragDrop;
+    public event EventHandler? Load;
+    public event EventHandler? Resized;
+    public event Func<object, ClosingEventArgs, Task>? Closing;
 
     #endregion
 
@@ -188,7 +188,7 @@ public abstract class Form
         Hexa.NET.ImGui.ImGui.End();
     }
 
-    protected void Close()
+    protected static void Close()
     {
         Application.Instance.Exit();
     }
@@ -207,10 +207,10 @@ public abstract class Form
 
     internal async Task OnClosing(ClosingEventArgs e)
     {
-        if (Closing == null)
+        if (Closing is null)
             return;
 
-        await Closing?.Invoke(this, e);
+        await Closing.Invoke(this, e);
     }
 
     private void OnDragDrop(string[] files)

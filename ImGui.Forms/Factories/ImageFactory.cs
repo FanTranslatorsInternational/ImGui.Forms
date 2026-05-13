@@ -8,6 +8,7 @@ namespace ImGui.Forms.Factories;
 
 internal class ImageFactory(SDLGPUDevicePtr gpuDevice)
 {
+    private readonly object _sync = new();
     private readonly Dictionary<Image<Rgba32>, nint> _inputPointers = [];
     private readonly Dictionary<nint, Image<Rgba32>> _inputPointersReverse = [];
     private readonly Dictionary<nint, SDLGPUTexturePtr> _ptrTextures = [];
@@ -16,42 +17,51 @@ internal class ImageFactory(SDLGPUDevicePtr gpuDevice)
 
     public nint LoadImage(Image<Rgba32> img)
     {
-        nint ptr;
-
-        if (_inputPointers.TryGetValue(img, out IntPtr texturePtr))
+        lock (_sync)
         {
-            ptr = texturePtr;
-            UpdateImage(ptr);
+            nint ptr;
 
-            _ptrTexturesRefCount[ptr]++;
+            if (_inputPointers.TryGetValue(img, out IntPtr texturePtr))
+            {
+                ptr = texturePtr;
+                UpdateImage(ptr);
+
+                _ptrTexturesRefCount[ptr]++;
+
+                return ptr;
+            }
+
+            ptr = Load2DTexture(img);
+
+            _inputPointers[img] = ptr;
+            _inputPointersReverse[ptr] = img;
+            _ptrTexturesRefCount[ptr] = 1;
 
             return ptr;
         }
-
-        ptr = Load2DTexture(img);
-
-        _inputPointers[img] = ptr;
-        _inputPointersReverse[ptr] = img;
-        _ptrTexturesRefCount[ptr] = 1;
-
-        return ptr;
     }
 
     public void UpdateImage(nint ptr)
     {
-        if (!_ptrTextures.ContainsKey(ptr) || !_inputPointersReverse.TryGetValue(ptr, out Image<Rgba32>? texture))
-            return;
+        lock (_sync)
+        {
+            if (!_ptrTextures.ContainsKey(ptr) || !_inputPointersReverse.TryGetValue(ptr, out Image<Rgba32>? texture))
+                return;
 
-        TransferToGpuTexture(_ptrTextures[ptr], texture);
+            TransferToGpuTexture(_ptrTextures[ptr], texture);
+        }
     }
 
     public void UnloadImage(nint ptr)
     {
-        if (!_ptrTextures.ContainsKey(ptr))
-            return;
+        lock (_sync)
+        {
+            if (!_ptrTextures.ContainsKey(ptr))
+                return;
 
-        _ptrTexturesRefCount[ptr]--;
-        _unloadQueue.Add(ptr);
+            _ptrTexturesRefCount[ptr]--;
+            _unloadQueue.Add(ptr);
+        }
     }
 
     private unsafe nint Load2DTexture(Image<Rgba32> image)
@@ -65,7 +75,7 @@ internal class ImageFactory(SDLGPUDevicePtr gpuDevice)
         return imgPtr;
     }
 
-    private SDLGPUTexturePtr CreateGpuTexture(Image<Rgba32> image)
+    private unsafe SDLGPUTexturePtr CreateGpuTexture(Image<Rgba32> image)
     {
         SDLGPUTexturePtr gpuTexture = SDL.CreateGPUTexture(gpuDevice, new SDLGPUTextureCreateInfo
         {
@@ -79,6 +89,9 @@ internal class ImageFactory(SDLGPUDevicePtr gpuDevice)
             Usage = (int)SDLGPUTextureUsageFlags.Sampler
         });
 
+        if (gpuTexture.Handle == null)
+            throw new InvalidOperationException($"Failed to create GPU texture: {SDL.GetErrorS()}");
+
         TransferToGpuTexture(gpuTexture, image);
 
         return gpuTexture;
@@ -86,16 +99,28 @@ internal class ImageFactory(SDLGPUDevicePtr gpuDevice)
 
     private unsafe void TransferToGpuTexture(SDLGPUTexturePtr gpuTexture, Image<Rgba32> image)
     {
+        if (gpuTexture.Handle == null)
+            throw new ArgumentException("Cannot transfer data to a null GPU texture.", nameof(gpuTexture));
+
         // Transfer image into temporary buffer
         int size = image.Width * image.Height * 4;
+        if (size <= 0)
+            throw new InvalidOperationException("Cannot upload an empty image to the GPU.");
 
         SDLGPUTransferBufferPtr transferBuffer = SDL.CreateGPUTransferBuffer(gpuDevice, new SDLGPUTransferBufferCreateInfo
         {
             Size = (uint)size,
             Usage = SDLGPUTransferBufferUsage.Upload
         });
+        if (transferBuffer.Handle == null)
+            throw new InvalidOperationException($"Failed to create GPU transfer buffer: {SDL.GetErrorS()}");
 
         void* texturePtr = SDL.MapGPUTransferBuffer(gpuDevice, transferBuffer, true);
+        if (texturePtr is null)
+        {
+            SDL.ReleaseGPUTransferBuffer(gpuDevice, transferBuffer);
+            throw new InvalidOperationException("Failed to map GPU transfer buffer for image upload.");
+        }
 
         var copiedImage = new Rgba32[image.Width * image.Height];
         image.CopyPixelDataTo(copiedImage);
@@ -109,7 +134,9 @@ internal class ImageFactory(SDLGPUDevicePtr gpuDevice)
         var transferInfo = new SDLGPUTextureTransferInfo
         {
             Offset = 0,
-            TransferBuffer = transferBuffer
+            TransferBuffer = transferBuffer,
+            PixelsPerRow = (uint)image.Width,
+            RowsPerLayer = (uint)image.Height
         };
 
         var textureRegion = new SDLGPUTextureRegion
@@ -123,44 +150,74 @@ internal class ImageFactory(SDLGPUDevicePtr gpuDevice)
         };
 
         SDLGPUCommandBufferPtr cmd = SDL.AcquireGPUCommandBuffer(gpuDevice);
+        if (cmd.Handle == null)
+        {
+            SDL.ReleaseGPUTransferBuffer(gpuDevice, transferBuffer);
+            throw new InvalidOperationException($"Failed to acquire GPU command buffer: {SDL.GetErrorS()}");
+        }
+
         SDLGPUCopyPassPtr copyPass = SDL.BeginGPUCopyPass(cmd);
+        if (copyPass.Handle == null)
+        {
+            SDL.ReleaseGPUTransferBuffer(gpuDevice, transferBuffer);
+            throw new InvalidOperationException($"Failed to begin GPU copy pass: {SDL.GetErrorS()}");
+        }
+
         SDL.UploadToGPUTexture(copyPass, transferInfo, textureRegion, false);
         SDL.EndGPUCopyPass(copyPass);
-        SDL.SubmitGPUCommandBuffer(cmd);
+        if (!SDL.SubmitGPUCommandBuffer(cmd))
+        {
+            SDL.ReleaseGPUTransferBuffer(gpuDevice, transferBuffer);
+            throw new InvalidOperationException($"Failed to submit GPU command buffer: {SDL.GetErrorS()}");
+        }
 
+        SDL.WaitForGPUIdle(gpuDevice);
         SDL.ReleaseGPUTransferBuffer(gpuDevice, transferBuffer);
     }
 
     internal void FreeTextures()
     {
-        foreach (var toFree in _unloadQueue)
+        lock (_sync)
         {
-            // Textures that were marked to unload, but somehow retained/regained references afterwards should not be unloaded
-            if (!_ptrTexturesRefCount.ContainsKey(toFree) || _ptrTexturesRefCount[toFree] > 0)
-                continue;
+            if (_unloadQueue.Count == 0)
+                return;
 
-            SDL.ReleaseGPUTexture(gpuDevice, _ptrTextures[toFree]);
+            SDL.WaitForGPUIdle(gpuDevice);
 
-            _ptrTextures.Remove(toFree);
-            _ptrTexturesRefCount.Remove(toFree);
+            foreach (var toFree in _unloadQueue)
+            {
+                // Textures that were marked to unload, but somehow retained/regained references afterwards should not be unloaded
+                if (!_ptrTexturesRefCount.ContainsKey(toFree) || _ptrTexturesRefCount[toFree] > 0)
+                    continue;
 
-            var obj = _inputPointersReverse[toFree];
-            _inputPointersReverse.Remove(toFree);
-            _inputPointers.Remove(obj);
+                SDL.ReleaseGPUTexture(gpuDevice, _ptrTextures[toFree]);
+
+                _ptrTextures.Remove(toFree);
+                _ptrTexturesRefCount.Remove(toFree);
+
+                var obj = _inputPointersReverse[toFree];
+                _inputPointersReverse.Remove(toFree);
+                _inputPointers.Remove(obj);
+            }
+
+            _unloadQueue.Clear();
         }
-
-        _unloadQueue.Clear();
     }
 
     internal void Dispose()
     {
-        foreach (var ptrTexture in _ptrTextures)
-            SDL.ReleaseGPUTexture(gpuDevice, ptrTexture.Value);
+        lock (_sync)
+        {
+            SDL.WaitForGPUIdle(gpuDevice);
 
-        _ptrTextures.Clear();
-        _ptrTexturesRefCount.Clear();
-        _inputPointers.Clear();
-        _inputPointersReverse.Clear();
-        _unloadQueue.Clear();
+            foreach (var ptrTexture in _ptrTextures)
+                SDL.ReleaseGPUTexture(gpuDevice, ptrTexture.Value);
+
+            _ptrTextures.Clear();
+            _ptrTexturesRefCount.Clear();
+            _inputPointers.Clear();
+            _inputPointersReverse.Clear();
+            _unloadQueue.Clear();
+        }
     }
 }

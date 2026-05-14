@@ -60,7 +60,7 @@ public class ImageButton : Component
 
         if (Image != null && Image.IsValid())
         {
-            if ((Hexa.NET.ImGui.ImGui.ImageButton($"##{Id}", Image.GetTextureRef(), GetImageSize()) || KeyAction.IsPressed()) && Enabled)
+            if ((Hexa.NET.ImGui.ImGui.ImageButton($"##{Id}", Image.GetTextureRef()!.Value, GetImageSize()) || KeyAction.IsPressed()) && Enabled)
                 OnClicked();
         }
         else
@@ -91,7 +91,7 @@ public class ImageButton : Component
         Hexa.NET.ImGui.ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Padding);
     }
 
-    private void RemoveStyles(bool enabled)
+    private static void RemoveStyles(bool enabled)
     {
         Hexa.NET.ImGui.ImGui.PopStyleVar();
 

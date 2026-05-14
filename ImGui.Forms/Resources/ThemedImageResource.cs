@@ -5,61 +5,53 @@ using ImGui.Forms.Models;
 
 namespace ImGui.Forms.Resources;
 
-public class ThemedImageResource
+public class ThemedImageResource(ImageResource? lightImage, ImageResource? darkImage)
 {
-    private readonly ImageResource _lightImage;
-    private readonly ImageResource _darkImage;
-
     /// <summary>
     /// The size of the <see cref="ThemedImageResource"/> as a <see cref="Vector2"/>.
     /// </summary>
-    public Vector2 Size => new(GetImage().Width, GetImage().Height);
+    public Vector2 Size => new(Width, Height);
 
     /// <summary>
     /// The width of the <see cref="ThemedImageResource"/>.
     /// </summary>
-    public int Width => GetImage().Width;
+    public int Width => GetImage()?.Width ?? 0;
 
     /// <summary>
     /// The height of the <see cref="ThemedImageResource"/>.
     /// </summary>
-    public int Height => GetImage().Height;
-
-    public ThemedImageResource(ImageResource lightImage, ImageResource darkImage)
-    {
-        _lightImage = lightImage;
-        _darkImage = darkImage;
-    }
+    public int Height => GetImage()?.Height ?? 0;
 
     public void Destroy()
     {
-        if (_lightImage != null)
-            _lightImage.Destroy();
-        if (_darkImage != null)
-            _darkImage.Destroy();
+        lightImage?.Destroy();
+        darkImage?.Destroy();
     }
 
-    public bool IsValid() => GetTextureRef().TexID != nint.Zero;
-
-    public ImTextureRef GetTextureRef()
+    public bool IsValid()
     {
-        return GetImage().GetTextureRef();
+        var textureRef = GetTextureRef();
+        
+        if (textureRef is null)
+            return false;
+
+        return textureRef.Value.TexID != nint.Zero;
     }
 
-    public static implicit operator ThemedImageResource(ImageResource ir) => new(ir, ir);
-
-    public ImageResource GetImage()
+    public ImTextureRef? GetTextureRef()
     {
-        switch (Style.Theme)
+        return GetImage()?.GetTextureRef();
+    }
+
+    public static implicit operator ThemedImageResource(ImageResource? ir) => new(ir, ir);
+
+    public ImageResource? GetImage()
+    {
+        return Style.Theme switch
         {
-            case Theme.Light:
-                return _lightImage;
-
-            case Theme.Dark:
-                return _darkImage;
-
-            default:
-                throw new InvalidOperationException($"Unknown theme {Style.Theme}.");
-        }
+            Theme.Light => lightImage,
+            Theme.Dark => darkImage,
+            _ => throw new InvalidOperationException($"Unknown theme {Style.Theme}.")
+        };
     }
 }

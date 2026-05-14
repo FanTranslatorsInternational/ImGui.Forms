@@ -19,12 +19,12 @@ public class ZoomablePictureBox(ThemedImageResource? image = null) : ZoomableCom
 
     #endregion
 
-    public void SetImage(ThemedImageResource? imagResource, bool releaseOldImage = true)
+    public void SetImage(ThemedImageResource? imageResource, bool releaseOldImage = true)
     {
         if (releaseOldImage)
             Image?.Destroy();
 
-        Image = imagResource;
+        Image = imageResource;
     }
 
     protected override void DrawInternal(Rectangle contentRect)
@@ -39,7 +39,7 @@ public class ZoomablePictureBox(ThemedImageResource? image = null) : ZoomableCom
 
         Rectangle imageRect = GetTransformedImageRect(contentRect);
 
-        Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddImage(Image!.GetTextureRef(), imageRect.Position, imageRect.Position + imageRect.Size);
+        Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddImage(Image!.GetTextureRef()!.Value, imageRect.Position, imageRect.Position + imageRect.Size);
 
         if (ShowImageBorder)
             Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddRect(imageRect.Position, imageRect.Position + imageRect.Size, Style.GetColor(ImGuiCol.Border).ToUInt32());

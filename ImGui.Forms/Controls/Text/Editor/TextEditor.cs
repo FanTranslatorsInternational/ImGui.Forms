@@ -1212,13 +1212,19 @@ public class TextEditor : Component
             ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.NoMove);
 
         if (IsHandleKeyboardInputsEnabled)
+        {
             HandleKeyboardInputs();
+            Hexa.NET.ImGui.ImGui.PushItemFlag(ImGuiItemFlags.NoTabStop, false);
+        }
 
         if (IsHandleMouseInputsEnabled)
             HandleMouseInputs();
 
         ColorizeInternal();
         Render();
+
+        if (IsHandleKeyboardInputsEnabled)
+            Hexa.NET.ImGui.ImGui.PopItemFlag();
 
         Hexa.NET.ImGui.ImGui.EndChild();
 

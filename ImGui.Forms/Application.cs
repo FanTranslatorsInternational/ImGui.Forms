@@ -99,6 +99,7 @@ public class Application
 
         SDL.SetWindowPosition(window, 50, 70);
         SDL.ShowWindow(window);
+        SDL.StartTextInput(window);
 
         SDLGPUDevice* gpuDevice = SDL.CreateGPUDevice((uint)(SDLGPUShaderFormat.Spirv | SDLGPUShaderFormat.Dxil | SDLGPUShaderFormat.Metallib), false, (byte*)null);
         if (gpuDevice == null)
@@ -286,6 +287,7 @@ public class Application
         DestroyDepthTarget(gpuDevice);
 
         SDL.ReleaseWindowFromGPUDevice(gpuDevice, window);
+        SDL.StopTextInput(window);
         SDL.DestroyGPUDevice(gpuDevice);
         SDL.DestroyWindow(window);
         SDL.Quit();

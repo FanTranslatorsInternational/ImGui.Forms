@@ -5,20 +5,15 @@ using ImGui.Forms.Support;
 
 namespace ImGui.Forms.Controls;
 
-public class PictureBox : Component
+public class PictureBox(ThemedImageResource? image = null) : Component
 {
     #region Properties
 
     public Size Size { get; set; } = Size.Content;
 
-    public ThemedImageResource? Image { get; private set; }
+    public ThemedImageResource? Image { get; private set; } = image;
 
     #endregion
-
-    public PictureBox(ThemedImageResource? image = null)
-    {
-        Image = image;
-    }
 
     public void SetImage(ThemedImageResource imagResource, bool releaseOldImage = true)
     {
@@ -46,6 +41,6 @@ public class PictureBox : Component
         if (Image == null || !Image.IsValid())
             return;
 
-        Hexa.NET.ImGui.ImGui.Image(Image.GetTextureRef(), contentRect.Size);
+        Hexa.NET.ImGui.ImGui.Image(Image.GetTextureRef()!.Value, contentRect.Size);
     }
 }

@@ -99,7 +99,6 @@ public class Application
 
         SDL.SetWindowPosition(window, 50, 70);
         SDL.ShowWindow(window);
-        SDL.StartTextInput(window);
 
         SDLGPUDevice* gpuDevice = SDL.CreateGPUDevice((uint)(SDLGPUShaderFormat.Spirv | SDLGPUShaderFormat.Dxil | SDLGPUShaderFormat.Metallib), false, (byte*)null);
         if (gpuDevice == null)
@@ -158,6 +157,8 @@ public class Application
             UpdateApplicationEvents();
 
             _executionContext.Images.FreeTextures();
+
+            SDL.StartTextInput(window);
 
             SDLEvent e;
             while (SDL.PollEvent(&e))

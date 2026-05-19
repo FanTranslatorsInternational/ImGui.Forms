@@ -112,14 +112,14 @@ public unsafe class Object3DView : Component
         _state.View = Matrix4x4.CreateLookAt(cameraPosition, _camera.Target, up);
         _state.Transformation = Matrix4x4.Identity;
 
-        Application.Instance.EnqueueGpuPrepareAction((gpuDevice, commandBuffer) =>
+        Application.Instance.EnqueueRenderPrepareAction(renderer =>
         {
-            _renderer.Prepare(gpuDevice, commandBuffer);
+            _renderer.Prepare(renderer);
         });
 
-        Application.Instance.EnqueueGpuRenderAction((gpuDevice, commandBuffer, renderPass) =>
+        Application.Instance.EnqueueRenderAction(renderer =>
         {
-            _renderer.Render(gpuDevice, commandBuffer, renderPass, contentRect, _state);
+            _renderer.Render(renderer, contentRect, _state);
         });
     }
 

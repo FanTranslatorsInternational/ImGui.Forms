@@ -5,47 +5,30 @@ using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Numerics;
-using System.Reflection;
 using System.Runtime.InteropServices;
 
 namespace ImGui.Forms.Support;
 
 internal unsafe class SdlGpuMeshRenderer3D : IDisposable
 {
-    private readonly Mesh3DVertex[] _gridVertices = CreateGridVertices();
     private static readonly Vector4 LightBillboardColor = new(180f, 140f, 40f, 255f);
     private const float MinLightBillboardDistance = 0.5f;
     private const float LightBillboardPaddingFactor = 0.1f;
     private const float MinLightBillboardPadding = 0.25f;
+    private static readonly Rgba32 TransparentPixel = new(0, 0, 0, 0);
 
-    private Mesh3DVertex[] _vertices;
-    private Mesh3DVertex[] _pointCenters;
-    private Mesh3DVertex[] _pointVertices;
-    private Mesh3DVertex[] _lightVertices;
-    private bool _vertexDataDirty = true;
-    private bool _pointVertexDataDirty = true;
-    private bool _lightVertexDataDirty = true;
-    private bool _gridVertexDataDirty = true;
-
-    private SDLGPUBuffer* _vertexBuffer;
-    private uint _vertexBufferSize;
-    private SDLGPUBuffer* _pointVertexBuffer;
-    private uint _pointVertexBufferSize;
-    private SDLGPUBuffer* _lightVertexBuffer;
-    private uint _lightVertexBufferSize;
-    private SDLGPUBuffer* _gridVertexBuffer;
-    private uint _gridVertexBufferSize;
-
-    private SDLGPUGraphicsPipeline* _pipeline;
-    private SDLGPUShader* _vertexShader;
-    private SDLGPUShader* _fragmentShader;
-    private SDLGPUSampler* _textureSampler;
-    private SDLGPUTexture* _texture;
-    private SDLGPUTexture* _fallbackTexture;
+    private Mesh3DVertex[] _vertices = [];
+    private Mesh3DVertex[] _pointCenters = [];
+    private Mesh3DVertex[] _lightVertices = [];
     private Image<Rgba32>? _sourceTexture;
-    private bool _textureDirty = true;
+
+    private SDLTexture* _rasterTexture;
+    private int _rasterWidth;
+    private int _rasterHeight;
+    private Rgba32[] _colorBuffer = [];
+    private float[] _depthBuffer = [];
+    private readonly List<WireTriangle> _wireTriangles = [];
     private readonly List<Rectangle> _additionalScissorExclusions = [];
     private readonly List<Rectangle> _scissorRenderRects = [];
 
@@ -53,10 +36,6 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
 
     public SdlGpuMeshRenderer3D(Mesh3D? mesh = null)
     {
-        _vertices = [];
-        _pointCenters = [];
-        _pointVertices = [];
-        _lightVertices = [];
         SetMesh(mesh);
     }
 
@@ -66,11 +45,7 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
         {
             _vertices = [];
             _pointCenters = [];
-            _pointVertices = [];
             _lightVertices = [];
-            _vertexDataDirty = true;
-            _pointVertexDataDirty = true;
-            _lightVertexDataDirty = true;
             return;
         }
 
@@ -78,7 +53,7 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
         for (int i = 0; i < mesh.Vertices.Count; i++)
         {
             MeshVertex3D pointVertex = mesh.Vertices[i];
-            points[i] = new Mesh3DVertex(pointVertex.Position, pointVertex.Color, pointVertex.UvCoordinate, Vector3.Zero);
+            points[i] = new Mesh3DVertex(pointVertex.Position, pointVertex.Color, pointVertex.UvCoordinate);
         }
 
         var expandedVertices = new List<Mesh3DVertex>(mesh.Faces.Count * 3);
@@ -94,55 +69,19 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
             MeshVertex3D vertexA = mesh.Vertices[face.AIndex];
             MeshVertex3D vertexB = mesh.Vertices[face.BIndex];
             MeshVertex3D vertexC = mesh.Vertices[face.CIndex];
-            expandedVertices.Add(new Mesh3DVertex(vertexA.Position, vertexA.Color, vertexA.UvCoordinate, new Vector3(1f, 0f, 0f)));
-            expandedVertices.Add(new Mesh3DVertex(vertexB.Position, vertexB.Color, vertexB.UvCoordinate, new Vector3(0f, 1f, 0f)));
-            expandedVertices.Add(new Mesh3DVertex(vertexC.Position, vertexC.Color, vertexC.UvCoordinate, new Vector3(0f, 0f, 1f)));
+            expandedVertices.Add(new Mesh3DVertex(vertexA.Position, vertexA.Color, vertexA.UvCoordinate));
+            expandedVertices.Add(new Mesh3DVertex(vertexB.Position, vertexB.Color, vertexB.UvCoordinate));
+            expandedVertices.Add(new Mesh3DVertex(vertexC.Position, vertexC.Color, vertexC.UvCoordinate));
         }
 
         _pointCenters = points;
-        RebuildPointVertices();
-        UpdateLightBillboardVertices();
         _vertices = [.. expandedVertices];
-        _vertexDataDirty = true;
+        UpdateLightBillboardVertices();
     }
 
     public void SetTexture(Image<Rgba32>? texture)
     {
         _sourceTexture = texture;
-        _textureDirty = true;
-    }
-
-    private void RebuildPointVertices()
-    {
-        if (_pointCenters.Length == 0)
-        {
-            _pointVertices = [];
-            _pointVertexDataDirty = true;
-            return;
-        }
-
-        var dotVertices = new List<Mesh3DVertex>(_pointCenters.Length * 6);
-
-        foreach (Mesh3DVertex center in _pointCenters)
-        {
-            AddBillboardDot(dotVertices, center);
-        }
-
-        _pointVertices = [.. dotVertices];
-        _pointVertexDataDirty = true;
-    }
-
-    private static void AddBillboardDot(List<Mesh3DVertex> output, Mesh3DVertex center)
-    {
-        var color = center.Color;
-        Vector3 position = center.Position;
-
-        output.Add(new Mesh3DVertex(position, color, new Vector2(0f, 0f), new Vector3(-1f, -1f, 0f)));
-        output.Add(new Mesh3DVertex(position, color, new Vector2(1f, 0f), new Vector3(1f, -1f, 0f)));
-        output.Add(new Mesh3DVertex(position, color, new Vector2(1f, 1f), new Vector3(1f, 1f, 0f)));
-        output.Add(new Mesh3DVertex(position, color, new Vector2(0f, 0f), new Vector3(-1f, -1f, 0f)));
-        output.Add(new Mesh3DVertex(position, color, new Vector2(1f, 1f), new Vector3(1f, 1f, 0f)));
-        output.Add(new Mesh3DVertex(position, color, new Vector2(0f, 1f), new Vector3(-1f, 1f, 0f)));
     }
 
     public void SetAdditionalScissorExclusions(IEnumerable<Rectangle>? exclusions)
@@ -160,678 +99,361 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
         }
     }
 
-    public void Prepare(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer)
+    public void Prepare(SDLRenderer* renderer)
     {
-        if (_vertices.Length == 0 && _pointVertices.Length == 0 && _lightVertices.Length == 0)
-            return;
-
         UpdateLightBillboardVertices();
-        CreatePipelineIfRequired(gpuDevice);
-        if (_vertices.Length > 0)
-            EnsureVertexBuffer(gpuDevice);
-        if (_pointVertices.Length > 0)
-            EnsurePointVertexBuffer(gpuDevice);
-        if (_lightVertices.Length > 0)
-            EnsureLightVertexBuffer(gpuDevice);
-        EnsureGridVertexBuffer(gpuDevice, commandBuffer);
-        EnsureSampler(gpuDevice);
-        EnsureFallbackTexture(gpuDevice, commandBuffer);
-        UploadTextureIfRequired(gpuDevice, commandBuffer);
-
-        if (_vertexDataDirty && _vertexBuffer != null && _vertices.Length > 0)
-        {
-            UploadVertices(gpuDevice, commandBuffer, _vertexBuffer, _vertices);
-            _vertexDataDirty = false;
-        }
-
-        if (_pointVertexDataDirty && _pointVertexBuffer != null && _pointVertices.Length > 0)
-        {
-            UploadVertices(gpuDevice, commandBuffer, _pointVertexBuffer, _pointVertices);
-            _pointVertexDataDirty = false;
-        }
-
-        if (_lightVertexDataDirty && _lightVertexBuffer != null && _lightVertices.Length > 0)
-        {
-            UploadVertices(gpuDevice, commandBuffer, _lightVertexBuffer, _lightVertices);
-            _lightVertexDataDirty = false;
-        }
     }
 
-    public void Render(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer, SDLGPURenderPass* renderPass, Rectangle contentSize, ObjectState state)
+    public void Render(SDLRenderer* renderer, Rectangle contentSize, ObjectState state)
     {
-        bool hasFaceData = _vertices.Length > 0 && _pipeline != null && _vertexBuffer != null;
-        bool hasPointData = SceneConfiguration.ShowVertices && _pointVertices.Length > 0 && _pipeline != null && _pointVertexBuffer != null;
-        bool hasLightPointData = _lightVertices.Length > 0 && _pipeline != null && _lightVertexBuffer != null;
-        bool hasGridData = SceneConfiguration.ShowGrid && _pipeline != null && _gridVertexBuffer != null;
-        if (!hasFaceData && !hasPointData && !hasLightPointData && !hasGridData)
+        if (_vertices.Length == 0 && _pointCenters.Length == 0)
             return;
 
-        int viewportWidth = Math.Max(1, (int)contentSize.Width);
-        int viewportHeight = Math.Max(1, (int)contentSize.Height);
-
-        SDLGPUViewport viewport = new()
-        {
-            X = contentSize.X,
-            Y = contentSize.Y,
-            W = viewportWidth,
-            H = viewportHeight,
-            MinDepth = 0f,
-            MaxDepth = 1f
-        };
-
-        SDL.SetGPUViewport(renderPass, viewport);
         BuildScissorRenderRects(contentSize, _scissorRenderRects);
         if (_scissorRenderRects.Count == 0)
             return;
 
-        GetCameraBasisFromView(state.View, out Vector3 cameraRight, out Vector3 cameraUp);
-
-        MeshTransformUniform uniform = new()
-        {
-            World = state.Transformation,
-            ViewProjection = state.View * state.Projection,
-            WorldViewProjection = state.Transformation * state.View * state.Projection,
-            // x: wireframe, y: Y=0 grid enabled, z: render pass (0=mesh), w: has texture
-            RenderParams = new Vector4(SceneConfiguration.ShowWireFrame ? 1f : 0f, SceneConfiguration.ShowGrid ? 1f : 0f, 0f, _texture != null ? 1f : 0f),
-            WireColor = NormalizeColor(SceneConfiguration.WireColor),
-            LightDirection = new Vector4(Vector3.Normalize(SceneConfiguration.LightDirection == Vector3.Zero ? new Vector3(1f, 0f, -1f) : SceneConfiguration.LightDirection), 0f),
-            LightColor = new Vector4(SceneConfiguration.LightColor, 1f),
-            StyleParams = new Vector4(MathF.Max(0.01f, SceneConfiguration.WireThickness), MathF.Max(0f, SceneConfiguration.LightIntensity), 0f, 0f),
-            CameraRight = Vector4.Zero,
-            CameraUp = Vector4.Zero
-        };
-
-        SDLGPUBufferBinding vertexBinding = new()
-        {
-            Buffer = _vertexBuffer,
-            Offset = 0
-        };
-
-        SDLGPUTextureSamplerBinding textureBinding = new()
-        {
-            Texture = _texture != null ? _texture : _fallbackTexture,
-            Sampler = _textureSampler
-        };
-        SDL.BindGPUFragmentSamplers(renderPass, 0, &textureBinding, 1);
-
-        MeshTransformUniform gridUniform = new()
-        {
-            World = Matrix4x4.Identity,
-            ViewProjection = state.View * state.Projection,
-            WorldViewProjection = state.View * state.Projection,
-            // Disable wireframe, keep grid enabled, mark this as dedicated grid pass (z=1).
-            RenderParams = new Vector4(0f, 1f, 1f, 0f),
-            WireColor = NormalizeColor(SceneConfiguration.WireColor),
-            LightDirection = new Vector4(Vector3.Normalize(SceneConfiguration.LightDirection == Vector3.Zero ? new Vector3(1f, 0f, -1f) : SceneConfiguration.LightDirection), 0f),
-            LightColor = new Vector4(SceneConfiguration.LightColor, 1f),
-            StyleParams = new Vector4(MathF.Max(0.01f, SceneConfiguration.WireThickness), MathF.Max(0f, SceneConfiguration.LightIntensity), 0f, 0f),
-            CameraRight = Vector4.Zero,
-            CameraUp = Vector4.Zero
-        };
-
-        SDLGPUBufferBinding gridBinding = new()
-        {
-            Buffer = _gridVertexBuffer,
-            Offset = 0
-        };
-
+        Matrix4x4 worldViewProjection = state.Transformation * state.View * state.Projection;
         float vertexDotSize = MathF.Max(1f, SceneConfiguration.VertexDotSize);
 
-        MeshTransformUniform pointUniform = new()
-        {
-            World = state.Transformation,
-            ViewProjection = state.View * state.Projection,
-            WorldViewProjection = state.Transformation * state.View * state.Projection,
-            // Dedicated vertex-marker pass (z=2).
-            RenderParams = new Vector4(0f, 0f, 2f, vertexDotSize),
-            WireColor = NormalizeColor(SceneConfiguration.WireColor),
-            LightDirection = new Vector4(Vector3.Normalize(SceneConfiguration.LightDirection == Vector3.Zero ? new Vector3(1f, 0f, -1f) : SceneConfiguration.LightDirection), 0f),
-            LightColor = new Vector4(SceneConfiguration.LightColor, 1f),
-            StyleParams = new Vector4(MathF.Max(0.01f, SceneConfiguration.WireThickness), MathF.Max(0f, SceneConfiguration.LightIntensity), 0f, 0f),
-            CameraRight = new Vector4(cameraRight, 0f),
-            CameraUp = new Vector4(cameraUp, 0f)
-        };
-        SDLGPUBufferBinding pointBinding = new()
-        {
-            Buffer = _pointVertexBuffer,
-            Offset = 0
-        };
-
-        SDLGPUBufferBinding lightBinding = new()
-        {
-            Buffer = _lightVertexBuffer,
-            Offset = 0
-        };
+        RasterizeFaces(renderer, contentSize, worldViewProjection);
 
         foreach (Rectangle scissorRect in _scissorRenderRects)
         {
             if (!TryConvertToSdlRect(scissorRect, out SDLRect sdlScissor))
                 continue;
 
-            SDL.SetGPUScissor(renderPass, sdlScissor);
-            if (hasFaceData)
-            {
-                SDL.BindGPUGraphicsPipeline(renderPass, _pipeline);
-                SDL.BindGPUVertexBuffers(renderPass, 0, &vertexBinding, 1);
-                SDL.BindGPUFragmentSamplers(renderPass, 0, &textureBinding, 1);
-                SDL.PushGPUVertexUniformData(commandBuffer, 0, &uniform, (uint)sizeof(MeshTransformUniform));
-                SDL.DrawGPUPrimitives(renderPass, (uint)_vertices.Length, 1, 0, 0);
-            }
-
-            if (SceneConfiguration.ShowGrid && _gridVertexBuffer != null)
-            {
-                SDL.BindGPUGraphicsPipeline(renderPass, _pipeline);
-                SDL.BindGPUVertexBuffers(renderPass, 0, &gridBinding, 1);
-                SDL.BindGPUFragmentSamplers(renderPass, 0, &textureBinding, 1);
-                SDL.PushGPUVertexUniformData(commandBuffer, 0, &gridUniform, (uint)sizeof(MeshTransformUniform));
-                SDL.DrawGPUPrimitives(renderPass, (uint)_gridVertices.Length, 1, 0, 0);
-            }
-
-            if (hasPointData)
-            {
-                SDL.BindGPUGraphicsPipeline(renderPass, _pipeline);
-                SDL.BindGPUVertexBuffers(renderPass, 0, &pointBinding, 1);
-                SDL.PushGPUVertexUniformData(commandBuffer, 0, &pointUniform, (uint)sizeof(MeshTransformUniform));
-                SDL.DrawGPUPrimitives(renderPass, (uint)_pointVertices.Length, 1, 0, 0);
-            }
-
-            if (hasLightPointData)
-            {
-                SDL.BindGPUGraphicsPipeline(renderPass, _pipeline);
-                SDL.BindGPUVertexBuffers(renderPass, 0, &lightBinding, 1);
-                SDL.PushGPUVertexUniformData(commandBuffer, 0, &pointUniform, (uint)sizeof(MeshTransformUniform));
-                SDL.DrawGPUPrimitives(renderPass, (uint)_lightVertices.Length, 1, 0, 0);
-            }
+            SDL.SetRenderClipRect(renderer, sdlScissor);
+            DrawFaceRegion(renderer, contentSize, scissorRect);
+            DrawGrid(renderer, scissorRect, state.View * state.Projection);
+            DrawVertices(renderer, scissorRect, worldViewProjection, _pointCenters, Vector4.One, vertexDotSize);
+            DrawVertices(renderer, scissorRect, worldViewProjection, _lightVertices, new Vector4(SceneConfiguration.LightColor, 1f), vertexDotSize * 1.2f);
         }
+
+        SDL.SetRenderClipRect(renderer, (SDLRect*)0);
     }
 
     public void Dispose()
     {
-        SDLGPUDevice* gpuDevice = Application.Instance.GpuDevice;
-        if (gpuDevice == null)
-            return;
-
-        if (_pipeline != null)
+        if (_rasterTexture != null)
         {
-            SDL.ReleaseGPUGraphicsPipeline(gpuDevice, _pipeline);
-            _pipeline = null;
-        }
-
-        if (_vertexShader != null)
-        {
-            SDL.ReleaseGPUShader(gpuDevice, _vertexShader);
-            _vertexShader = null;
-        }
-
-        if (_fragmentShader != null)
-        {
-            SDL.ReleaseGPUShader(gpuDevice, _fragmentShader);
-            _fragmentShader = null;
-        }
-
-        if (_textureSampler != null)
-        {
-            SDL.ReleaseGPUSampler(gpuDevice, _textureSampler);
-            _textureSampler = null;
-        }
-
-        if (_texture != null)
-        {
-            SDL.ReleaseGPUTexture(gpuDevice, _texture);
-            _texture = null;
-        }
-
-        if (_fallbackTexture != null)
-        {
-            SDL.ReleaseGPUTexture(gpuDevice, _fallbackTexture);
-            _fallbackTexture = null;
-        }
-
-        if (_vertexBuffer != null)
-        {
-            SDL.ReleaseGPUBuffer(gpuDevice, _vertexBuffer);
-            _vertexBuffer = null;
-        }
-
-        if (_gridVertexBuffer != null)
-        {
-            SDL.ReleaseGPUBuffer(gpuDevice, _gridVertexBuffer);
-            _gridVertexBuffer = null;
-        }
-
-        if (_pointVertexBuffer != null)
-        {
-            SDL.ReleaseGPUBuffer(gpuDevice, _pointVertexBuffer);
-            _pointVertexBuffer = null;
-        }
-
-        if (_lightVertexBuffer != null)
-        {
-            SDL.ReleaseGPUBuffer(gpuDevice, _lightVertexBuffer);
-            _lightVertexBuffer = null;
+            SDL.DestroyTexture(_rasterTexture);
+            _rasterTexture = null;
         }
     }
 
-    private void EnsureVertexBuffer(SDLGPUDevice* gpuDevice)
+    private void RasterizeFaces(SDLRenderer* renderer, Rectangle contentRect, Matrix4x4 worldViewProjection)
     {
-        uint requiredSize = (uint)(_vertices.Length * Marshal.SizeOf<Mesh3DVertex>());
-        if (_vertexBuffer != null && _vertexBufferSize >= requiredSize)
+        if (_vertices.Length < 3)
             return;
 
-        if (_vertexBuffer != null)
-            SDL.ReleaseGPUBuffer(gpuDevice, _vertexBuffer);
+        int width = Math.Max(1, (int)contentRect.Width);
+        int height = Math.Max(1, (int)contentRect.Height);
+        EnsureRasterTarget(renderer, width, height);
+        Array.Fill(_colorBuffer, TransparentPixel);
+        Array.Fill(_depthBuffer, float.PositiveInfinity);
+        _wireTriangles.Clear();
 
-        _vertexBuffer = SDL.CreateGPUBuffer(gpuDevice, new SDLGPUBufferCreateInfo
+        bool hasTexture = _sourceTexture != null;
+
+        for (int i = 0; i + 2 < _vertices.Length; i += 3)
         {
-            Usage = (int)SDLGPUBufferUsageFlags.Vertex,
-            Size = requiredSize
-        });
-        _vertexBufferSize = requiredSize;
-        _vertexDataDirty = true;
-    }
+            if (!TryProjectTriangle(width, height, worldViewProjection, _vertices[i], _vertices[i + 1], _vertices[i + 2], out ProjectedTriangle triangle))
+                continue;
 
-    private void EnsurePointVertexBuffer(SDLGPUDevice* gpuDevice)
-    {
-        uint requiredSize = (uint)(_pointVertices.Length * Marshal.SizeOf<Mesh3DVertex>());
-        if (_pointVertexBuffer != null && _pointVertexBufferSize >= requiredSize)
-            return;
-
-        if (_pointVertexBuffer != null)
-            SDL.ReleaseGPUBuffer(gpuDevice, _pointVertexBuffer);
-
-        _pointVertexBuffer = SDL.CreateGPUBuffer(gpuDevice, new SDLGPUBufferCreateInfo
-        {
-            Usage = (int)SDLGPUBufferUsageFlags.Vertex,
-            Size = requiredSize
-        });
-        _pointVertexBufferSize = requiredSize;
-        _pointVertexDataDirty = true;
-    }
-
-    private void EnsureLightVertexBuffer(SDLGPUDevice* gpuDevice)
-    {
-        uint requiredSize = (uint)(_lightVertices.Length * Marshal.SizeOf<Mesh3DVertex>());
-        if (_lightVertexBuffer != null && _lightVertexBufferSize >= requiredSize)
-            return;
-
-        if (_lightVertexBuffer != null)
-            SDL.ReleaseGPUBuffer(gpuDevice, _lightVertexBuffer);
-
-        _lightVertexBuffer = SDL.CreateGPUBuffer(gpuDevice, new SDLGPUBufferCreateInfo
-        {
-            Usage = (int)SDLGPUBufferUsageFlags.Vertex,
-            Size = requiredSize
-        });
-        _lightVertexBufferSize = requiredSize;
-        _lightVertexDataDirty = true;
-    }
-
-    private static void UploadVertices(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer, SDLGPUBuffer* destinationBuffer, Mesh3DVertex[] vertices)
-    {
-        uint bytesToUpload = (uint)(vertices.Length * Marshal.SizeOf<Mesh3DVertex>());
-        SDLGPUTransferBuffer* transferBuffer = SDL.CreateGPUTransferBuffer(gpuDevice, new SDLGPUTransferBufferCreateInfo
-        {
-            Usage = SDLGPUTransferBufferUsage.Upload,
-            Size = bytesToUpload
-        });
-
-        void* mapped = SDL.MapGPUTransferBuffer(gpuDevice, transferBuffer, true);
-        fixed (Mesh3DVertex* verticesPtr = vertices)
-            Buffer.MemoryCopy(verticesPtr, mapped, bytesToUpload, bytesToUpload);
-        SDL.UnmapGPUTransferBuffer(gpuDevice, transferBuffer);
-
-        SDLGPUCopyPass* copyPass = SDL.BeginGPUCopyPass(commandBuffer);
-        SDL.UploadToGPUBuffer(copyPass,
-            new SDLGPUTransferBufferLocation
-            {
-                TransferBuffer = transferBuffer,
-                Offset = 0
-            },
-            new SDLGPUBufferRegion
-            {
-                Buffer = destinationBuffer,
-                Offset = 0,
-                Size = bytesToUpload
-            },
-            false);
-        SDL.EndGPUCopyPass(copyPass);
-        SDL.ReleaseGPUTransferBuffer(gpuDevice, transferBuffer);
-    }
-
-    private void EnsureGridVertexBuffer(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer)
-    {
-        uint requiredSize = (uint)(_gridVertices.Length * Marshal.SizeOf<Mesh3DVertex>());
-        if (_gridVertexBuffer == null || _gridVertexBufferSize < requiredSize)
-        {
-            if (_gridVertexBuffer != null)
-                SDL.ReleaseGPUBuffer(gpuDevice, _gridVertexBuffer);
-
-            _gridVertexBuffer = SDL.CreateGPUBuffer(gpuDevice, new SDLGPUBufferCreateInfo
-            {
-                Usage = (int)SDLGPUBufferUsageFlags.Vertex,
-                Size = requiredSize
-            });
-            _gridVertexBufferSize = requiredSize;
-            _gridVertexDataDirty = true;
+            _wireTriangles.Add(new WireTriangle(triangle.A.Position, triangle.B.Position, triangle.C.Position));
+            RasterizeTriangle(triangle, hasTexture);
         }
 
-        if (!_gridVertexDataDirty || _gridVertexBuffer == null)
-            return;
-
-        SDLGPUTransferBuffer* transferBuffer = SDL.CreateGPUTransferBuffer(gpuDevice, new SDLGPUTransferBufferCreateInfo
-        {
-            Usage = SDLGPUTransferBufferUsage.Upload,
-            Size = requiredSize
-        });
-
-        void* mapped = SDL.MapGPUTransferBuffer(gpuDevice, transferBuffer, true);
-        fixed (Mesh3DVertex* verticesPtr = _gridVertices)
-            Buffer.MemoryCopy(verticesPtr, mapped, requiredSize, requiredSize);
-        SDL.UnmapGPUTransferBuffer(gpuDevice, transferBuffer);
-
-        SDLGPUCopyPass* copyPass = SDL.BeginGPUCopyPass(commandBuffer);
-        SDL.UploadToGPUBuffer(copyPass,
-            new SDLGPUTransferBufferLocation
-            {
-                TransferBuffer = transferBuffer,
-                Offset = 0
-            },
-            new SDLGPUBufferRegion
-            {
-                Buffer = _gridVertexBuffer,
-                Offset = 0,
-                Size = requiredSize
-            },
-            false);
-        SDL.EndGPUCopyPass(copyPass);
-        SDL.ReleaseGPUTransferBuffer(gpuDevice, transferBuffer);
-
-        _gridVertexDataDirty = false;
+        fixed (Rgba32* colorBufferPtr = _colorBuffer)
+            SDL.UpdateTexture(_rasterTexture, (SDLRect*)0, colorBufferPtr, _rasterWidth * sizeof(uint));
     }
 
-    private void CreatePipelineIfRequired(SDLGPUDevice* gpuDevice)
+    private void DrawFaceRegion(SDLRenderer* renderer, Rectangle contentRect, Rectangle scissorRect)
     {
-        if (_pipeline != null)
+        if (_rasterTexture == null)
             return;
 
-        (byte[] vertexCode, byte[] fragmentCode, SDLGPUShaderFormat format) = LoadShadersForCurrentBackend(gpuDevice);
-        if (_vertexShader == null)
-            _vertexShader = CreateShader(gpuDevice, vertexCode, format, SDLGPUShaderStage.Vertex, 1);
-        if (_fragmentShader == null)
-            _fragmentShader = CreateShader(gpuDevice, fragmentCode, format, SDLGPUShaderStage.Fragment, 0, 1);
-
-        SDLGPUVertexBufferDescription vertexBufferDescription = new()
+        SDLFRect src = new()
         {
-            Slot = 0,
-            InputRate = SDLGPUVertexInputRate.Vertex,
-            InstanceStepRate = 0,
-            Pitch = (uint)Marshal.SizeOf<Mesh3DVertex>()
+            X = scissorRect.X - contentRect.X,
+            Y = scissorRect.Y - contentRect.Y,
+            W = scissorRect.Width,
+            H = scissorRect.Height
         };
 
-        SDLGPUVertexAttribute* attributes = stackalloc SDLGPUVertexAttribute[4];
-        attributes[0] = new SDLGPUVertexAttribute
+        SDLFRect dst = new()
         {
-            BufferSlot = 0,
-            Format = SDLGPUVertexElementFormat.Float3,
-            Location = 0,
-            Offset = 0
-        };
-        attributes[1] = new SDLGPUVertexAttribute
-        {
-            BufferSlot = 0,
-            Format = SDLGPUVertexElementFormat.Float4,
-            Location = 1,
-            Offset = 12
-        };
-        attributes[2] = new SDLGPUVertexAttribute
-        {
-            BufferSlot = 0,
-            Format = SDLGPUVertexElementFormat.Float2,
-            Location = 2,
-            Offset = 28
-        };
-        attributes[3] = new SDLGPUVertexAttribute
-        {
-            BufferSlot = 0,
-            Format = SDLGPUVertexElementFormat.Float3,
-            Location = 3,
-            Offset = 36
+            X = scissorRect.X,
+            Y = scissorRect.Y,
+            W = scissorRect.Width,
+            H = scissorRect.Height
         };
 
-        SDLGPUColorTargetDescription colorTargetDescription = new()
+        SDL.RenderTexture(renderer, _rasterTexture, src, dst);
+
+        if (!SceneConfiguration.ShowWireFrame || _wireTriangles.Count == 0)
+            return;
+
+        Vector4 wireColor = NormalizeColor(SceneConfiguration.WireColor);
+        float wireThickness = MathF.Max(1f, SceneConfiguration.WireThickness);
+        foreach (WireTriangle triangle in _wireTriangles)
         {
-            Format = Application.Instance.SwapchainFormat,
-            BlendState = new SDLGPUColorTargetBlendState
+            SDLFPoint a = triangle.A;
+            SDLFPoint b = triangle.B;
+            SDLFPoint c = triangle.C;
+            a.X += contentRect.X; a.Y += contentRect.Y;
+            b.X += contentRect.X; b.Y += contentRect.Y;
+            c.X += contentRect.X; c.Y += contentRect.Y;
+            DrawLine(renderer, a, b, wireColor, wireThickness);
+            DrawLine(renderer, b, c, wireColor, wireThickness);
+            DrawLine(renderer, c, a, wireColor, wireThickness);
+        }
+    }
+
+    private void EnsureRasterTarget(SDLRenderer* renderer, int width, int height)
+    {
+        if (_rasterTexture != null && _rasterWidth == width && _rasterHeight == height)
+            return;
+
+        if (_rasterTexture != null)
+            SDL.DestroyTexture(_rasterTexture);
+
+        _rasterTexture = SDL.CreateTexture(renderer, SDLPixelFormat.Rgba32, SDLTextureAccess.Streaming, width, height);
+        if (_rasterTexture == null)
+            throw new InvalidOperationException($"Failed to create raster texture: {SDL.GetErrorS()}");
+
+        SDL.SetTextureBlendMode(_rasterTexture, (uint)SDLBlendMode.Blend);
+        SDL.SetTextureScaleMode(_rasterTexture, SDLScaleMode.Nearest);
+        _rasterWidth = width;
+        _rasterHeight = height;
+        _colorBuffer = new Rgba32[width * height];
+        _depthBuffer = new float[width * height];
+    }
+
+    private void RasterizeTriangle(ProjectedTriangle triangle, bool hasTexture)
+    {
+        float minX = MathF.Min(triangle.A.Position.X, MathF.Min(triangle.B.Position.X, triangle.C.Position.X));
+        float minY = MathF.Min(triangle.A.Position.Y, MathF.Min(triangle.B.Position.Y, triangle.C.Position.Y));
+        float maxX = MathF.Max(triangle.A.Position.X, MathF.Max(triangle.B.Position.X, triangle.C.Position.X));
+        float maxY = MathF.Max(triangle.A.Position.Y, MathF.Max(triangle.B.Position.Y, triangle.C.Position.Y));
+
+        int startX = Math.Max(0, (int)MathF.Floor(minX));
+        int startY = Math.Max(0, (int)MathF.Floor(minY));
+        int endX = Math.Min(_rasterWidth - 1, (int)MathF.Ceiling(maxX));
+        int endY = Math.Min(_rasterHeight - 1, (int)MathF.Ceiling(maxY));
+
+        float area = Edge(triangle.A.Position, triangle.B.Position, triangle.C.Position);
+        if (MathF.Abs(area) < float.Epsilon)
+            return;
+
+        for (int y = startY; y <= endY; y++)
+        {
+            for (int x = startX; x <= endX; x++)
             {
-                SrcColorBlendfactor = SDLGPUBlendFactor.SrcAlpha,
-                DstColorBlendfactor = SDLGPUBlendFactor.OneMinusSrcAlpha,
-                ColorBlendOp = SDLGPUBlendOp.Add,
-                SrcAlphaBlendfactor = SDLGPUBlendFactor.One,
-                DstAlphaBlendfactor = SDLGPUBlendFactor.OneMinusSrcAlpha,
-                AlphaBlendOp = SDLGPUBlendOp.Add,
-                EnableBlend = 1
+                var p = new SDLFPoint { X = x + 0.5f, Y = y + 0.5f };
+                float w0 = Edge(triangle.B.Position, triangle.C.Position, p);
+                float w1 = Edge(triangle.C.Position, triangle.A.Position, p);
+                float w2 = Edge(triangle.A.Position, triangle.B.Position, p);
+                bool hasNegative = (w0 < 0f) || (w1 < 0f) || (w2 < 0f);
+                bool hasPositive = (w0 > 0f) || (w1 > 0f) || (w2 > 0f);
+                if (hasNegative && hasPositive)
+                    continue;
+
+                w0 /= area;
+                w1 /= area;
+                w2 /= area;
+                float depth = (w0 * triangle.A.Depth) + (w1 * triangle.B.Depth) + (w2 * triangle.C.Depth);
+                int pixelIndex = (y * _rasterWidth) + x;
+                if (depth >= _depthBuffer[pixelIndex])
+                    continue;
+
+                _depthBuffer[pixelIndex] = depth;
+                Rgba32 color = InterpolateColor(triangle, w0, w1, w2);
+                if (hasTexture)
+                {
+                    Vector2 uv = PerspectiveCorrectUv(triangle, w0, w1, w2);
+                    color = MultiplyColor(color, SampleTexture(uv));
+                }
+
+                _colorBuffer[pixelIndex] = color;
             }
+        }
+    }
+
+    private static float Edge(SDLFPoint a, SDLFPoint b, SDLFPoint c)
+    {
+        return ((c.X - a.X) * (b.Y - a.Y)) - ((c.Y - a.Y) * (b.X - a.X));
+    }
+
+    private static Rgba32 InterpolateColor(ProjectedTriangle triangle, float w0, float w1, float w2)
+    {
+        float r = (triangle.A.Color.R * w0) + (triangle.B.Color.R * w1) + (triangle.C.Color.R * w2);
+        float g = (triangle.A.Color.G * w0) + (triangle.B.Color.G * w1) + (triangle.C.Color.G * w2);
+        float b = (triangle.A.Color.B * w0) + (triangle.B.Color.B * w1) + (triangle.C.Color.B * w2);
+        float a = (triangle.A.Color.A * w0) + (triangle.B.Color.A * w1) + (triangle.C.Color.A * w2);
+        return new Rgba32(ClampByte(r), ClampByte(g), ClampByte(b), ClampByte(a));
+    }
+
+    private static byte ClampByte(float value)
+    {
+        return (byte)Math.Clamp((int)MathF.Round(value), 0, 255);
+    }
+
+    private static Vector2 PerspectiveCorrectUv(ProjectedTriangle triangle, float w0, float w1, float w2)
+    {
+        float invW = (w0 * triangle.A.InvW) + (w1 * triangle.B.InvW) + (w2 * triangle.C.InvW);
+        if (MathF.Abs(invW) < float.Epsilon)
+            return Vector2.Zero;
+
+        float u = ((w0 * triangle.A.Uv.X * triangle.A.InvW) + (w1 * triangle.B.Uv.X * triangle.B.InvW) + (w2 * triangle.C.Uv.X * triangle.C.InvW)) / invW;
+        float v = ((w0 * triangle.A.Uv.Y * triangle.A.InvW) + (w1 * triangle.B.Uv.Y * triangle.B.InvW) + (w2 * triangle.C.Uv.Y * triangle.C.InvW)) / invW;
+        return new Vector2(u, v);
+    }
+
+    private Rgba32 SampleTexture(Vector2 uv)
+    {
+        if (_sourceTexture == null || _sourceTexture.Width <= 0 || _sourceTexture.Height <= 0)
+            return new Rgba32(255, 255, 255, 255);
+
+        float wrappedU = uv.X - MathF.Floor(uv.X);
+        float wrappedV = uv.Y - MathF.Floor(uv.Y);
+        int x = Math.Clamp((int)(wrappedU * (_sourceTexture.Width - 1)), 0, _sourceTexture.Width - 1);
+        int y = Math.Clamp((int)(wrappedV * (_sourceTexture.Height - 1)), 0, _sourceTexture.Height - 1);
+        return _sourceTexture[x, y];
+    }
+
+    private static Rgba32 MultiplyColor(Rgba32 vertexColor, Rgba32 textureColor)
+    {
+        byte r = (byte)((vertexColor.R * textureColor.R) / 255);
+        byte g = (byte)((vertexColor.G * textureColor.G) / 255);
+        byte b = (byte)((vertexColor.B * textureColor.B) / 255);
+        byte a = (byte)((vertexColor.A * textureColor.A) / 255);
+        return new Rgba32(r, g, b, a);
+    }
+
+    private void DrawGrid(SDLRenderer* renderer, Rectangle contentRect, Matrix4x4 viewProjection)
+    {
+        if (!SceneConfiguration.ShowGrid)
+            return;
+
+        Vector4 gridColor = NormalizeColor(new Vector4(150f, 150f, 150f, 200f));
+        const int halfCells = 15;
+        const float step = 1f;
+
+        for (int i = -halfCells; i <= halfCells; i++)
+        {
+            float offset = i * step;
+            DrawProjectedLine(renderer, contentRect, viewProjection, new Vector3(offset, 0f, -halfCells * step), new Vector3(offset, 0f, halfCells * step), gridColor);
+            DrawProjectedLine(renderer, contentRect, viewProjection, new Vector3(-halfCells * step, 0f, offset), new Vector3(halfCells * step, 0f, offset), gridColor);
+        }
+    }
+
+    private void DrawVertices(SDLRenderer* renderer, Rectangle contentRect, Matrix4x4 worldViewProjection, Mesh3DVertex[] points, Vector4 color, float size)
+    {
+        if (!SceneConfiguration.ShowVertices && !ReferenceEquals(points, _lightVertices))
+            return;
+
+        Vector4 normalizedColor = NormalizeColor(color);
+        float halfSize = size * 0.5f;
+        foreach (Mesh3DVertex point in points)
+        {
+            if (!TryProjectPoint((int)contentRect.Width, (int)contentRect.Height, worldViewProjection, point.Position, out SDLFPoint projected, out _, out _))
+                continue;
+
+            projected.X += contentRect.X;
+            projected.Y += contentRect.Y;
+
+            SDL.SetRenderDrawColorFloat(renderer, normalizedColor.X, normalizedColor.Y, normalizedColor.Z, normalizedColor.W);
+            SDLFRect dotRect = new()
+            {
+                X = projected.X - halfSize,
+                Y = projected.Y - halfSize,
+                W = size,
+                H = size
+            };
+            SDL.RenderFillRect(renderer, dotRect);
+        }
+    }
+
+    private static void DrawLine(SDLRenderer* renderer, SDLFPoint start, SDLFPoint end, Vector4 color, float thickness)
+    {
+        SDL.SetRenderDrawColorFloat(renderer, color.X, color.Y, color.Z, color.W);
+        if (thickness <= 1f)
+        {
+            SDL.RenderLine(renderer, start.X, start.Y, end.X, end.Y);
+            return;
+        }
+
+        float halfThickness = thickness * 0.5f;
+        for (float offset = -halfThickness; offset <= halfThickness; offset += 1f)
+            SDL.RenderLine(renderer, start.X + offset, start.Y, end.X + offset, end.Y);
+    }
+
+    private static void DrawProjectedLine(SDLRenderer* renderer, Rectangle contentRect, Matrix4x4 viewProjection, Vector3 start, Vector3 end, Vector4 color)
+    {
+        if (!TryProjectPoint((int)contentRect.Width, (int)contentRect.Height, viewProjection, start, out SDLFPoint projectedStart, out _, out _))
+            return;
+        if (!TryProjectPoint((int)contentRect.Width, (int)contentRect.Height, viewProjection, end, out SDLFPoint projectedEnd, out _, out _))
+            return;
+
+        projectedStart.X += contentRect.X;
+        projectedStart.Y += contentRect.Y;
+        projectedEnd.X += contentRect.X;
+        projectedEnd.Y += contentRect.Y;
+        DrawLine(renderer, projectedStart, projectedEnd, color, 1f);
+    }
+
+    private static bool TryProjectTriangle(int width, int height, Matrix4x4 mvp, Mesh3DVertex a, Mesh3DVertex b, Mesh3DVertex c, out ProjectedTriangle triangle)
+    {
+        triangle = default;
+        if (!TryProjectVertex(width, height, mvp, a, out RasterVertex pa))
+            return false;
+        if (!TryProjectVertex(width, height, mvp, b, out RasterVertex pb))
+            return false;
+        if (!TryProjectVertex(width, height, mvp, c, out RasterVertex pc))
+            return false;
+
+        triangle = new ProjectedTriangle(pa, pb, pc);
+        return true;
+    }
+
+    private static bool TryProjectVertex(int width, int height, Matrix4x4 mvp, Mesh3DVertex input, out RasterVertex vertex)
+    {
+        vertex = default;
+        if (!TryProjectPoint(width, height, mvp, input.Position, out SDLFPoint projected, out float ndcDepth, out float invW))
+            return false;
+
+        SDLFColor color = ToSdlColor(input.Color);
+        vertex = new RasterVertex(
+            projected,
+            ndcDepth,
+            invW,
+            input.UvCoordinate,
+            new Rgba32(ClampByte(color.R * 255f), ClampByte(color.G * 255f), ClampByte(color.B * 255f), ClampByte(color.A * 255f)));
+        return true;
+    }
+
+    private static bool TryProjectPoint(int width, int height, Matrix4x4 mvp, Vector3 position, out SDLFPoint projected, out float ndcDepth, out float invW)
+    {
+        projected = default;
+        ndcDepth = 0f;
+        invW = 0f;
+
+        Vector4 clip = Vector4.Transform(new Vector4(position, 1f), mvp);
+        if (Math.Abs(clip.W) < float.Epsilon || clip.W <= 0f)
+            return false;
+
+        invW = 1f / clip.W;
+        float ndcX = clip.X * invW;
+        float ndcY = clip.Y * invW;
+        ndcDepth = clip.Z * invW;
+        projected = new SDLFPoint
+        {
+            X = (ndcX * 0.5f + 0.5f) * width,
+            Y = (1f - (ndcY * 0.5f + 0.5f)) * height
         };
-
-        _pipeline = SDL.CreateGPUGraphicsPipeline(gpuDevice, new SDLGPUGraphicsPipelineCreateInfo
-        {
-            VertexShader = _vertexShader,
-            FragmentShader = _fragmentShader,
-            PrimitiveType = SDLGPUPrimitiveType.Trianglelist,
-            VertexInputState = new SDLGPUVertexInputState
-            {
-                NumVertexBuffers = 1,
-                VertexBufferDescriptions = &vertexBufferDescription,
-                NumVertexAttributes = 4,
-                VertexAttributes = attributes
-            },
-            RasterizerState = new SDLGPURasterizerState
-            {
-                CullMode = SDLGPUCullMode.None
-            },
-            DepthStencilState = new SDLGPUDepthStencilState
-            {
-                CompareOp = SDLGPUCompareOp.LessOrEqual,
-                EnableDepthTest = 1,
-                EnableDepthWrite = 1,
-                EnableStencilTest = 0
-            },
-            MultisampleState = new SDLGPUMultisampleState
-            {
-                SampleCount = SDLGPUSampleCount.Samplecount1
-            },
-            TargetInfo = new SDLGPUGraphicsPipelineTargetInfo
-            {
-                NumColorTargets = 1,
-                ColorTargetDescriptions = &colorTargetDescription,
-                HasDepthStencilTarget = 1,
-                DepthStencilFormat = SelectDepthFormat(gpuDevice)
-            }
-        });
-    }
-
-    private static SDLGPUShader* CreateShader(SDLGPUDevice* gpuDevice, byte[] code, SDLGPUShaderFormat format, SDLGPUShaderStage stage, uint uniformBufferCount, uint samplerCount = 0)
-    {
-        fixed (byte* shaderCode = code)
-        {
-            return SDL.CreateGPUShader(gpuDevice, new SDLGPUShaderCreateInfo
-            {
-                Code = shaderCode,
-                CodeSize = (nuint)code.Length,
-                Format = (uint)format,
-                Stage = stage,
-                NumSamplers = samplerCount,
-                NumStorageTextures = 0,
-                NumStorageBuffers = 0,
-                NumUniformBuffers = uniformBufferCount
-            });
-        }
-    }
-
-    private static (byte[] vertexShader, byte[] fragmentShader, SDLGPUShaderFormat format) LoadShadersForCurrentBackend(SDLGPUDevice* gpuDevice)
-    {
-        SDLGPUShaderFormat format = (SDLGPUShaderFormat)SDL.GetGPUShaderFormats(gpuDevice);
-
-        if (format.HasFlag(SDLGPUShaderFormat.Dxil))
-        {
-            return (
-                ReadEmbeddedFile("ImGui.Forms.Resources.Shaders.DXIL.Shader.vert.dxil"),
-                ReadEmbeddedFile("ImGui.Forms.Resources.Shaders.DXIL.Shader.frag.dxil"),
-                SDLGPUShaderFormat.Dxil);
-        }
-
-        if (format.HasFlag(SDLGPUShaderFormat.Spirv))
-        {
-            return (
-                ReadEmbeddedFile("ImGui.Forms.Resources.Shaders.SPIRV.Shader.vert.spv"),
-                ReadEmbeddedFile("ImGui.Forms.Resources.Shaders.SPIRV.Shader.frag.spv"),
-                SDLGPUShaderFormat.Spirv);
-        }
-
-        throw new InvalidOperationException($"The current GPU backend does not support supported shader formats. Available: {format}");
-    }
-
-    private static byte[] ReadEmbeddedFile(string resourceName)
-    {
-        using Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName);
-        if (stream == null)
-            throw new InvalidOperationException($"Shader resource not found: {resourceName}");
-
-        using var memory = new MemoryStream();
-        stream.CopyTo(memory);
-        return memory.ToArray();
-    }
-
-    private void EnsureSampler(SDLGPUDevice* gpuDevice)
-    {
-        if (_textureSampler != null)
-            return;
-
-        _textureSampler = SDL.CreateGPUSampler(gpuDevice, new SDLGPUSamplerCreateInfo
-        {
-            MinFilter = SDLGPUFilter.Nearest,
-            MagFilter = SDLGPUFilter.Nearest,
-            MipmapMode = SDLGPUSamplerMipmapMode.Nearest,
-            AddressModeU = SDLGPUSamplerAddressMode.Repeat,
-            AddressModeV = SDLGPUSamplerAddressMode.Repeat,
-            AddressModeW = SDLGPUSamplerAddressMode.Repeat
-        });
-    }
-
-    private void EnsureFallbackTexture(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer)
-    {
-        if (_fallbackTexture != null)
-            return;
-
-        using var image = new Image<Rgba32>(1, 1, new Rgba32(255, 255, 255, 255));
-        _fallbackTexture = CreateGpuTexture(gpuDevice, image);
-        UploadImageToTexture(gpuDevice, commandBuffer, _fallbackTexture, image);
-    }
-
-    private void UploadTextureIfRequired(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer)
-    {
-        if (!_textureDirty)
-            return;
-
-        if (_texture != null)
-        {
-            SDL.ReleaseGPUTexture(gpuDevice, _texture);
-            _texture = null;
-        }
-
-        if (_sourceTexture != null)
-        {
-            _texture = CreateGpuTexture(gpuDevice, _sourceTexture);
-            UploadImageToTexture(gpuDevice, commandBuffer, _texture, _sourceTexture);
-        }
-
-        _textureDirty = false;
-    }
-
-    private static SDLGPUTexture* CreateGpuTexture(SDLGPUDevice* gpuDevice, Image<Rgba32> image)
-    {
-        return SDL.CreateGPUTexture(gpuDevice, new SDLGPUTextureCreateInfo
-        {
-            Width = (uint)image.Width,
-            Height = (uint)image.Height,
-            Format = SDLGPUTextureFormat.R8G8B8A8Unorm,
-            Type = SDLGPUTextureType.Texturetype2D,
-            LayerCountOrDepth = 1,
-            NumLevels = 1,
-            SampleCount = SDLGPUSampleCount.Samplecount1,
-            Usage = (int)SDLGPUTextureUsageFlags.Sampler
-        });
-    }
-
-    private static void UploadImageToTexture(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer, SDLGPUTexture* texture, Image<Rgba32> image)
-    {
-        uint size = (uint)(image.Width * image.Height * 4);
-        SDLGPUTransferBuffer* transferBuffer = SDL.CreateGPUTransferBuffer(gpuDevice, new SDLGPUTransferBufferCreateInfo
-        {
-            Usage = SDLGPUTransferBufferUsage.Upload,
-            Size = size
-        });
-
-        void* mapped = SDL.MapGPUTransferBuffer(gpuDevice, transferBuffer, true);
-        var pixels = new Rgba32[image.Width * image.Height];
-        image.CopyPixelDataTo(pixels);
-        fixed (Rgba32* pixelPtr = pixels)
-            Buffer.MemoryCopy(pixelPtr, mapped, size, size);
-        SDL.UnmapGPUTransferBuffer(gpuDevice, transferBuffer);
-
-        SDLGPUCopyPass* copyPass = SDL.BeginGPUCopyPass(commandBuffer);
-        SDL.UploadToGPUTexture(copyPass,
-            new SDLGPUTextureTransferInfo
-            {
-                TransferBuffer = transferBuffer,
-                Offset = 0,
-                PixelsPerRow = (uint)image.Width,
-                RowsPerLayer = (uint)image.Height
-            },
-            new SDLGPUTextureRegion
-            {
-                Texture = texture,
-                X = 0,
-                Y = 0,
-                W = (uint)image.Width,
-                H = (uint)image.Height,
-                D = 1
-            },
-            false);
-        SDL.EndGPUCopyPass(copyPass);
-        SDL.ReleaseGPUTransferBuffer(gpuDevice, transferBuffer);
-    }
-
-    private static SDLGPUTextureFormat SelectDepthFormat(SDLGPUDevice* gpuDevice)
-    {
-        SDLGPUTextureType textureType = SDLGPUTextureType.Texturetype2D;
-        uint usage = (uint)SDLGPUTextureUsageFlags.DepthStencilTarget;
-
-        if (SDL.GPUTextureSupportsFormat(gpuDevice, SDLGPUTextureFormat.D32Float, textureType, usage))
-            return SDLGPUTextureFormat.D32Float;
-
-        if (SDL.GPUTextureSupportsFormat(gpuDevice, SDLGPUTextureFormat.D24Unorm, textureType, usage))
-            return SDLGPUTextureFormat.D24Unorm;
-
-        throw new InvalidOperationException("No supported depth format was found for this GPU backend.");
-    }
-
-    private static Mesh3DVertex[] CreateGridVertices()
-    {
-        const float gridHalfSize = 1024f;
-        Vector4 color = new(255f, 255f, 255f, 255f);
-        Vector3 normalBarycentric = new(1f, 0f, 0f);
-
-        // Two triangles making a large XZ plane at Y=0.
-        return
-        [
-            new Mesh3DVertex(new Vector3(-gridHalfSize, 0f, -gridHalfSize), color, new Vector2(0f, 0f), normalBarycentric),
-            new Mesh3DVertex(new Vector3( gridHalfSize, 0f, -gridHalfSize), color, new Vector2(1f, 0f), normalBarycentric),
-            new Mesh3DVertex(new Vector3( gridHalfSize, 0f,  gridHalfSize), color, new Vector2(1f, 1f), normalBarycentric),
-            new Mesh3DVertex(new Vector3(-gridHalfSize, 0f, -gridHalfSize), color, new Vector2(0f, 0f), normalBarycentric),
-            new Mesh3DVertex(new Vector3( gridHalfSize, 0f,  gridHalfSize), color, new Vector2(1f, 1f), normalBarycentric),
-            new Mesh3DVertex(new Vector3(-gridHalfSize, 0f,  gridHalfSize), color, new Vector2(0f, 1f), normalBarycentric)
-        ];
+        return true;
     }
 
     private void BuildScissorRenderRects(Rectangle contentRect, List<Rectangle> output)
@@ -863,7 +485,6 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
 
             output.Clear();
             output.AddRange(next);
-
             if (output.Count == 0)
                 return;
         }
@@ -877,7 +498,6 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
         float bottom = Math.Min(a.Y + a.Height, b.Y + b.Height);
         float width = right - left;
         float height = bottom - top;
-
         if (width <= 0f || height <= 0f)
             return null;
 
@@ -901,7 +521,6 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
     {
         if (width <= 0f || height <= 0f)
             return;
-
         output.Add(new Rectangle(new Vector2(x, y), new Vector2(width, height)));
     }
 
@@ -913,29 +532,8 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
         int bottom = (int)MathF.Ceiling(rect.Y + rect.Height);
         int width = right - x;
         int height = bottom - y;
-
-        sdlRect = new SDLRect
-        {
-            X = x,
-            Y = y,
-            W = width,
-            H = height
-        };
-
+        sdlRect = new SDLRect { X = x, Y = y, W = width, H = height };
         return width > 0 && height > 0;
-    }
-
-    private static void GetCameraBasisFromView(Matrix4x4 view, out Vector3 right, out Vector3 up)
-    {
-        if (!Matrix4x4.Invert(view, out Matrix4x4 inverseView))
-        {
-            right = Vector3.UnitX;
-            up = Vector3.UnitY;
-            return;
-        }
-
-        right = Vector3.Normalize(new Vector3(inverseView.M11, inverseView.M12, inverseView.M13));
-        up = Vector3.Normalize(new Vector3(inverseView.M21, inverseView.M22, inverseView.M23));
     }
 
     private void UpdateLightBillboardVertices()
@@ -943,11 +541,7 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
         Vector3 lightDirection = Vector3.Normalize(SceneConfiguration.LightDirection == Vector3.Zero ? new Vector3(1f, 0f, -1f) : SceneConfiguration.LightDirection);
         float lightDistance = GetLightBillboardDistance(lightDirection);
         Vector3 lightPosition = lightDirection * lightDistance;
-        var lightCenter = new Mesh3DVertex(lightPosition, LightBillboardColor, Vector2.Zero, Vector3.Zero);
-        var vertices = new List<Mesh3DVertex>(6);
-        AddBillboardDot(vertices, lightCenter);
-        _lightVertices = [.. vertices];
-        _lightVertexDataDirty = true;
+        _lightVertices = [new Mesh3DVertex(lightPosition, LightBillboardColor, Vector2.Zero)];
     }
 
     private float GetLightBillboardDistance(Vector3 lightDirection)
@@ -974,47 +568,43 @@ internal unsafe class SdlGpuMeshRenderer3D : IDisposable
     {
         if (color.X > 1f || color.Y > 1f || color.Z > 1f || color.W > 1f)
             return color / 255f;
-
         return color;
     }
 
-    [StructLayout(LayoutKind.Sequential)]
-    private readonly struct Mesh3DVertex
+    private static SDLFColor ToSdlColor(Vector4 color)
     {
-        public readonly Vector3 Position;
-        public readonly Vector4 Color;
-        public readonly Vector2 UvCoordinate;
-        public readonly Vector3 Barycentric;
-
-        public Mesh3DVertex(Vector3 position, Vector4 color, Vector2 uvCoordinate, Vector3 barycentric)
-        {
-            Position = position;
-            Color = NormalizeColor(color);
-            UvCoordinate = uvCoordinate;
-            Barycentric = barycentric;
-        }
-
-        private static Vector4 NormalizeColor(Vector4 color)
-        {
-            if (color.X > 1f || color.Y > 1f || color.Z > 1f || color.W > 1f)
-                return color / 255f;
-
-            return color;
-        }
+        Vector4 normalizedColor = NormalizeColor(color);
+        return new SDLFColor { R = normalizedColor.X, G = normalizedColor.Y, B = normalizedColor.Z, A = normalizedColor.W };
     }
 
     [StructLayout(LayoutKind.Sequential)]
-    private struct MeshTransformUniform
+    private readonly struct Mesh3DVertex(Vector3 position, Vector4 color, Vector2 uvCoordinate)
     {
-        public Matrix4x4 World;
-        public Matrix4x4 ViewProjection;
-        public Matrix4x4 WorldViewProjection;
-        public Vector4 RenderParams;
-        public Vector4 WireColor;
-        public Vector4 LightDirection;
-        public Vector4 LightColor;
-        public Vector4 StyleParams;
-        public Vector4 CameraRight;
-        public Vector4 CameraUp;
+        public readonly Vector3 Position = position;
+        public readonly Vector4 Color = NormalizeColor(color);
+        public readonly Vector2 UvCoordinate = uvCoordinate;
+    }
+
+    private readonly struct RasterVertex(SDLFPoint position, float depth, float invW, Vector2 uv, Rgba32 color)
+    {
+        public SDLFPoint Position { get; } = position;
+        public float Depth { get; } = depth;
+        public float InvW { get; } = invW;
+        public Vector2 Uv { get; } = uv;
+        public Rgba32 Color { get; } = color;
+    }
+
+    private readonly struct ProjectedTriangle(RasterVertex a, RasterVertex b, RasterVertex c)
+    {
+        public RasterVertex A { get; } = a;
+        public RasterVertex B { get; } = b;
+        public RasterVertex C { get; } = c;
+    }
+
+    private readonly struct WireTriangle(SDLFPoint a, SDLFPoint b, SDLFPoint c)
+    {
+        public SDLFPoint A { get; } = a;
+        public SDLFPoint B { get; } = b;
+        public SDLFPoint C { get; } = c;
     }
 }

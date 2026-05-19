@@ -123,9 +123,6 @@ public abstract class Form
         // Begin window
         Hexa.NET.ImGui.ImGui.Begin($"{Id}", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove);
         
-        // Set nearest sampler for image interpolation
-        ImGuiSampler.SetNearest();
-
         // Set icon
         if (_setIcon)
         {

@@ -12,32 +12,63 @@ internal class ImageFactory(SDLGPUDevicePtr gpuDevice)
     private readonly Dictionary<Image<Rgba32>, nint> _inputPointers = [];
     private readonly Dictionary<nint, Image<Rgba32>> _inputPointersReverse = [];
     private readonly Dictionary<nint, SDLGPUTexturePtr> _ptrTextures = [];
-    private readonly Dictionary<nint, int> _ptrTexturesRefCount = [];
+    private readonly Dictionary<Image<Rgba32>, int> _imageRefCount = [];
+    private readonly Dictionary<nint, bool> _ptrUsedThisFrame = [];
     private readonly List<nint> _unloadQueue = [];
 
-    public nint LoadImage(Image<Rgba32> img)
+    public void RegisterImage(Image<Rgba32> image)
     {
         lock (_sync)
         {
-            nint ptr;
+            _imageRefCount.TryGetValue(image, out var refCount);
+            _imageRefCount[image] = refCount + 1;
+        }
+    }
 
-            if (_inputPointers.TryGetValue(img, out IntPtr texturePtr))
+    public nint GetOrLoadImage(Image<Rgba32> image)
+    {
+        lock (_sync)
+        {
+            if (_inputPointers.TryGetValue(image, out var texturePtr) && _ptrTextures.ContainsKey(texturePtr))
             {
-                ptr = texturePtr;
-                UpdateImage(ptr);
-
-                _ptrTexturesRefCount[ptr]++;
-
-                return ptr;
+                TouchTexture(texturePtr);
+                return texturePtr;
             }
 
-            ptr = Load2DTexture(img);
+            if (_inputPointers.TryGetValue(image, out var stalePtr))
+            {
+                _inputPointers.Remove(image);
+                _inputPointersReverse.Remove(stalePtr);
+                _ptrUsedThisFrame.Remove(stalePtr);
+            }
 
-            _inputPointers[img] = ptr;
-            _inputPointersReverse[ptr] = img;
-            _ptrTexturesRefCount[ptr] = 1;
+            var ptr = Load2DTexture(image);
+
+            _inputPointers[image] = ptr;
+            _inputPointersReverse[ptr] = image;
+            TouchTexture(ptr);
 
             return ptr;
+        }
+    }
+
+    public void UnregisterImage(Image<Rgba32> image)
+    {
+        lock (_sync)
+        {
+            if (!_imageRefCount.TryGetValue(image, out var refCount))
+                return;
+
+            if (refCount > 1)
+            {
+                _imageRefCount[image] = refCount - 1;
+                return;
+            }
+
+            _imageRefCount.Remove(image);
+
+            if (_inputPointers.TryGetValue(image, out var ptr))
+                _unloadQueue.Add(ptr);
         }
     }
 
@@ -49,19 +80,13 @@ internal class ImageFactory(SDLGPUDevicePtr gpuDevice)
                 return;
 
             TransferToGpuTexture(_ptrTextures[ptr], texture);
+            TouchTexture(ptr);
         }
     }
 
-    public void UnloadImage(nint ptr)
+    private void TouchTexture(nint ptr)
     {
-        lock (_sync)
-        {
-            if (!_ptrTextures.ContainsKey(ptr))
-                return;
-
-            _ptrTexturesRefCount[ptr]--;
-            _unloadQueue.Add(ptr);
-        }
+        _ptrUsedThisFrame[ptr] = true;
     }
 
     private unsafe nint Load2DTexture(Image<Rgba32> image)
@@ -179,26 +204,52 @@ internal class ImageFactory(SDLGPUDevicePtr gpuDevice)
     {
         lock (_sync)
         {
-            if (_unloadQueue.Count == 0)
-                return;
+            HashSet<nint>? toFree = null;
 
-            SDL.WaitForGPUIdle(gpuDevice);
-
-            foreach (var toFree in _unloadQueue)
+            foreach (var (ptr, usedThisFrame) in _ptrUsedThisFrame)
             {
-                // Textures that were marked to unload, but somehow retained/regained references afterwards should not be unloaded
-                if (!_ptrTexturesRefCount.ContainsKey(toFree) || _ptrTexturesRefCount[toFree] > 0)
+                if (usedThisFrame)
                     continue;
 
-                SDL.ReleaseGPUTexture(gpuDevice, _ptrTextures[toFree]);
+                if (!_ptrTextures.ContainsKey(ptr))
+                    continue;
 
-                _ptrTextures.Remove(toFree);
-                _ptrTexturesRefCount.Remove(toFree);
-
-                var obj = _inputPointersReverse[toFree];
-                _inputPointersReverse.Remove(toFree);
-                _inputPointers.Remove(obj);
+                toFree ??= [];
+                toFree.Add(ptr);
             }
+
+            foreach (var ptr in _unloadQueue)
+            {
+                if (!_ptrTextures.ContainsKey(ptr))
+                    continue;
+
+                toFree ??= [];
+                toFree.Add(ptr);
+            }
+
+            if (toFree is { Count: > 0 })
+            {
+                SDL.WaitForGPUIdle(gpuDevice);
+
+                foreach (var ptr in toFree)
+                {
+                    if (!_ptrTextures.TryGetValue(ptr, out var texture))
+                        continue;
+
+                    SDL.ReleaseGPUTexture(gpuDevice, texture);
+                    _ptrTextures.Remove(ptr);
+                    _ptrUsedThisFrame.Remove(ptr);
+
+                    if (!_inputPointersReverse.TryGetValue(ptr, out var image))
+                        continue;
+
+                    _inputPointersReverse.Remove(ptr);
+                    _inputPointers.Remove(image);
+                }
+            }
+
+            foreach (var ptr in _ptrUsedThisFrame.Keys)
+                _ptrUsedThisFrame[ptr] = false;
 
             _unloadQueue.Clear();
         }
@@ -214,7 +265,8 @@ internal class ImageFactory(SDLGPUDevicePtr gpuDevice)
                 SDL.ReleaseGPUTexture(gpuDevice, ptrTexture.Value);
 
             _ptrTextures.Clear();
-            _ptrTexturesRefCount.Clear();
+            _imageRefCount.Clear();
+            _ptrUsedThisFrame.Clear();
             _inputPointers.Clear();
             _inputPointersReverse.Clear();
             _unloadQueue.Clear();

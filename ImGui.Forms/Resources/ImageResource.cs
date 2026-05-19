@@ -14,7 +14,7 @@ namespace ImGui.Forms.Resources;
 /// <remarks>To load built-in images, see <see cref="ImageResource"/>.</remarks>
 public class ImageResource
 {
-    private nint _ptr;
+    private bool _isRegistered;
 
     /// <summary>
     /// The size of the <see cref="ImageResource"/> as a <see cref="Vector2"/>.
@@ -110,10 +110,10 @@ public class ImageResource
 
     public void Destroy()
     {
-        if (_ptr != nint.Zero)
-            Application.Instance.Images!.UnloadImage(_ptr);
+        if (_isRegistered)
+            Application.Instance.Images!.UnregisterImage(Image);
 
-        _ptr = nint.Zero;
+        _isRegistered = false;
     }
 
     public unsafe ImTextureRef GetTextureRef()
@@ -123,9 +123,14 @@ public class ImageResource
 
     private nint GetPointer()
     {
-        if (_ptr != nint.Zero)
-            return _ptr;
+        var images = Application.Instance.Images!;
 
-        return _ptr = Application.Instance.Images!.LoadImage(Image);
+        if (!_isRegistered)
+        {
+            images.RegisterImage(Image);
+            _isRegistered = true;
+        }
+
+        return images.GetOrLoadImage(Image);
     }
 }

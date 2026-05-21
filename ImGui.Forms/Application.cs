@@ -100,10 +100,10 @@ public class Application
         SDL.SetWindowPosition(window, 50, 70);
         SDL.ShowWindow(window);
 
-        SDLGPUDevice* gpuDevice = SDL.CreateGPUDevice((uint)(SDLGPUShaderFormat.Spirv | SDLGPUShaderFormat.Dxil | SDLGPUShaderFormat.Metallib), false, (byte*)null);
+        SDLGPUDevice* gpuDevice = CreateGpuDeviceInPreferredOrder();
         if (gpuDevice == null)
         {
-            Console.WriteLine($"Error: SDL_CreateGPUDevice(): {SDL.GetErrorS()}");
+            Console.WriteLine("Error: SDL_CreateGPUDevice(): failed for all preferred drivers (vulkan, metal, direct3d).");
             return;
         }
 
@@ -391,6 +391,26 @@ public class Application
     private void OnUnhandledException(object sender, UnhandledExceptionEventArgs e)
     {
         UnhandledException?.Invoke(this, e.ExceptionObject as Exception);
+    }
+
+    private static unsafe SDLGPUDevice* CreateGpuDeviceInPreferredOrder()
+    {
+        uint shaderFormats = (uint)(SDLGPUShaderFormat.Spirv | SDLGPUShaderFormat.Dxil | SDLGPUShaderFormat.Metallib);
+        ReadOnlySpan<string> preferredDrivers = ["vulkan", "metal", "direct3d12"];
+
+        foreach (string driver in preferredDrivers)
+        {
+            SDLGPUDevice* gpuDevice = SDL.CreateGPUDevice(shaderFormats, false, driver);
+            if (gpuDevice != null)
+            {
+                Console.WriteLine($"SDL_CreateGPUDevice(): using '{driver}' driver.");
+                return gpuDevice;
+            }
+
+            Console.WriteLine($"SDL_CreateGPUDevice(): failed for '{driver}' driver: {SDL.GetErrorS()}");
+        }
+
+        return null;
     }
 
     private unsafe void EnsureDepthTarget(SDLGPUDevice* gpuDevice, int width, int height)

@@ -37,6 +37,8 @@ public class TabControl : Component
         }
     }
 
+    public bool AllowClosingPages { get; set; } = true;
+
     #endregion
 
     #region Events
@@ -56,12 +58,13 @@ public class TabControl : Component
     {
         var wasManuallyChanged = _selectedPageTemp != null && _selectedTabPageCount-- > 0 && _selectedPageTemp != _selectedPage;
 
-        if (Hexa.NET.ImGui.ImGui.BeginTabBar($"{Id}", ImGuiTabBarFlags.None))
+        if (Hexa.NET.ImGui.ImGui.BeginTabBar($"{Id}", ImGuiTabBarFlags.FittingPolicyScroll))
         {
             var toRemovePages = new HashSet<TabPage>();
             foreach (TabPage page in Pages.ToArray())
             {
                 var pageFlags = ImGuiTabItemFlags.None;
+                if (!AllowClosingPages) pageFlags |= ImGuiTabItemFlags.NoAssumedClosure;
                 if (page.HasChanges) pageFlags |= ImGuiTabItemFlags.UnsavedDocument;
                 if (IsSelected(page, wasManuallyChanged))
                     pageFlags |= ImGuiTabItemFlags.SetSelected;
@@ -84,21 +87,19 @@ public class TabControl : Component
                         if (wasChanged && Enabled)
                             OnSelectedPageChanged();
 
-                        // Remove tab page on middle mouse click
-                        if (Hexa.NET.ImGui.ImGui.IsItemHovered() && Hexa.NET.ImGui.ImGui.IsMouseClicked(ImGuiMouseButton.Middle) && Enabled)
-                            toRemovePages.Add(page);
-
                         // Draw content of tab page
                         var yPos = (int)Hexa.NET.ImGui.ImGui.GetCursorPosY();
 
                         var pageWidth = page.Content.GetWidth((int)contentRect.Width, (int)contentRect.Height - yPos);
                         var pageHeight = page.Content.GetHeight((int)contentRect.Width, (int)contentRect.Height - yPos);
 
+                        var pagePos = Hexa.NET.ImGui.ImGui.GetCursorScreenPos() with { X = contentRect.X };
                         var pageSize = new Vector2(pageWidth, pageHeight);
+
+                        Hexa.NET.ImGui.ImGui.SetCursorScreenPos(pagePos);
+
                         if (Hexa.NET.ImGui.ImGui.BeginChild($"##{Id}-in", pageSize, ImGuiChildFlags.None, ImGuiWindowFlags.None))
                         {
-                            var pagePos = Hexa.NET.ImGui.ImGui.GetWindowPos();
-
                             if (page.ShowBorder)
                                 Hexa.NET.ImGui.ImGui.GetWindowDrawList().AddRect(pagePos, pagePos + pageSize, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.Border));
 
@@ -113,7 +114,7 @@ public class TabControl : Component
 
                 Hexa.NET.ImGui.ImGui.PopID();
 
-                if (!stillOpen && Enabled)
+                if (!stillOpen && AllowClosingPages && Enabled)
                     toRemovePages.Add(page);
             }
 

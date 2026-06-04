@@ -79,7 +79,7 @@ public readonly struct SizeValue
     public static SizeValue Parent = Relative(1f);
 
     /// <summary>
-    /// Gets the absolute value or the the relative factor between 0.0 and 1.0.
+    /// Gets the absolute value or the relative factor between 0.0 and 1.0.
     /// </summary>
     public readonly float Value;
 

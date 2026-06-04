@@ -32,9 +32,7 @@ public class Expander(Component? content, LocalizedString caption = default) : C
 
     public override Size GetSize()
     {
-        SizeValue height = Size.Height.IsContentAligned
-            ? SizeValue.Content
-            : Size.Height;
+        SizeValue height = !Expanded ? SizeValue.Content : Size.Height;
 
         return new Size(Size.Width, height);
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Numerics;
+using System.Text;
 using Hexa.NET.ImGui;
 using ImGui.Forms.Controls.Base;
 using ImGui.Forms.Localization;
@@ -96,56 +97,67 @@ public class TextBox : Component
 
     protected override void UpdateInternal(Rectangle contentRect)
     {
-        bool isMasked = IsMasked;
-        bool isReadonly = IsReadOnly;
-        bool enabled = Enabled;
-
-        var flags = ImGuiInputTextFlags.None;
-        if (isMasked) flags |= ImGuiInputTextFlags.Password;
-        if (isReadonly || !enabled) flags |= ImGuiInputTextFlags.ReadOnly;
-
-        switch (AllowedCharacters)
+        try
         {
-            case CharacterRestriction.Decimal:
-                flags |= ImGuiInputTextFlags.CharsDecimal;
-                break;
+            bool isMasked = IsMasked;
+            bool isReadonly = IsReadOnly;
+            bool enabled = Enabled;
 
-            case CharacterRestriction.Hexadecimal:
-                flags |= ImGuiInputTextFlags.CharsHexadecimal;
-                break;
+            var flags = ImGuiInputTextFlags.None;
+            if (isMasked) flags |= ImGuiInputTextFlags.Password;
+            if (isReadonly || !enabled) flags |= ImGuiInputTextFlags.ReadOnly;
+
+            switch (AllowedCharacters)
+            {
+                case CharacterRestriction.Decimal:
+                    flags |= ImGuiInputTextFlags.CharsDecimal;
+                    break;
+
+                case CharacterRestriction.Hexadecimal:
+                    flags |= ImGuiInputTextFlags.CharsHexadecimal;
+                    break;
+            }
+
+            Hexa.NET.ImGui.ImGui.SetNextItemWidth(contentRect.Width);
+
+            if (isReadonly || !enabled)
+            {
+                Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBg, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+                Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            }
+
+            string currentText = _text ?? string.Empty;
+            if (currentText.Length > MaxCharacters)
+                currentText = currentText[..(int)MaxCharacters];
+
+            var currentTextLength = (uint)Encoding.UTF8.GetByteCount(currentText) + 1;
+
+            bool isChanged = !string.IsNullOrEmpty(Placeholder)
+                ? Hexa.NET.ImGui.ImGui.InputTextWithHint($"##{Id}", Placeholder, ref currentText, currentTextLength, flags)
+                : Hexa.NET.ImGui.ImGui.InputText($"##{Id}", ref currentText, currentTextLength, flags);
+
+            if (isChanged && !_currentFrameChanged)
+            {
+                _text = currentText;
+                OnTextChanged();
+            }
+
+            // Check if item is active and lost focus
+            if (!Hexa.NET.ImGui.ImGui.IsItemActive() && _activePreviousFrame)
+                OnFocusLost();
+
+            _activePreviousFrame = Hexa.NET.ImGui.ImGui.IsItemActive();
+
+            if (isReadonly || !enabled)
+                Hexa.NET.ImGui.ImGui.PopStyleColor(3);
+
+            _currentFrameChanged = false;
         }
-
-        Hexa.NET.ImGui.ImGui.SetNextItemWidth(contentRect.Width);
-
-        if (isReadonly || !enabled)
+        catch (Exception e)
         {
-            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBg, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBgActive, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
-            Hexa.NET.ImGui.ImGui.PushStyleColor(ImGuiCol.FrameBgHovered, Hexa.NET.ImGui.ImGui.GetColorU32(ImGuiCol.TextDisabled));
+            ;
         }
-
-        string currentText = _text ?? string.Empty;
-
-        bool isChanged = !string.IsNullOrEmpty(Placeholder)
-            ? Hexa.NET.ImGui.ImGui.InputTextWithHint($"##{Id}", Placeholder, ref currentText, MaxCharacters, flags)
-            : Hexa.NET.ImGui.ImGui.InputText($"##{Id}", ref currentText, MaxCharacters, flags);
-
-        if (isChanged && !_currentFrameChanged)
-        {
-            _text = currentText;
-            OnTextChanged();
-        }
-
-        // Check if item is active and lost focus
-        if (!Hexa.NET.ImGui.ImGui.IsItemActive() && _activePreviousFrame)
-            OnFocusLost();
-
-        _activePreviousFrame = Hexa.NET.ImGui.ImGui.IsItemActive();
-
-        if (isReadonly || !enabled)
-            Hexa.NET.ImGui.ImGui.PopStyleColor(3);
-
-        _currentFrameChanged = false;
     }
 
     protected override void ApplyStyles()

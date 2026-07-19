@@ -131,7 +131,7 @@ public class TextBox : Component
             if (currentText.Length > MaxCharacters)
                 currentText = currentText[..(int)MaxCharacters];
 
-            var currentTextLength = (uint)Encoding.UTF8.GetByteCount(currentText) + 1;
+            var currentTextLength = (uint)Encoding.UTF8.GetByteCount(currentText) + 5;
 
             bool isChanged = !string.IsNullOrEmpty(Placeholder)
                 ? Hexa.NET.ImGui.ImGui.InputTextWithHint($"##{Id}", Placeholder, ref currentText, currentTextLength, flags)

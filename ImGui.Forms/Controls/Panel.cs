@@ -26,6 +26,11 @@ public class Panel : Component
 
     protected override void UpdateInternal(Rectangle contentRect)
     {
-        Content?.Update(contentRect);
+        Hexa.NET.ImGui.ImGui.SetCursorScreenPos(contentRect.Position);
+
+        if (Hexa.NET.ImGui.ImGui.BeginChild($"{Id}-panel", contentRect.Size))
+            Content?.Update(contentRect);
+
+        Hexa.NET.ImGui.ImGui.EndChild();
     }
 }

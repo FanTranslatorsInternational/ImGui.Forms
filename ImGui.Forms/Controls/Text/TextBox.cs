@@ -131,11 +131,11 @@ public class TextBox : Component
             if (currentText.Length > MaxCharacters)
                 currentText = currentText[..(int)MaxCharacters];
 
-            var currentTextLength = (uint)Encoding.UTF8.GetByteCount(currentText) + 5;
+            var currentTextLimit = (uint)Encoding.UTF8.GetByteCount(currentText) + MaxCharacters * 4;
 
             bool isChanged = !string.IsNullOrEmpty(Placeholder)
-                ? Hexa.NET.ImGui.ImGui.InputTextWithHint($"##{Id}", Placeholder, ref currentText, currentTextLength, flags)
-                : Hexa.NET.ImGui.ImGui.InputText($"##{Id}", ref currentText, currentTextLength, flags);
+                ? Hexa.NET.ImGui.ImGui.InputTextWithHint($"##{Id}", Placeholder, ref currentText, currentTextLimit, flags)
+                : Hexa.NET.ImGui.ImGui.InputText($"##{Id}", ref currentText, currentTextLimit, flags);
 
             if (isChanged && !_currentFrameChanged)
             {

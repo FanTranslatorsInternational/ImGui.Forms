@@ -7,6 +7,7 @@ using ImGui.Forms.Localization;
 using ImGui.Forms.Support;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -40,7 +41,6 @@ public class Application
     private readonly List<GpuRenderAction> _gpuRenderActions = [];
 
     private readonly List<DragDropEvent> _dragDropEvents = [];
-    private readonly List<bool> _frameHandledDragDrops = [];
 
     #region Static properties
 
@@ -314,10 +314,36 @@ public class Application
 
     private void UpdateApplicationEvents()
     {
-        _dragDropEvents.Clear();
-        _frameHandledDragDrops.Clear();
+        UpdateDragDropEvents();
+
         _gpuPrepareActions.Clear();
         _gpuRenderActions.Clear();
+    }
+
+    private void UpdateDragDropEvents()
+    {
+        if (_dragDropEvents.Count <= 0)
+            return;
+
+        if (_dragDropEvents.All(x => !x.IsInvalid(_executionContext!.MainForm.Size)))
+        {
+            _dragDropEvents.Clear();
+            return;
+        }
+
+        foreach (var dragDropEvent in _dragDropEvents.ToArray())
+        {
+            if (!dragDropEvent.IsInvalid(_executionContext!.MainForm.Size))
+            {
+                _dragDropEvents.Remove(dragDropEvent);
+                continue;
+            }
+
+            // For some reason, mouse positions get stuck at float.MinValue when the window is inactive.
+            // DragFile events are registered even on inactive windows, so this updates to a valid mouse
+            // position as soon as available before throwing the DropFile event away.
+            dragDropEvent.MousePosition = Hexa.NET.ImGui.ImGui.GetMousePos();
+        }
     }
 
     internal void EnqueueGpuPrepareAction(GpuPrepareAction action)
@@ -382,8 +408,7 @@ public class Application
         if (path == null)
             return;
 
-        _frameHandledDragDrops.Add(false);
-        _dragDropEvents.Add(new DragDropEvent(path, Hexa.NET.ImGui.ImGui.GetMousePos()));
+        _dragDropEvents.Add(new DragDropEvent(path, Hexa.NET.ImGui.ImGui.GetMousePos(), false));
     }
 
     #endregion
@@ -467,16 +492,16 @@ public class Application
         files = new string[_dragDropEvents.Count];
         var index = 0;
 
-        for (var i = 0; i < _frameHandledDragDrops.Count; i++)
+        foreach (var dragDropEvent in _dragDropEvents)
         {
-            if (_frameHandledDragDrops[i] || _dragDropEvents[i].IsEmpty)
+            if (dragDropEvent.IsHandled || dragDropEvent.IsInvalid(_executionContext!.MainForm.Size))
                 continue;
 
-            if (!controlRect.Contains(_dragDropEvents[i].MousePosition))
+            if (!controlRect.Contains(dragDropEvent.MousePosition))
                 continue;
 
-            files[index++] = _dragDropEvents[i].File;
-            _frameHandledDragDrops[i] = true;
+            files[index++] = dragDropEvent.File;
+            dragDropEvent.IsHandled = true;
         }
 
         Array.Resize(ref files, index);
@@ -486,9 +511,8 @@ public class Application
 
 internal unsafe delegate void GpuPrepareAction(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer);
 internal unsafe delegate void GpuRenderAction(SDLGPUDevice* gpuDevice, SDLGPUCommandBuffer* commandBuffer, SDLGPURenderPass* renderPass);
-internal delegate void ImGuiRenderAction();
 
-internal unsafe sealed class ExecutionContext(Form mainForm, SDLWindowPtr window, ImageFactory images, IdFactory ids, SDLGPUDevice* gpuDevice, SDLGPUTextureFormat swapchainFormat)
+internal sealed unsafe class ExecutionContext(Form mainForm, SDLWindowPtr window, ImageFactory images, IdFactory ids, SDLGPUDevice* gpuDevice, SDLGPUTextureFormat swapchainFormat)
 {
     public Form MainForm { get; } = mainForm;
     public SDLWindowPtr Window { get; } = window;
@@ -498,10 +522,15 @@ internal unsafe sealed class ExecutionContext(Form mainForm, SDLWindowPtr window
     public SDLGPUTextureFormat SwapchainFormat { get; } = swapchainFormat;
 }
 
-internal readonly struct DragDropEvent(string file, Vector2 mousePos)
+internal class DragDropEvent(string file, Vector2 mousePosition, bool isHandled)
 {
-    public string File { get; } = file;
-    public Vector2 MousePosition { get; } = mousePos;
+    private static readonly Vector2 InvalidVector = new(float.MinValue);
 
-    public bool IsEmpty => MousePosition == default && File == null;
+    public string File { get; } = file;
+    public Vector2 MousePosition { get; set; } = mousePosition;
+    public bool IsHandled { get; set; } = isHandled;
+
+    public bool IsInvalid(Vector2 windowSize) => MousePosition == InvalidVector
+                                                 || MousePosition.X < 0 || MousePosition.X > windowSize.X
+                                                 || MousePosition.Y < 0 || MousePosition.Y > windowSize.Y;
 }
